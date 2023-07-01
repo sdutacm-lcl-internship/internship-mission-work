@@ -8,7 +8,7 @@
 
 现在，假定你的昵称/ID 为 `$id` （如 `bLue`，通常为只能包含数字、英文字母和下划线），下文会用到。
 
-基于最新的 master 分支检出一个自己的分支。分支名为 `register/$id`，如 `mission/bLue`。
+基于最新的 master 分支检出一个自己的分支。分支名为 `register/$id`，如 `register/bLue`。
 
 在你的分支上做如下修改：
 
