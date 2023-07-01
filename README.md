@@ -30,4 +30,4 @@
 
 ## 见习作业合集
 
-- [cooper (软件2001张晓硕)](/works/cooper/README.md)：参加于 2023-07-01 (demo)
+- [cooper (软件2001张晓硕)](/works/cooper)：参加于 2023-07-01 (demo)
