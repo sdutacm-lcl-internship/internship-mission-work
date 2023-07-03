@@ -31,4 +31,4 @@
 ## 见习作业合集
 
 - [cooper (软件2001张晓硕)](/works/cooper)：参加于 2023-07-01 (demo)
-- [LovelyPeracid (地信2102韩政轩)](/works/xuan20235):参加于 2023-07-03
+- [LovelyPeracid (地信2102韩政轩)](/works/xuan20235)：参加于 2023-07-03
