@@ -2,7 +2,7 @@
 <table>
 	<tr>
 		<th>kunkun</th>
-		<td colspan="3"> StudentClass </td>
+		<td colspan="3"> 把篮球和鸡联想起来 </td>
 	</tr>
 	<tr>
     	<td> 出生日期</td>
