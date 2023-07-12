@@ -34,3 +34,4 @@
 - [LovelyPeracid (地信2102韩政轩)](/works/xuan20235)：参加于 2023-07-03
 - [MyOnlySnow (计科2203程一硕)](/works/MyOnlySnow)：参加于 2023-07-09
 - [FuYou20 (软件2102郭呈银)](/works/guoChengYin)：参加于 2023-07-12
+- [xiandandd (软件本2101孙文倩)](/works/xiandandd)：参加于 2023-07-12
