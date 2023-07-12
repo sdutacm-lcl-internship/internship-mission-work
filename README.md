@@ -33,3 +33,4 @@
 - [cooper (软件2001张晓硕)](/works/cooper)：参加于 2023-07-01 (demo)
 - [LovelyPeracid (地信2102韩政轩)](/works/xuan20235)：参加于 2023-07-03
 - [MyOnlySnow (计科2203程一硕)](/works/MyOnlySnow)：参加于 2023-07-09
+- [xiandandd (软件本2101孙文倩)](/works/xiandandd)：参加于 2023-07-12
