@@ -33,8 +33,7 @@ for arg in args :
                 date={
                 "handle": handle,
                 "rating": rate,
-                "rank": rank
-                }
+                "rank": rank.strip()}
                 res_json=json.dumps(date)
                 sys.stdout.write(res_json + '\n')
             else :
@@ -45,3 +44,5 @@ for arg in args :
                 sys.stdout.write(res_json + '\n')
         else :
             sys.stderr.write("no such handle\n")
+            sys.exit(1) 
+print("over!")
