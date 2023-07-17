@@ -18,17 +18,21 @@ def solve(username):
         elif response.status_code == 404:
             sys.stderr.write("Not found\n")
             sys.exit(1)
+        #访问频率过快时会出现503错误
+        elif response.status_code == 503:
+            sys.stderr.write("Access frequency too fast\n")
+            sys.exit(1)
         data = response.json()
         if data["status"] == "OK":
             for user in data["result"]:
-                # 查看maxRank是否存在，若不存在那么就是没用rating的用户
-                if "maxRank" not in user:
+                # 查看rank这个键是否存在，若不存在那么就是没用rating的用户
+                if "rank" not in user:
                     user_info = {"handle": params["handles"]}
                 else:
                     user_info = {
                         "handle": params["handles"],
                         "rating": user["rating"],
-                        "rank": user["maxRank"]
+                        "rank": user["rank"]
                     }
                 user_json = json.dumps(user_info)
                 sys.stdout.write(user_json + "\n")
