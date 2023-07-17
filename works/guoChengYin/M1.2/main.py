@@ -50,7 +50,6 @@ def solve(usernames):
 if __name__ == '__main__':
 
   args=sys.argv[1:]
-  print(args)
   #异常情况3  防止空输入
   if len(args)==0:
     returnCode=1
