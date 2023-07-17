@@ -16,7 +16,7 @@ def resolve(handle):
         now = tree.xpath("//div[@class='info']/ul[1]/li[1]/span[1]/text()")
         max = tree.xpath("//div[@class='info']/ul[1]/li[1]//span[@class='smaller']/span[2]/text()")
         contribution = tree.xpath("//div[@class='info']//ul/li[2]/span/text()")
-        rank = tree.xpath("//div[@class='info']/ul[1]/li[1]//span[@class='smaller']/span[1]/text()")
+        rank = tree.xpath("//div[@id='body']//div[@id='pageContent']//div[@class='userbox']//div[@class='info']//div[@class='user-rank']/span/text()")
         if contribution == []:
             contribution = tree.xpath("//div[@class='info']//li[1]/span/text()")
             if contribution == []:
@@ -34,7 +34,7 @@ def resolve(handle):
                 data ={
                 "name":handle,
                 "rating":int(now[0]),
-                "rank":rank[0][:-2]
+                "rank":rank[0][:-1]
                 }
             else:
                 data = {
