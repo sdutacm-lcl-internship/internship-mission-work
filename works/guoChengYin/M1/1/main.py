@@ -1,5 +1,6 @@
 import json
 import sys
+import time
 
 import requests
 import parsel
@@ -7,7 +8,6 @@ def solve(username):
   url = 'https://codeforces.com/profile/{}'.format(username)
   #伪装成正常访问
   headers = {
-    'cookie':'__utmz=71512449.1689222621.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); JSESSIONID=672FB94F0EAC899F8CFC5AA46CA4CFB2-n1; 39ce7=CFvnpm3F; __utma=71512449.943931001.1689222621.1689336095.1689492329.5; __utmc=71512449; __utmt=1; __utmb=71512449.1.10.1689492329; __cf_bm=dzmQglvmP.XChgKtwCF7lXoifRIf6WONlEcxlthpr6s-1689492330-0-AYPajZXVdYcPzBN6bLmx4nDySXz3ZcuYbwOr35kcPQTvzP7cnPgmCMjSgYWPBEHimQ==',
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/57.36'
   }
 
@@ -27,6 +27,7 @@ def solve(username):
     #若handlePart为空则认为不存在该用户
     if handlePart is None:
       sys.stderr.write('no such handle' + "\n")
+      #返回异常值1
       return 1
 
     #如果handle首字母不为空则加入到最终的handle中，否则只取handlePart
@@ -36,7 +37,7 @@ def solve(username):
       handle = str(handlePart)
 
       #rating为空只封装handle
-    if rating is None:
+    if rating is None or rating=='0':
       data = {
         "handle":handle
       }
@@ -44,7 +45,7 @@ def solve(username):
       data={
         "handle":handle,
         "rating":int(rating),
-        "rank":str(rank)
+        "rank":str(rank).strip()
       }
 
     #封装json数据
@@ -52,18 +53,18 @@ def solve(username):
 
     #输出
     sys.stdout.write(json_data + "\n")
+    return 0
   else:
     sys.stderr.write("ErrorCode"+str(res.status_code)+'\n')
     return 1
 
 if __name__ == '__main__':
-  while True:
-    username = input().strip()
-    solve(username)
-    sys.stdout.write('是否继续程序？【Y/N】'+ "\n")
-    decide =  input().strip().upper()
-    if  not decide=='Y':
-      break
-
-
-
+  args=sys.argv[1:]
+  for i in args:
+    returnCode=solve(i)
+    #如果出现异常(返回1)，按异常退出
+    if returnCode==1:
+      exit(returnCode)
+    time.sleep(3)
+  #程序正常结束，正常退出
+  exit(0)
