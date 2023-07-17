@@ -62,7 +62,6 @@ if __name__ == '__main__':
   args=sys.argv[1:]
   for i in args:
     returnCode=solve(i)
-    print(returnCode)
     #如果出现异常(返回1)，按异常退出
     if returnCode==1:
       exit(returnCode)
