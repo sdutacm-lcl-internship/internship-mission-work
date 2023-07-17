@@ -21,7 +21,8 @@ def resolve(handle):
             contribution = tree.xpath("//div[@class='info']//li[1]/span")
             if contribution == []:
                 sys.stderr.write("No such handle\n")
-                return 1
+                sys.exit(1)
+
         if  not now or max ==[]:
             data ={
                 "name":handle
@@ -29,11 +30,18 @@ def resolve(handle):
             kun = json.dumps(data)
             sys.stdout.write(kun + "\n")
         else:
-            data ={
+            if Rank:
+                data ={
                 "name":handle,
                 "rating":int(now[0]),
                 "rank":Rank[0][:-1]
-            }
+                }
+            else:
+                data = {
+                    "name": handle,
+                    "rating": int(now[0]),
+                    "rank": "None"
+                }
             kun = json.dumps(data)
             sys.stdout.write(kun+"\n")
     else:
