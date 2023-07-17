@@ -16,9 +16,9 @@ def resolve(handle):
         now = tree.xpath("//div[@class='info']/ul[1]/li[1]/span[1]/text()")
         max = tree.xpath("//div[@class='info']/ul[1]/li[1]//span[@class='smaller']/span[2]/text()")
         contribution = tree.xpath("//div[@class='info']//ul/li[2]/span/text()")
-        Rank = tree.xpath("//div[@class='user-rank']//span[@class='user-legendary']/text()")
+        rank = tree.xpath("//div[@class='info']/ul[1]/li[1]//span[@class='smaller']/span[1]/text()")
         if contribution == []:
-            contribution = tree.xpath("//div[@class='info']//li[1]/span")
+            contribution = tree.xpath("//div[@class='info']//li[1]/span/text()")
             if contribution == []:
                 sys.stderr.write("No such handle\n")
                 sys.exit(1)
@@ -30,11 +30,11 @@ def resolve(handle):
             kun = json.dumps(data)
             sys.stdout.write(kun + "\n")
         else:
-            if Rank:
+            if rank:
                 data ={
                 "name":handle,
                 "rating":int(now[0]),
-                "rank":Rank[0][:-1]
+                "rank":rank[0][:-2]
                 }
             else:
                 data = {
