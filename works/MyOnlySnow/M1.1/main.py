@@ -37,7 +37,7 @@ def resolve(handle):
             kun = json.dumps(data)
             sys.stdout.write(kun+"\n")
     else:
-        sys.stderr.write("你是什么烂网络"+str(response.code+"\n"))
+        sys.stderr.write("Network error"+str(response.code+"\n"))
     return
 
 def main():
