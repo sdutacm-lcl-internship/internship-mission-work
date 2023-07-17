@@ -18,7 +18,7 @@ def solve(username):
             # contribution也为空说明这个用户不存在
             if contribution == []:
                 sys.stderr.write("no such handle\n")
-                return 1
+                sys.exit(1)
         flag = 0
         # 如果为空说明此人没有rank
         if max_rating == []:
@@ -36,19 +36,18 @@ def solve(username):
                 "name": username,
                 "rating": int(now_rating[0]),
                 # 去掉最后一个空格
-                "rank": rank[0][:-1]
+                "rank": rank[0].strip()
             }
         data_json = json.dumps(data)
         # 输出到标准输出流
         sys.stdout.write(data_json + "\n")
-        return 0
+        sys.exit(0)
 
 
 def main():
     # 使用sys.argv获取命令行参数
-    args = sys.argv[1:]
-    for username in args:
-        solve(username)
+    username = sys.argv[1:][0]
+    solve(username)
 
 
 if __name__ == '__main__':
