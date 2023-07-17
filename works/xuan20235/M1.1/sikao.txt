@@ -1,0 +1,9 @@
+几种方法
+能用RE正则
+还有bs4
+xpath
+我是昨天先学的bs4用的bs4
+xpath 是路径定位 通过[@tagName="keyword"]来定位到层级关系
+re就是提取关键字
+
+如果传入多个handle用数组存下来 处理吧
