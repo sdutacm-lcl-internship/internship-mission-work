@@ -3,6 +3,7 @@ import json
 import sys
 import urllib.parse
 from fake_useragent import UserAgent
+import urllib.error
 
 
 def resolve(handle):
@@ -11,40 +12,41 @@ def resolve(handle):
     ua = UserAgent().random
     headers = {'User-Agent': ua}
     request = urllib.request.Request(url=url, headers=headers)
-    response = urllib.request.urlopen(request)
-    if response.code == 200:
-        content = response.read().decode("utf-8")
-        Json = json.loads(content)
-        info_list = Json.get('result', [])
-        if not info_list:
+    try:
+            response = urllib.request.urlopen(request)
+            content = response.read().decode("utf-8")
+            Json = json.loads(content)
+            info_list = Json.get('result', [])
+            info = info_list[0]
+            handle = info.get('handle', '')
+            rating = info.get('rating', 0)
+            rank = info.get('rank', '')
+            max = info.get('maxRating', '')
+            if not rank:
+                data = {
+                    'name': handle,
+                    'rating': rating,
+                    'rank': 'None'
+                }
+            if not rating or max == []:
+                data = {
+                    'name': handle
+                }
+            else:
+                data = {
+                    'name': handle,
+                    'rating': rating,
+                    'rank': rank
+                }
+            print(json.dumps(data) + '\n')
+    except urllib.error.HTTPError as error:
+        if error.code == 400:
             print("No Such Handle\n")
             exit(1)
-        info = info_list[0]
-        handle = info.get('handle', '')
-        rating = info.get('rating', 0)
-        rank = info.get('rank', '')
-        max = info.get('maxRating', '')
-        if not rank:
-            data = {
-                'name': handle,
-                'rating': rating,
-                'rank': 'None'
-            }
-        if not rating or max == []:
-            data = {
-                'name': handle,
-                'rating': 'None',
-                'rank': 'None'
-            }
         else:
-            data = {
-                'name': handle,
-                'rating': rating,
-                'rank': rank
-            }
-        print(json.dumps(data) + '\n')
-    else:
-        print('NetWork error' + response.code + '\n')
+            print("Network Error: {}".format(error.code)+'\n')
+            exit(1)
+
 
 
 def main():
