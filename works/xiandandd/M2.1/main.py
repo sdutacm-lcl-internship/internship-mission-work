@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-import sys
 import requests
 
 # 这个主要是使用了python的flask进行处理和响应，然后访问codeforces的api接口获取数据
@@ -13,11 +12,24 @@ def solve(username):
     params = {
         "handles": username
     }
+
     try:
+        #新建一个空的response对象，以便于异常的判断
+        response=requests.Response()
         response = requests.get(url, params=params)
         number = response.status_code
+        print(number)
         data = response.json()
-        if number == 404 or number == 503 or number == 403:
+        #没有收到响应的情况
+        if response is None:
+            user_info = {
+                "success": False,
+                "type": 3,
+                "message": "No valid HTTP response was received when querying this item",
+            }
+            return user_info
+        #遇到异常http响应的情况,408是Request Timeout，504是Gateway Timeout
+        elif number == 404 or number == 503 or number == 403 or number == 500 or number == 408 or number == 504:
             user_info = {
                 "success": False,
                 "type": 2,
@@ -27,14 +39,7 @@ def solve(username):
                 }
             }
             return user_info
-        elif number == 500:
-            user_info = {
-                "success": False,
-                "type": 4,
-                "message": 'Internal Server Error'
-            }
-            return user_info
-        # 如果content-type不在请求头里面，说明这个响应异常了，应该是这样吧
+        # 前面写了没有响应的情况，这里再特判一下极小概率的情况
         elif "Content-Type" not in response.headers:
             user_info = {
                 "success": False,
@@ -61,8 +66,6 @@ def solve(username):
                             "rank": user["rank"]
                         }
                     }
-                # user_json = json.dumps(user_info)
-                # print(user_json)
                 return user_info
         # 因为前面把错误的状态码都筛选掉了，所以剩下的就是查无此人的情况了
         elif data["status"] == "FAILED":
@@ -72,12 +75,26 @@ def solve(username):
                 "message": 'no such handle'
             }
             return user_info
-    # 我断网了，无法访问api
+    #发现如果访问api失败也会收到状态码，这种情况下一般是503的状况
+    #访问失败，没有收到状态码就是断网的情况了
     except requests.exceptions.RequestException as e:
-        user_info = {
-            "message": "无法访问api，请尝试检查网络"
-        }
+        if response is not None and response.status_code == 503:
+            user_info = {
+                "success": False,
+                "type": 2,
+                "message": "Access frequency too fast",
+                "details": {
+                    "status": 503,
+                }
+            }
+        else:
+            user_info = {
+            "success": False,
+            "type": 4,
+            "message": "Problem with program"
+            }
         return user_info
+
 
 
 @app.route('/', methods=['GET'])
@@ -95,6 +112,8 @@ def query_handles():
     # jsonify()函数简化了将数据转换为JSON响应的过程，并确保响应的Content-Type标头正确设置为application/json
     # 这样，浏览器或其他客户端会正确地解析返回的JSON数据了
     return jsonify(response_data)
+
+
 
 
 if __name__ == '__main__':
