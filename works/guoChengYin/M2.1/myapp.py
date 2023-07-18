@@ -33,7 +33,7 @@ def query():
   # get方法和post方法获取前端数据的方式不同
   handles = request.args.get("handles")
   name_list = str(handles).split(",")
-  # 接收序列化结果
+  # 接收结果list
   res_list = solve(name_list)
   return Response(json.dumps(res_list), mimetype='application/json')
 
@@ -81,6 +81,7 @@ def solve(name_list):
       }
       user_dict["details"] = details
       res_list.append(user_dict)
+      # 先返回一个list,在query方法中封装JSON
   return res_list
 
 
