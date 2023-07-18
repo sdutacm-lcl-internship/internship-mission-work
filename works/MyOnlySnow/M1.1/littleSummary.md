@@ -1,0 +1,4 @@
+HTTPResponse对象没有response.status_code属性，导致了AttributeError错误。解决这个问题的方法是将response.status_code替换为response.code。
+尝试将一个列表对象now转换为整数，但是int()函数只能用于字符串或类似数字的对象，因此出现了TypeError错误。为了解决这个问题，需要从now列表中提取所需的值，并将其转换为整数。可以通过int(now[0])来提取列表的第一个元素并进行转换。
+爬取内容时没有注意到url发生变化会导致爬取错误内容
+不能随便命名
