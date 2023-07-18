@@ -30,7 +30,7 @@ def solve(username):
       user_dic["rank"] = str(user_data["rank"]).strip()
 
     # 封装
-    json_data = json.dumps(user_data)
+    json_data = json.dumps(user_dic)
     sys.stdout.write(json_data + "\n")
   elif status_code == 400:
     sys.stderr.write('no such handle\n')
