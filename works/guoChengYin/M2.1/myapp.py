@@ -1,7 +1,6 @@
 import json
-from multiprocessing.dummy import Pool
 import requests
-from flask import Flask, jsonify
+from flask import Flask, jsonify, Response
 from flask import render_template  # 渲染
 from flask import request
 
@@ -26,22 +25,17 @@ def framework_error(e):
       "type": 4,
       "message": 'Internal Server Error'
     }
-  return jsonify(response), 200
+  return Response(json.dumps(response), mimetype='application/json')
 
 
-@app.route('/')  # 初始化加载主页
-def init():
-  return render_template('index.html')
-
-
-@app.route('/query', methods=["GET", "POST"])
+@app.route('/')
 def query():
   # get方法和post方法获取前端数据的方式不同
-  val = request.args.get("val")
-  name_list = str(val).split(",")
+  handles = request.args.get("handles")
+  name_list = str(handles).split(",")
   # 接收序列化结果
   res_list = solve(name_list)
-  return jsonify(res_list)
+  return Response(json.dumps(res_list), mimetype='application/json')
 
 
 def solve(name_list):
@@ -56,7 +50,6 @@ def solve(name_list):
     user_dict = dict()
     result_dict = dict()
     response = requests.get(url=url + user_name, headers=headers)
-    print(response)
     # 情况1此handle可以查询到
     if response.status_code == 200:
       rep_json = json.loads(response.text)
@@ -82,13 +75,13 @@ def solve(name_list):
     else:
       user_dict["success"] = False
       user_dict["type"] = 2
-      user_dict["message"] = "HTTP response with code "+str(response.status_code)
+      user_dict["message"] = "HTTP response with code " + str(response.status_code)
       details = {
         "status": response.status_code
       }
       user_dict["details"] = details
       res_list.append(user_dict)
-  return str(res_list)
+  return res_list
 
 
 # 自定义 500 错误处理装饰器，返回自己封装的JSON响应
