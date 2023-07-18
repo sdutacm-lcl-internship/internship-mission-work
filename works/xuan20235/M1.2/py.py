@@ -73,7 +73,7 @@ def main():
         if exit_f == 1:
             sys.exit(1)  #无法找到用户时 exit 1
         if network_f == 0:
-            sys.stderr.write("无法链接到网络\n")
+            sys.stderr.write("无法链接到网络或发生未知错误\n")
 
 
 if __name__ == "__main__":
