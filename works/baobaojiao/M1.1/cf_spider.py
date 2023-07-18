@@ -19,7 +19,7 @@ def grep_rank(handle):
         rank_list = re.findall(find_rank, page_text)
         if len(rank_list) == 0:
             sys.stderr.write("no such handle\n")
-            return 1
+            exit(1)
         else:
             rank = re.findall(find_rankname, rank_list[0])[0]
             find_rating = re.compile(r'<span style="font-weight:bold;" class="user-.*?>(.*?)</span>', re.S)
@@ -28,7 +28,6 @@ def grep_rank(handle):
                 ans = {
                     'handle': handle,
                 }
-                print(ans)
             else:
                 ans = {
                     'handle': handle,
@@ -49,4 +48,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
