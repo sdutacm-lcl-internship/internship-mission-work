@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-import requests
+import requests 
 
 # 这个主要是使用了python的flask进行处理和响应，然后访问codeforces的api接口获取数据
 
