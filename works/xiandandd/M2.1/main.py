@@ -79,13 +79,13 @@ def solve(username):
     #发现如果访问api失败也会收到状态码，这种情况下一般是503的状况
     #访问失败，没有收到状态码就是断网的情况了
     except requests.exceptions.RequestException as e:
-        if response is not None and response.status_code == 503:
+        if response is not None and response.status_code != 200 and response.status_code !=400:
             user_info = {
                 "success": False,
                 "type": 2,
-                "message": "Access frequency too fast",
+                "message": "Abnormal response",
                 "details": {
-                    "status": 503,
+                    "status": response.status_code,
                 }
             }
         #断网了，没有收到响应
