@@ -33,11 +33,17 @@ def grep_rank(handle):
     elif response_status == 'FAILED': #未查找到用户
         sys.stdout.write('no such handle')
         exit(1)
-    elif response_status == 'Call limit exceeded': #请求发送过快
+    elif page['result'][0]['comment'] == 'Call limit exceeded': #当api在2秒内接受超过1次的请求时也会出现'FAILED'状态，该状态与未查询到用户虽然状态相同，产生原因却不同
         sys.stdout.write('请求发送频繁，请稍候！')
     elif response.status_code == 400:  #前端提交的字段名称或者字段类型和后台的实体类不一样，或者前端提交的参数跟后台需要的参数个数不一致，导致无法封装
         sys.stdout.write('请求错误！')
     elif response.status_code == 500:  #参数传入正常，服务器内部处理错误
+        sys.stdout.write('服务器错误！')
+    elif response.status_code == 404:
+        sys.stdout.write('请求地址错误！')
+    elif response.status_code == 403:
+        sys.stdout.write('服务器拒绝访问')
+    elif response.status_code == 503:
         sys.stdout.write('服务器错误！')
 
 
