@@ -50,6 +50,7 @@ def solve(name_list):
     user_dict = dict()
     result_dict = dict()
     response = requests.get(url=url + user_name, headers=headers)
+
     # 情况1此handle可以查询到
     if response.status_code == 200:
       rep_json = json.loads(response.text)
