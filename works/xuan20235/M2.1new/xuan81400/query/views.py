@@ -118,7 +118,7 @@ def query_handles(request):
     string = string + ','
 
     list = []
-
+    r=r+','
     for i in r:
         if i == ',':
 
