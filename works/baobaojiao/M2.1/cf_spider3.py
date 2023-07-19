@@ -65,8 +65,14 @@ def grep_user(user):
     except requests.exceptions.RequestException as e:  # 程序抛出异常
         ans = {
             "success": 'false',
-            "type": '4',
+            "type": '3',
             "message": "Internal Server Error"
+        }
+    except BaseException as e:
+        ans = {
+            "success": "false",
+            "type": "4",
+            "message": 'Internal Server Error'
         }
     return ans
 
