@@ -9,7 +9,6 @@ app = Flask(__name__)
 
 
 def grep_user(user):
-
     url = 'https://codeforces.com/api/user.info'
     headers = {
         'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Mobile Safari/537.36 Edg/113.0.1774.42'
@@ -19,7 +18,7 @@ def grep_user(user):
         "handles": user
     }
 
-    try:#程序正常运行
+    try:  # 程序正常运行
         response = requests.get(url=url, headers=headers, params=param)
         page = response.json()
         resp_status_code = response.status_code
@@ -48,7 +47,7 @@ def grep_user(user):
                 "message": "no such handle"
             }
         elif resp_status_code == 401 or resp_status_code == 403 or resp_status_code == 404 or resp_status_code == 500 or resp_status_code == 502 or resp_status_code == 503 or resp_status_code == 504:
-            #请求响应异常
+            # 请求响应异常
             ans = {
                 "success": 'false',
                 "type": '2',
@@ -57,17 +56,23 @@ def grep_user(user):
                     "status": str(resp_status_code)
                 }
             }
-        else:#除去响应异常以及程序异常，剩下的为未收到合法响应
+        else:  # 除去响应异常以及程序异常，剩下的为未收到合法响应
             ans = {
                 "success": 'false',
                 "type": '3',
                 "message": "No valid HTTP response was received when querying this item"
             }
-    except requests.exceptions.RequestException as e:#程序抛出异常
+    except requests.exceptions.RequestException as e:  # 程序抛出异常
         ans = {
             "success": 'false',
-            "type": '4',
+            "type": '3',
             "message": "Internal Server Error"
+        }
+    except BaseException as e:
+        ans = {
+            "success": "false",
+            "type": "4",
+            "message": 'Internal Server Error'
         }
     return ans
 
@@ -82,6 +87,7 @@ def cin():
         ans.append(grep_user(user))
 
     return Response(json.dumps(ans), mimetype='application/json')
+
 
 if __name__ == '__main__':
     server = pywsgi.WSGIServer(('127.0.0.1', 2333), app)
