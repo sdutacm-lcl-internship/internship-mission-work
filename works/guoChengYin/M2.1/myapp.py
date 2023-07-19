@@ -64,7 +64,7 @@ def solve(name_list):
         user_dict = {
           "success": False,
           "type": 3,
-          "message": "Request timeout"
+          "message": "Request failed"
         }
       else:
         #情况5 在查询此项时程序发生运行时异常
