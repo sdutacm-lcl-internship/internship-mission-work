@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.config['DEBUG']=True
 
 def search_handles(handle):
-    url = f"https://codeforces.com/api/user.info?handles={handle}"
+    url = f"https://1codeforces.com/api/user.info?handles={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
     request = urllib.request.Request(url=url, headers=headers)
@@ -51,16 +51,16 @@ def search_handles(handle):
                 }
             }
     except urllib.error.URLError as error:
-        return {
-            'success': False,
-            'type': 3,
-            'message': "Request timeout"
-        }
+            return {
+                'success': False,
+                'type': 3,
+                'message': "Nice! Request Failed due to Network issues."
+            }
     except Exception as e:
         return {
             'success': False,
             'type': 4,
-            'message': 'Internal Server Error'
+            'message': str(e)
         }
 
 @app.route('/')
