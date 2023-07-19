@@ -27,64 +27,86 @@ def func(handle):
     url_base = f"https://codeforces.com/api/{methodName}"
 
     pa = {"handles": handle}
-    response = requests.get(url=url_base, params=pa, headers=headers)
-    #print(response.status_code)
-    # if response.status_code != 200 and response.status_code != 400:  #1 解决url 错误 400是没找到通过下面的来处理
-    #     #sys.stderr.write(f"status_code ={response.status_code}\n")
-    #     return 0
-    load_json = json.loads(response.text)
-    status_code_value = response.status_code
-    if response.status_code != 200 and response.status_code != 400:  #解决
-        ans = {
-            "success": 'false',
-            "type": 2,
-            "message": f"HTTP response with code {status_code_value}",
-            "details": {
-                "status": status_code_value
-            }
-        }
-        return ans
-
-    if load_json["status"] == 'FAILED':
-        #sys.stderr.write("no such handle\n")
-        #a = "no such handle"
-        ans = {"success": "false", "type": "1", "message": "no such handle"}
-        return ans
-    else:
-
+    try:
+        response = requests.get(url=url_base, params=pa, headers=headers)
+        #print(response.status_code)
+        # if response.status_code != 200 and response.status_code != 400:  #1 解决url 错误 400是没找到通过下面的来处理
+        #     #sys.stderr.write(f"status_code ={response.status_code}\n")
+        #     return 0
         load_json = json.loads(response.text)
+        status_code_value = response.status_code
 
-        result = load_json["result"]
-
-        if 'rating' in result[0]:
-
-            rate = result[0]["rating"]
-            rank = result[0]["rank"]
-            #for tmp in result[0]["rank"]:
-            #    rank = rank + tmp
-
+        #status_code_value = response.status_code
+        if response.status_code != 200 and response.status_code != 400:  #解决
             ans = {
-                "success": True,
-                "result": {
-                    "handle": handle,
-                    "rating": rate,
-                    "rank": rank.strip(),
+                "success": 'false',
+                "type": 2,
+                "message": f"HTTP response with code {status_code_value}",
+                "details": {
+                    "status": status_code_value
                 }
             }
-            #res_json = json.dumps(ans)
-            #sys.stdout.write(res_json + '\n')
+            return ans
+
+        if load_json["status"] == 'FAILED':
+            #sys.stderr.write("no such handle\n")
+            #a = "no such handle"
+            ans = {
+                "success": "false",
+                "type": "1",
+                "message": "no such handle"
+            }
             return ans
         else:
-            ans = {
-                "success": True,
-                "result": {
-                    "handle": handle,
-                }
-            }
 
-            #res_json = json.dumps(ans)
-            #sys.stdout.write(res_json + '\n')
-            return ans
+            load_json = json.loads(response.text)
+
+            result = load_json["result"]
+
+            if 'rating' in result[0]:
+
+                rate = result[0]["rating"]
+                rank = result[0]["rank"]
+                #for tmp in result[0]["rank"]:
+                #    rank = rank + tmp
+
+                ans = {
+                    "success": True,
+                    "result": {
+                        "handle": handle,
+                        "rating": rate,
+                        "rank": rank.strip(),
+                    }
+                }
+                #res_json = json.dumps(ans)
+                #sys.stdout.write(res_json + '\n')
+                return ans
+            else:
+                ans = {
+                    "success": True,
+                    "result": {
+                        "handle": handle,
+                    }
+                }
+
+                #res_json = json.dumps(ans)
+                #sys.stdout.write(res_json + '\n')
+                return ans
+
+    except requests.exceptions.RequestException as e:  # 程序抛出异常
+        ans = {
+            "success": 'false',
+            "type": '3',
+            "message": "Internal Server Error"
+        }
+        return ans
+    except BaseException as e:
+        ans = {
+            "success": "false",
+            "type": "4",
+            "message": 'Internal Server Error'
+        }
+        return ans
 
 
 def server_error(request):  #一开始是想通过函数来实现 但是不知道怎么拿到服务器的状态 就暂时用中间件写了
@@ -118,7 +140,7 @@ def query_handles(request):
     string = string + ','
 
     list = []
-    r=r+','
+    r = r + ','
     for i in r:
         if i == ',':
 
