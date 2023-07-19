@@ -5,12 +5,13 @@ from flask import Flask
 from flask import request
 from flask import Response
 from gevent import pywsgi
+import pytz
 
 app = Flask(__name__)
 
 
 def unix_to_iso(unix_time):
-    Date_Time = datetime.datetime.fromtimestamp(unix_time)
+    Date_Time = datetime.datetime.fromtimestamp(unix_time, pytz.timezone('Asia/Shanghai'))
     Iso_Time = Date_Time.isoformat()
     return Iso_Time
 
@@ -99,7 +100,7 @@ def grep_rating(handle):
                 "contestId": rating_info['contestId'],
                 "contestName": rating_info['contestName'],
                 "rank": rating_info['rank'],
-                "ratingUpdatedAt": unix_to_iso(rating_info['ratingUpdateTimeSeconds']) + "+08:00",
+                "ratingUpdatedAt": unix_to_iso(rating_info['ratingUpdateTimeSeconds']),
                 "oldRating": rating_info['oldRating'],
                 'newRating': rating_info['newRating']
             }
