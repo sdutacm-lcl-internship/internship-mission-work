@@ -43,6 +43,8 @@ def grep_rank(handle):
         sys.stdout.write('请求地址错误！')
     elif response.status_code == 403:
         sys.stdout.write('服务器拒绝访问')
+    elif response.status_code == 503:
+        sys.stdout.write('服务器错误！')
 
 
 def main():
