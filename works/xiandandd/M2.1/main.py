@@ -14,6 +14,7 @@ def solve(username):
     }
 
     try:
+        #1/0
         #新建一个空的response对象，以便于异常的判断
         response=requests.Response()
         response = requests.get(url, params=params)
@@ -87,14 +88,22 @@ def solve(username):
                     "status": 503,
                 }
             }
+        #断网了，没有收到响应
         else:
             user_info = {
-            "success": False,
-            "type": 4,
-            "message": "Problem with program"
+                "success": False,
+                "type": 3,
+                "message": "No valid HTTP response was received when querying this item",
             }
         return user_info
-
+    #这是程序异常的情况
+    except:
+        user_info={
+            "success":False,
+            "type":4,
+            "message":"Internal Server Error"
+        }
+        return user_info
 
 
 @app.route('/', methods=['GET'])
