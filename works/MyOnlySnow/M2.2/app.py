@@ -4,6 +4,9 @@ import urllib.request
 import json
 from fake_useragent import UserAgent
 import datetime
+import redis
+import time
+import pytz
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -82,7 +85,7 @@ def search_ratings(handle):
             ratingUpdateTimeSeconds = info.get('ratingUpdateTimeSeconds', 0)
             oldRating = info.get('oldRating', 0)
             newRating = info.get('newRating', 0)
-            time = datetime.datetime.fromtimestamp(ratingUpdateTimeSeconds)
+            time = datetime.datetime.fromtimestamp(ratingUpdateTimeSeconds,pytz.timezone('Asia/Shanghai'))
             ratingUpdatedAt = time.isoformat()
             result.append(
                 {
@@ -90,7 +93,7 @@ def search_ratings(handle):
                     'contestId': contestId,
                     'contestName': contestName,
                     'rank': rank,
-                    'ratingUpdatedAt': ratingUpdatedAt+'+08:00',
+                    'ratingUpdatedAt': ratingUpdatedAt,
                     'oldRating': oldRating,
                     'newRating': newRating
                 }
