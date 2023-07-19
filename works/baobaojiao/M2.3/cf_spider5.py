@@ -2,6 +2,7 @@ import json
 import requests
 import datetime
 import time
+import pytz
 from flask import Flask
 from flask import request
 from flask import Response
@@ -12,43 +13,47 @@ app = Flask(__name__)
 cache_userinfo = {}
 cache_userrating = {}
 
+
 def get_user_from_map(user):
-    if user in cache_userinfo and cache_userinfo[user]["expiry_time"] > time.time():  #若所查询用户在缓存内并且未超时，直接返回
+    if user in cache_userinfo and cache_userinfo[user]["expiry_time"] > time.time():  # 若所查询用户在缓存内并且未超时，直接返回
         print("通过map获取user")
         return cache_userinfo[user]["data"]
 
-    data = grep_user(user) #走到这一步说明：用户不在缓存内，或者缓存内数据超时，重新获取
+    data = grep_user(user)  # 走到这一步说明：用户不在缓存内，或者缓存内数据超时，重新获取
 
-    if 'type' in data: #查询不到用户或请求异常时不加入缓存，‘type’存在于正常查询外的所有情况，所以可通过‘type’判断
+    if 'type' in data:  # 查询不到用户或请求异常时不加入缓存，‘type’存在于正常查询外的所有情况，所以可通过‘type’判断
         return data
 
-    cache_userinfo[user] = { #将新数据存缓存
+    cache_userinfo[user] = {  # 将新数据存缓存
         "data": data,
-        "expiry_time": time.time() + 15 #15s限制
+        "expiry_time": time.time() + 15  # 15s限制
     }
     print("通过server获取user")
     return cache_userinfo[user]['data']
 
+
 def get_rating_from_map(handle):
-    if handle in cache_userrating and cache_userrating[handle]['expiry_time'] > time.time(): #判断缓存内是否存在合法数据
+    if handle in cache_userrating and cache_userrating[handle]['expiry_time'] > time.time():  # 判断缓存内是否存在合法数据
         return cache_userrating[handle]["data"]
 
     data = grep_rating(handle)
 
-    if 'message' in data[0]:#’message‘存在于正常数据外的所有情况，用‘message’判断异常情况
+    if 'message' in data[0]:  # ’message‘存在于正常数据外的所有情况，用‘message’判断异常情况
         return data
 
-    cache_userrating[handle] = {  #存入缓存
+    cache_userrating[handle] = {  # 存入缓存
         "data": data,
         "expiry_time": time.time() + 15
     }
 
     return cache_userrating[handle]['data']
 
+
 def unix_to_iso(unix_time):
-    Date_Time = datetime.datetime.fromtimestamp(unix_time)  #转换Unix时间戳
-    Iso_Time = Date_Time.isoformat()  #转换为iso
+    Date_Time = datetime.datetime.fromtimestamp(unix_time, pytz.timezone('Asia/Shanghai'))  # 转换Unix时间戳
+    Iso_Time = Date_Time.isoformat()  # 转换为iso
     return Iso_Time
+
 
 def grep_user(user):
     url = 'https://codeforces.com/api/user.info'
@@ -135,7 +140,7 @@ def grep_rating(handle):
                 "contestId": rating_info['contestId'],
                 "contestName": rating_info['contestName'],
                 "rank": rating_info['rank'],
-                "ratingUpdatedAt": unix_to_iso(rating_info['ratingUpdateTimeSeconds']) + "+08:00",
+                "ratingUpdatedAt": unix_to_iso(rating_info['ratingUpdateTimeSeconds']),
                 "oldRating": rating_info['oldRating'],
                 'newRating': rating_info['newRating']
             }
