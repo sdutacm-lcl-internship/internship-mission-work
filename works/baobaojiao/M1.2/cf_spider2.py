@@ -36,10 +36,13 @@ def grep_rank(handle):
         exit(1)
     elif response_status == 'Call limit exceeded': #请求发送过快
         sys.stdout.write('请求发送频繁，请稍候！')
+        return 0
     elif response.status_code == 400:  #前端提交的字段名称或者字段类型和后台的实体类不一样，或者前端提交的参数跟后台需要的参数个数不一致，导致无法封装
         sys.stdout.write('请求错误！')
+        return 0
     elif response.status_code == 500:  #参数传入正常，服务器内部处理错误
         sys.stdout.write('服务器错误！')
+      return 0
 
 
 def main():
