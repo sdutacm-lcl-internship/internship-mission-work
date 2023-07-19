@@ -88,28 +88,54 @@ def grep_rating(handle):
         "handle": handle
     }
 
-    response = requests.get(url=url, headers=headers, params=param)
-    page = response.json()
-    resp_status = response.status_code
+    try:
+        response = requests.get(url=url, headers=headers, params=param)
+        page = response.json()
+        resp_status = response.status_code
 
-    ans = []
-    if resp_status == 200:
-        for rating_info in page['result']:
-            temp = {
-                "handle": rating_info['handle'],
-                "contestId": rating_info['contestId'],
-                "contestName": rating_info['contestName'],
-                "rank": rating_info['rank'],
-                "ratingUpdatedAt": unix_to_iso(rating_info['ratingUpdateTimeSeconds']),
-                "oldRating": rating_info['oldRating'],
-                'newRating': rating_info['newRating']
+        ans = []
+        if resp_status == 200:
+            for rating_info in page['result']:
+                temp = {
+                    "handle": rating_info['handle'],
+                    "contestId": rating_info['contestId'],
+                    "contestName": rating_info['contestName'],
+                    "rank": rating_info['rank'],
+                    "ratingUpdatedAt": unix_to_iso(rating_info['ratingUpdateTimeSeconds']),
+                    "oldRating": rating_info['oldRating'],
+                    'newRating': rating_info['newRating']
+                }
+                ans.append(temp)
+        elif resp_status == 400:
+            ans.append({
+                "status": "404",
+                "result": {
+                    "message": "no such handle"
+                }
+            })
+        elif resp_status == 401 or resp_status == 403 or resp_status == 404 or resp_status == 500 or resp_status == 502 or resp_status == 503 or resp_status == 504:
+            ans.append({
+                "status": str(resp_status),
+                "result": {
+                    "message": "HTTP response with code" + str(resp_status)
+                }
+            })
+    except requests.exceptions.RequestException as e:  # 程序抛出异常
+        ans.append({
+            "status": "501",
+            "result": {
+                "message": "Not Implemented"
             }
-            ans.append(temp)
-    elif resp_status == 400:
-        ans.append({"message": "no such handle"})
-    else:
-        ans.append({"message": "HTTP response with code " + str(resp_status)})
+        })
+    except BaseException as e:
+        ans.append({
+            "status": "500",
+            "result": {
+                "message": "Internal Server Error"
+            }
+        })
     return ans
+
 
 
 @app.route('/batchGetUserInfo', methods=['get', 'post'])
