@@ -13,10 +13,8 @@ app = Flask(__name__)
 cache_userinfo = {}
 cache_userrating = {}
 
-
 def get_user_from_map(user):
     if user in cache_userinfo and cache_userinfo[user]["expiry_time"] > time.time():  # 若所查询用户在缓存内并且未超时，直接返回
-        print("通过map获取user")
         return cache_userinfo[user]["data"]
 
     data = grep_user(user)  # 走到这一步说明：用户不在缓存内，或者缓存内数据超时，重新获取
@@ -28,26 +26,24 @@ def get_user_from_map(user):
         "data": data,
         "expiry_time": time.time() + 15  # 15s限制
     }
-    print("通过server获取user")
+
     return cache_userinfo[user]['data']
 
 
 def get_rating_from_map(handle):
     if handle in cache_userrating and cache_userrating[handle]['expiry_time'] > time.time():  # 判断缓存内是否存在合法数据
-        return cache_userrating[handle]["data"]
-
+        return cache_userrating[handle]["data"], 200
     data = grep_rating(handle)
 
-    print(data)
-    if 'status' in data[0]:  # ’message‘存在于正常数据外的所有情况，用‘message’判断异常情况
-        return data
+    if data[1] != 200:  # ’message‘存在于正常数据外的所有情况，用‘message’判断异常情况
+        return data[0], data[1]
 
     cache_userrating[handle] = {  # 存入缓存
-        "data": data,
+        "data": data[0],
         "expiry_time": time.time() + 15
     }
 
-    return cache_userrating[handle]['data']
+    return cache_userrating[handle]['data'], data[1]
 
 
 def unix_to_iso(unix_time):
@@ -155,26 +151,26 @@ def grep_rating(handle):
                 }
                 ans.append(temp)
         elif resp_status == 400:
+            status_code = 404
             ans = {
-                'status': '404',
                 "message": "no such handle"
             }
         elif resp_status == 401 or resp_status == 403 or resp_status == 404 or resp_status == 500 or resp_status == 502 or resp_status == 503 or resp_status == 504:
+            status_code = resp_status,
             ans = {
-                'status': resp_status,
                 "message": "HTTP response with code" + str(resp_status)
             }
     except requests.exceptions.RequestException as e:  # 程序抛出异常
+        status_code = 500
         ans = {
-            'status': '500',
             "message": "Internal Server Error"
         }
     except Exception as e:
+        status_code = 500
         ans = {
-            'status': '500',
             "message": "Internal Server Error"
         }
-    return ans
+    return ans, status_code
 
 
 @app.route('/batchGetUserInfo', methods=['get', 'post'])
@@ -192,9 +188,8 @@ def cin():
 @app.route('/getUserRatings', methods=['get', 'post'])
 def rating_query():
     handle = request.args.get("handle")
-    ans = grep_rating(handle)
-    return jsonify(ans), 200 if not 'status' in ans else ans['status']
-
+    ans = get_rating_from_map(handle)
+    return jsonify(ans[0]), ans[1]
 
 
 if __name__ == '__main__':

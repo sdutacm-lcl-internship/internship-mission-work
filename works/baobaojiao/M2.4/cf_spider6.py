@@ -33,19 +33,18 @@ def get_user_from_map(user):
 
 def get_rating_from_map(handle):
     if handle in cache_userrating and cache_userrating[handle]['expiry_time'] > time.time():  # 判断缓存内是否存在合法数据
-        return cache_userrating[handle]["data"]
-
+        return cache_userrating[handle]["data"], 200
     data = grep_rating(handle)
 
-    if 'status' in data[0]:  # ’message‘存在于正常数据外的所有情况，用‘message’判断异常情况
-        return data
+    if data[1] != 200:  # ’message‘存在于正常数据外的所有情况，用‘message’判断异常情况
+        return data[0], data[1]
 
     cache_userrating[handle] = {  # 存入缓存
-        "data": data,
+        "data": data[0],
         "expiry_time": time.time() + 15
     }
 
-    return cache_userrating[handle]['data']
+    return cache_userrating[handle]['data'], data[1]
 
 
 def unix_to_iso(unix_time):
@@ -153,42 +152,41 @@ def grep_rating(handle):
                 }
                 ans.append(temp)
         elif resp_status == 400:
+            status_code = 404
             ans = {
-                'status': '404',
                 "message": "no such handle"
             }
         elif resp_status == 401 or resp_status == 403 or resp_status == 404 or resp_status == 500 or resp_status == 502 or resp_status == 503 or resp_status == 504:
+            status_code = resp_status,
             ans = {
-                'status': resp_status,
                 "message": "HTTP response with code" + str(resp_status)
             }
     except requests.exceptions.RequestException as e:  # 程序抛出异常
+        status_code = 500
         ans = {
-            'status': '500',
             "message": "Internal Server Error"
         }
     except Exception as e:
+        status_code = 500
         ans = {
-            'status': '500',
             "message": "Internal Server Error"
         }
-    return ans
+    return ans, status_code
 
 
 def clear_cache_json(response):
     ans = {
-        'status': '400',
-        'result': {
-            'message': 'invalid request'
-        }
+        'message': 'invalid request'
     }
+    status_code = 200
     try:
         for json_key in response.keys():
             if json_key != 'handles' and json_key != 'cacheType':
-                return ans
-        if (not 'cacheType' in response) or (
-                response['cacheType'] != 'userInfo' and response['cacheType'] != 'userRatings'):
-            return ans
+                status_code = 400
+                return ans, status_code
+        if (not 'cacheType' in response) or (response['cacheType'] != 'userInfo' and response['cacheType'] != 'userRatings'):
+            status_code = 400
+            return ans, status_code
         if response['cacheType'] == 'userInfo' and 'handles' in response:
             for handle in response['handles']:
                 if handle in cache_userinfo:
@@ -204,18 +202,17 @@ def clear_cache_json(response):
         else:
             cache_userrating.clear()
 
-        ans['status'] = '200'
-        ans['result']['message'] = 'ok'
+        ans['message'] = 'ok'
 
     except requests.exceptions.RequestException as e:
-        ans['status'] = '400'
-        ans['result']['message'] = 'invalid request'
+        status_code = 400
+        ans['message'] = 'invalid request'
 
     except Exception as e:
-        ans['status'] = '500'
-        ans['result']['message'] = 'Internal Server Error'
+        status_code = 500
+        ans['message'] = 'Internal Server Error'
 
-    return ans
+    return ans,status_code
 
 
 def clear_cache_form(response):
@@ -224,17 +221,18 @@ def clear_cache_form(response):
     if 'handles' in response:
         list = str(response['handles'])[2:-2].replace('\",\"', " ").split()
         response['handles'] = list
-    return clear_cache_json(response)
+    ans = clear_cache_json(response)
+    return ans[0], ans[1]
 
 
 @app.route('/clearCache', methods=['post'])
 def clear_cache():
     try:
         ans = clear_cache_json(request.json)
-        return jsonify(ans), ans['status']
+        return jsonify(ans[0]), ans[1]
     except Exception as e:
         ans = clear_cache_form(request.form)
-        return jsonify(ans), ans['status']
+        return jsonify(ans[0]), ans[1]
 
 
 @app.route('/batchGetUserInfo', methods=['get', 'post'])
@@ -253,7 +251,7 @@ def cin():
 def rating_query():
     handle = request.args.get("handle")
     ans = get_rating_from_map(handle)
-    return jsonify(ans), 200 if not 'status' in ans else ans['status']
+    return jsonify(ans[0]), ans[1]
 
 
 if __name__ == '__main__':
