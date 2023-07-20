@@ -162,7 +162,7 @@ def find(username):
             return data
     except requests.exceptions.RequestException as e:
         data = {
-            'status': 501,
+            'status': 503,
             "result": {
                 "message": 'Connection interruption',
             }
