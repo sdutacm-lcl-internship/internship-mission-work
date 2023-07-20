@@ -33,7 +33,7 @@ def func(handle):
         # if response.status_code != 200 and response.status_code != 400:  #1 解决url 错误 400是没找到通过下面的来处理
         #     #sys.stderr.write(f"status_code ={response.status_code}\n")
         #     return 0
-        load_json = json.loads(response.text)
+        #load_json = json.loads(response.text)
         status_code_value = response.status_code
 
         #status_code_value = response.status_code
@@ -47,7 +47,7 @@ def func(handle):
                 }
             }
             return ans
-
+        load_json = json.loads(response.text)
         if load_json["status"] == 'FAILED':
             #sys.stderr.write("no such handle\n")
             #a = "no such handle"
