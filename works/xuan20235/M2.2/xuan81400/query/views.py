@@ -125,7 +125,7 @@ def query_getUserRatings(request):
         #return HttpResponse(len(dir))
         if len(dir) == 1:
 
-            return JsonResponse(dir, safe=False, status=404)
+            return JsonResponse(dir, safe=False, status=200)
         elif len(dir) == 2:
 
             a = dir[1]["status"]
