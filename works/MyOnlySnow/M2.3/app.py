@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response,make_response
 import urllib.error
 import urllib.request
 import json
@@ -131,25 +131,29 @@ def search_ratings(handle):
     except urllib.error.HTTPError as error:
         if error.code == 400:
             data = {
-                'message': 'no such handle'
+                'message': 'no such handle',
+                 'code':404
             }
             cache[handle] = {
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
             }
+            return data
         else:
-            data = {
-                'message': f'HTTP response with code {error.code}'
+            return {
+                'message': f'HTTP response with code {error.code}',
+                'code': error.code
             }
     except urllib.error.URLError as error:
-        data = {
-            'message': "Nice! Request Failed due to Network issues."
+        return {
+            'message': "Nice! Request Failed due to Network issues.",
+            'code' :503
         }
-    except Exception:
-        data = {
-            'message':"Internal Server Error"
+    except Exception as error:
+         return {
+            'message':"Internal Server Error",
+             'code': error.code
         }
-    return data
 
 
 @app.route('/batchGetUserInfo')
@@ -172,7 +176,7 @@ def URL_ratings():
     handle = request.args.get('handle', '')
     results = []
     results = search_ratings(handle)
-    return json.dumps(results)
+    return json.dumps(results['message']),results['code']
 
 
 if __name__ == '__main__':

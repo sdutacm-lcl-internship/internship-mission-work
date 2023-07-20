@@ -1,17 +1,22 @@
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response,make_response
 import urllib.error
 import urllib.request
 import json
 from fake_useragent import UserAgent
-import datetime
+from datetime import  timedelta,datetime
 import redis
 import time
 import pytz
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
+cache = {}
+
 
 def search_handles(handle):
+    if handle in cache and cache[handle]['out'] > datetime.now():
+        return cache[handle]['data']
+
     url = f"https://codeforces.com/api/user.info?handles={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
@@ -27,26 +32,40 @@ def search_handles(handle):
         rank = info.get('rank', '')
         max = info.get('maxRating', '')
         if not rating or max == []:
-            return {
+            data = {
                 'success': True,
                 'handle': handle
             }
+            cache[handle] = {
+                'data': data,
+                'out': datetime.now() + timedelta(seconds=15)
+            }
         else:
-            return {
+            data = {
                 'success': True,
                 'handle': handle,
                 'rating': rating,
                 'rank': rank
             }
+            cache[handle] = {
+                'data': data,
+                'out': datetime.now() + timedelta(seconds=15)
+            }
+        return data
+
     except urllib.error.HTTPError as error:
         if error.code == 400:
-            return {
+            data = {
                 'success': False,
                 'type': 1,
                 'message': 'no such handle'
             }
+            cache[handle] = {
+                'data': data,
+                'out': datetime.now() + timedelta(seconds=15)
+            }
         else:
-            return {
+            data = {
                 'success': False,
                 'type': 2,
                 'message': f'HTTP response with code {error.code}',
@@ -55,19 +74,23 @@ def search_handles(handle):
                 }
             }
     except urllib.error.URLError as error:
-        return {
+        data = {
             'success': False,
             'type': 3,
             'message': "Nice! Request Failed due to Network issues."
         }
     except Exception as e:
-        return {
+        data = {
             'success': False,
             'type': 4,
             'message': "Internal Server Error"
         }
+    return data
+
 
 def search_ratings(handle):
+    if handle in cache and cache[handle]['out'] > datetime.now():
+        return cache[handle]['data']
     url = f"https://codeforces.com/api/user.rating?handle={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
@@ -85,7 +108,7 @@ def search_ratings(handle):
             ratingUpdateTimeSeconds = info.get('ratingUpdateTimeSeconds', 0)
             oldRating = info.get('oldRating', 0)
             newRating = info.get('newRating', 0)
-            time = datetime.datetime.fromtimestamp(ratingUpdateTimeSeconds,pytz.timezone('Asia/Shanghai'))
+            time = datetime.fromtimestamp(ratingUpdateTimeSeconds, pytz.timezone('Asia/Shanghai'))
             ratingUpdatedAt = time.isoformat()
             result.append(
                 {
@@ -98,26 +121,40 @@ def search_ratings(handle):
                     'newRating': newRating
                 }
             )
-
+            cache[handle] = {
+                'data': result,
+                'out': datetime.now() + timedelta(seconds=15)
+            }
         return result
+
 
     except urllib.error.HTTPError as error:
         if error.code == 400:
-            return {
-                'message': 'no such handle'
+            data = {
+                'message': 'no such handle',
+                 'code':404
             }
+            cache[handle] = {
+                'data': data,
+                'out': datetime.now() + timedelta(seconds=15)
+            }
+            return data
         else:
             return {
-                'message': f'HTTP response with code {error.code}'
+                'message': f'HTTP response with code {error.code}',
+                'code': error.code
             }
     except urllib.error.URLError as error:
-            return {
-                'message': "Nice! Request Failed due to Network issues."
-            }
-    except Exception as e:
         return {
-            'message': "Internal Server Error"
+            'message': "Nice! Request Failed due to Network issues.",
+            'code' :503
         }
+    except Exception as error:
+         return {
+            'message':"Internal Server Error",
+             'code': error.code
+        }
+
 
 @app.route('/batchGetUserInfo')
 def URL_handles():  # put application's code here
@@ -139,7 +176,7 @@ def URL_ratings():
     handle = request.args.get('handle', '')
     results = []
     results = search_ratings(handle)
-    return json.dumps(results)
+    return json.dumps(results['message']),results['code']
 
 
 if __name__ == '__main__':
