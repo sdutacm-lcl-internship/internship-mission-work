@@ -15,6 +15,7 @@ def unix_to_iso(unix_time):
     Iso_Time = Date_Time.isoformat()
     return Iso_Time
 
+
 def grep_user(user):
     url = 'https://codeforces.com/api/user.info'
     headers = {
@@ -75,6 +76,12 @@ def grep_user(user):
             "type": '4',
             "message": "Internal Server Error"
         }
+    except Exception as e:
+        ans = {
+            "success": 'false',
+            "type": "4",
+            "message": "Internal Server Error"
+        }
     return ans
 
 
@@ -92,6 +99,7 @@ def grep_rating(handle):
         response = requests.get(url=url, headers=headers, params=param)
         page = response.json()
         resp_status = response.status_code
+        status_code = resp_status
 
         ans = []
         if resp_status == 200:
@@ -107,35 +115,27 @@ def grep_rating(handle):
                 }
                 ans.append(temp)
         elif resp_status == 400:
+            status_code = 404
             ans.append({
-                "status": "404",
-                "result": {
-                    "message": "no such handle"
-                }
+                "message": "no such handle"
             })
         elif resp_status == 401 or resp_status == 403 or resp_status == 404 or resp_status == 500 or resp_status == 502 or resp_status == 503 or resp_status == 504:
             ans.append({
-                "status": str(resp_status),
-                "result": {
-                    "message": "HTTP response with code" + str(resp_status)
-                }
+                "message": "HTTP response with code" + str(resp_status)
             })
     except requests.exceptions.RequestException as e:  # 程序抛出异常
+        status_code = 500
+        ans = []
         ans.append({
-            "status": "501",
-            "result": {
-                "message": "Not Implemented"
-            }
+            "message": "Internal Server Error"
         })
-    except BaseException as e:
+    except Exception as e:
+        status_code = 500
+        ans = []
         ans.append({
-            "status": "500",
-            "result": {
-                "message": "Internal Server Error"
-            }
+            "message": "Internal Server Error"
         })
-    return ans
-
+    return ans, "status: " + str(status_code)
 
 
 @app.route('/batchGetUserInfo', methods=['get', 'post'])
