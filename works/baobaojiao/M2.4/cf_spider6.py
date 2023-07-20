@@ -252,7 +252,7 @@ def cin():
 @app.route('/getUserRatings', methods=['get', 'post'])
 def rating_query():
     handle = request.args.get("handle")
-    ans = grep_rating(handle)
+    ans = get_rating_from_map(handle)
     return jsonify(ans), 200 if not 'status' in ans else ans['status']
 
 
