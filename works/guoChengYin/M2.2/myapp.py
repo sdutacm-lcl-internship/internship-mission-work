@@ -1,4 +1,6 @@
 import json
+
+import pytz
 import requests
 from datetime import datetime, timezone
 from flask import Flask, Response, request, jsonify
@@ -44,10 +46,10 @@ def get_user_ratings():
         if "rank" in item.keys():
           context_info["rank"] = int(item["rank"])
         if "ratingUpdateTimeSeconds" in item.keys():
-          dt_object = datetime.fromtimestamp(item["ratingUpdateTimeSeconds"])
+          dt_object = datetime.fromtimestamp(item["ratingUpdateTimeSeconds"],pytz.timezone('Asia/Shanghai'))
           iso_datetime_str = dt_object.isoformat()
-          # 比格林威治时间提前八小时
-          context_info["ratingUpdatedAt"] = iso_datetime_str + '+08:00'
+          # 设置时区参数
+          context_info["ratingUpdatedAt"] = iso_datetime_str
         if "oldRating" in item.keys():
           context_info["oldRating"] = int(item["oldRating"])
         if "newRating" in item.keys():
