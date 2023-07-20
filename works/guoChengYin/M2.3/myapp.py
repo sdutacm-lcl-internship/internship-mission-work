@@ -13,6 +13,12 @@ cache_1 = Cache(app, config={'CACHE_TYPE': 'simple'})
 cache_2 = Cache(app, config={'CACHE_TYPE': 'simple'})
 #自定义爬虫
 crawler = Crawler()
+# 对于其他不可预知的错误，用一个全局异常处理器处理
+@app.errorhandler(Exception)
+def server_error(e):
+  error_message = {"message": 'Internal Server Error'}
+  return jsonify(error_message), 500
+
 
 # 路由1 选手信息
 @app.route('/batchGetUserInfo')
