@@ -176,7 +176,10 @@ def URL_ratings():
     handle = request.args.get('handle', '')
     results = []
     results = search_ratings(handle)
-    return json.dumps(results['message']),results['code']
+    if 'message' in results and 'code' in results:
+       return json.dumps(results['message']),results['code']
+    else:
+        return json.dumps(results)
 
 
 if __name__ == '__main__':
