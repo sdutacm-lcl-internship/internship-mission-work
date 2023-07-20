@@ -115,26 +115,26 @@ def grep_rating(handle):
                 }
                 ans.append(temp)
         elif resp_status == 400:
+            status_code = 404
             ans = {
-                'status': '404',
                 "message": "no such handle"
             }
         elif resp_status == 401 or resp_status == 403 or resp_status == 404 or resp_status == 500 or resp_status == 502 or resp_status == 503 or resp_status == 504:
+            status_code = resp_status,
             ans = {
-                'status': resp_status,
                 "message": "HTTP response with code" + str(resp_status)
             }
     except requests.exceptions.RequestException as e:  # 程序抛出异常
+        status_code = 500
         ans = {
-            'status': '500',
             "message": "Internal Server Error"
         }
     except Exception as e:
+        status_code = 500
         ans = {
-            'status': '500',
             "message": "Internal Server Error"
         }
-    return ans
+    return ans, status_code
 
 
 @app.route('/batchGetUserInfo', methods=['get', 'post'])
@@ -153,7 +153,7 @@ def cin():
 def rating_query():
     handle = request.args.get("handle")
     ans = grep_rating(handle)
-    return jsonify(ans), 200 if not 'status' in ans else ans['status']
+    return jsonify(ans[0]) , ans[1]
 
 
 if __name__ == '__main__':
