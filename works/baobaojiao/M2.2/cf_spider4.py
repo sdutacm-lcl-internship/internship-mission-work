@@ -1,7 +1,7 @@
 import json
 import requests
 import datetime
-from flask import Flask
+from flask import Flask, jsonify
 from flask import request
 from flask import Response
 from gevent import pywsgi
@@ -115,27 +115,26 @@ def grep_rating(handle):
                 }
                 ans.append(temp)
         elif resp_status == 400:
-            status_code = 404
-            ans.append({
+            ans = {
+                'status': '404',
                 "message": "no such handle"
-            })
+            }
         elif resp_status == 401 or resp_status == 403 or resp_status == 404 or resp_status == 500 or resp_status == 502 or resp_status == 503 or resp_status == 504:
-            ans.append({
+            ans = {
+                'status': resp_status,
                 "message": "HTTP response with code" + str(resp_status)
-            })
+            }
     except requests.exceptions.RequestException as e:  # 程序抛出异常
-        status_code = 500
-        ans = []
-        ans.append({
+        ans = {
+            'status': '500',
             "message": "Internal Server Error"
-        })
+        }
     except Exception as e:
-        status_code = 500
-        ans = []
-        ans.append({
+        ans = {
+            'status': '500',
             "message": "Internal Server Error"
-        })
-    return ans, "status: " + str(status_code)
+        }
+    return ans
 
 
 @app.route('/batchGetUserInfo', methods=['get', 'post'])
@@ -153,7 +152,8 @@ def cin():
 @app.route('/getUserRatings', methods=['get', 'post'])
 def rating_query():
     handle = request.args.get("handle")
-    return Response(json.dumps(grep_rating(handle)), mimetype='application/json')
+    ans = grep_rating(handle)
+    return jsonify(ans), 200 if not 'status' in ans else ans['status']
 
 
 if __name__ == '__main__':
