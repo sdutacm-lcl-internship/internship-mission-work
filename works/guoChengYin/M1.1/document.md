@@ -2,13 +2,13 @@
 
 **根据远程分支拉取创建本地分支**
 
-git checkout -b [待创建的本地分支名称]
+git checkout -b [待创建的本地分支名称] remotes/origin/远程主分支
 
 修改项目内容。。。
 
 **查看自己修改的内容**
 
-git status 
+git status
 
 **提交到缓存区**
 
