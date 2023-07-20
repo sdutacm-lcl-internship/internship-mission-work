@@ -35,10 +35,9 @@ def get_user_from_map(user):
 def get_rating_from_map(handle):
     if handle in cache_userrating and cache_userrating[handle]['expiry_time'] > time.time():  # 判断缓存内是否存在合法数据
         return cache_userrating[handle]["data"]
-
     data = grep_rating(handle)
 
-    print(data)
+
     if 'status' in data[0]:  # ’message‘存在于正常数据外的所有情况，用‘message’判断异常情况
         return data
 
@@ -192,7 +191,7 @@ def cin():
 @app.route('/getUserRatings', methods=['get', 'post'])
 def rating_query():
     handle = request.args.get("handle")
-    ans = grep_rating(handle)
+    ans = get_rating_from_map(handle)
     return jsonify(ans), 200 if not 'status' in ans else ans['status']
 
 
