@@ -1,18 +1,56 @@
 import json
 import requests
 import datetime
+import time
+import pytz
 from flask import Flask
 from flask import request
 from flask import Response
 from gevent import pywsgi
-import pytz
 
 app = Flask(__name__)
 
+cache_userinfo = {}
+cache_userrating = {}
+
+
+def get_user_from_map(user):
+    if user in cache_userinfo and cache_userinfo[user]["expiry_time"] > time.time():  # 若所查询用户在缓存内并且未超时，直接返回
+        return cache_userinfo[user]["data"]
+
+    data = grep_user(user)  # 走到这一步说明：用户不在缓存内，或者缓存内数据超时，重新获取
+
+    if 'type' in data:  # 查询不到用户或请求异常时不加入缓存，‘type’存在于正常查询外的所有情况，所以可通过‘type’判断
+        return data
+
+    cache_userinfo[user] = {  # 将新数据存缓存
+        "data": data,
+        "expiry_time": time.time() + 15  # 15s限制
+    }
+
+    return cache_userinfo[user]['data']
+
+
+def get_rating_from_map(handle):
+    if handle in cache_userrating and cache_userrating[handle]['expiry_time'] > time.time():  # 判断缓存内是否存在合法数据
+        return cache_userrating[handle]["data"]
+
+    data = grep_rating(handle)
+
+    if 'status' in data[0]:  # ’message‘存在于正常数据外的所有情况，用‘message’判断异常情况
+        return data
+
+    cache_userrating[handle] = {  # 存入缓存
+        "data": data,
+        "expiry_time": time.time() + 15
+    }
+
+    return cache_userrating[handle]['data']
+
 
 def unix_to_iso(unix_time):
-    Date_Time = datetime.datetime.fromtimestamp(unix_time, pytz.timezone('Asia/Shanghai'))
-    Iso_Time = Date_Time.isoformat()
+    Date_Time = datetime.datetime.fromtimestamp(unix_time, pytz.timezone('Asia/Shanghai'))  # 转换Unix时间戳
+    Iso_Time = Date_Time.isoformat()  # 转换为iso
     return Iso_Time
 
 
@@ -138,6 +176,68 @@ def grep_rating(handle):
     return ans, "status: " + str(status_code)
 
 
+def clear_cache_json(response):
+    ans = {
+        'status': '400',
+        'result': {
+            'message': 'invalid request'
+        }
+    }
+    try:
+        for json_key in response.keys():
+            if json_key != 'handles' and json_key != 'cacheType':
+                return json.dumps(ans)
+        if (not 'cacheType' in response) or (
+                response['cacheType'] != 'userInfo' and response['cacheType'] != 'userRatings'):
+            return json.dumps(ans)
+        if response['cacheType'] == 'userInfo' and 'handles' in response:
+            for handle in response['handles']:
+                if handle in cache_userinfo:
+                    del cache_userinfo[handle]
+
+        elif response['cacheType'] == 'userInfo':
+            cache_userinfo.clear()
+
+        elif response['cacheType'] == 'userRatings' and 'handles' in response:
+            for handle in response['handles']:
+                if handle in cache_userrating:
+                    del cache_userrating[handle]
+        else:
+            cache_userrating.clear()
+
+        ans['status'] = '200'
+        ans['result']['message'] = 'ok'
+
+    except requests.exceptions.RequestException as e:
+        ans['status'] = '400'
+        ans['result']['message'] = 'invalid request'
+
+    except Exception as e:
+        ans['status'] = '500'
+        ans['result']['message'] = 'Internal Server Error'
+
+    return json.dumps(ans)
+
+
+def clear_cache_form(response):
+
+    response = json.loads(json.dumps(response))
+
+    if 'handles' in response:
+        list = str(response['handles'])[2:-2].replace('\",\"', " ").split()
+        response['handles'] = list
+    return clear_cache_json(response)
+
+
+
+@app.route('/clearCache', methods=['post'])
+def clear_cache():
+    try:
+        return Response(clear_cache_json(request.json), mimetype='application/json')
+    except Exception as e:
+        return Response(clear_cache_form(request.form), mimetype='application/json')
+
+
 @app.route('/batchGetUserInfo', methods=['get', 'post'])
 def cin():
     handles = request.args.get("handles")
@@ -145,7 +245,7 @@ def cin():
 
     ans = []
     for user in handle_list:
-        ans.append(grep_user(user))
+        ans.append(get_user_from_map(user))
 
     return Response(json.dumps(ans), mimetype='application/json')
 
@@ -153,7 +253,7 @@ def cin():
 @app.route('/getUserRatings', methods=['get', 'post'])
 def rating_query():
     handle = request.args.get("handle")
-    return Response(json.dumps(grep_rating(handle)), mimetype='application/json')
+    return Response(json.dumps(get_rating_from_map(handle)), mimetype='application/json')
 
 
 if __name__ == '__main__':
