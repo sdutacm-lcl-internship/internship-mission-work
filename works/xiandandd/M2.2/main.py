@@ -137,10 +137,9 @@ def find(username):
         if number == 200:
             data = response.json()
             for one in data["result"]:
-                dt = datetime.fromtimestamp(one["ratingUpdateTimeSeconds"])
-                tz = pytz.timezone('Asia/Shanghai')  # 指定东八时区
-                dt = tz.localize(dt)  # 添加时区信息
+                dt = datetime.fromtimestamp(one["ratingUpdateTimeSeconds"], pytz.timezone('Asia/Shanghai'))
                 dtstring = dt.isoformat()
+
                 one["ratingUpdatedAt"] = dtstring
                 one.pop("ratingUpdateTimeSeconds")  # 把原来的时间戳键值删掉
             data["status"] = 200
@@ -161,7 +160,16 @@ def find(username):
                 }
             }
             return data
+    except requests.exceptions.RequestException as e:
+        data = {
+            'status': 501,
+            "result": {
+                "message": 'Connection interruption',
+            }
+        }
+        return data
     except:
+
         data = {
             'status': 500,
             "result": {
