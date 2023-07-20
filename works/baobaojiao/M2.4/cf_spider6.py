@@ -185,10 +185,10 @@ def clear_cache_json(response):
     try:
         for json_key in response.keys():
             if json_key != 'handles' and json_key != 'cacheType':
-                return json.dumps(ans)
+                return ans
         if (not 'cacheType' in response) or (
                 response['cacheType'] != 'userInfo' and response['cacheType'] != 'userRatings'):
-            return json.dumps(ans)
+            return ans
         if response['cacheType'] == 'userInfo' and 'handles' in response:
             for handle in response['handles']:
                 if handle in cache_userinfo:
@@ -215,11 +215,10 @@ def clear_cache_json(response):
         ans['status'] = '500'
         ans['result']['message'] = 'Internal Server Error'
 
-    return json.dumps(ans)
+    return ans
 
 
 def clear_cache_form(response):
-
     response = json.loads(json.dumps(response))
 
     if 'handles' in response:
@@ -228,13 +227,14 @@ def clear_cache_form(response):
     return clear_cache_json(response)
 
 
-
 @app.route('/clearCache', methods=['post'])
 def clear_cache():
     try:
-        return Response(clear_cache_json(request.json), mimetype='application/json')
+        ans = clear_cache_json(request.json)
+        return jsonify(ans), ans['status']
     except Exception as e:
-        return Response(clear_cache_form(request.form), mimetype='application/json')
+        ans = clear_cache_form(request.form)
+        return jsonify(ans), ans['status']
 
 
 @app.route('/batchGetUserInfo', methods=['get', 'post'])
@@ -254,7 +254,6 @@ def rating_query():
     handle = request.args.get("handle")
     ans = grep_rating(handle)
     return jsonify(ans), 200 if not 'status' in ans else ans['status']
-
 
 
 if __name__ == '__main__':
