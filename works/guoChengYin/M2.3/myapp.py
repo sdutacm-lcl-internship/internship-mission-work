@@ -16,7 +16,7 @@ crawler = Crawler()
 # 对于其他不可预知的错误，用一个全局异常处理器处理
 @app.errorhandler(Exception)
 def server_error(e):
-  error_message = {"message": 'Internal Server Error'}
+  error_message = {"message": str(e)}
   return jsonify(error_message), 500
 
 
