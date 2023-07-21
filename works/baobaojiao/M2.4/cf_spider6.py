@@ -33,6 +33,7 @@ def get_user_from_map(user):
 
 def get_rating_from_map(handle):
     if handle in cache_userrating and cache_userrating[handle]['expiry_time'] > time.time():  # 判断缓存内是否存在合法数据
+        print('map')
         return cache_userrating[handle]["data"], 200
     data = grep_rating(handle)
 
@@ -43,7 +44,7 @@ def get_rating_from_map(handle):
         "data": data[0],
         "expiry_time": time.time() + 15
     }
-
+    print('server')
     return cache_userrating[handle]['data'], data[1]
 
 
@@ -212,7 +213,7 @@ def clear_cache_json(response):
         status_code = 500
         ans['message'] = 'Internal Server Error'
 
-    return ans,status_code
+    return ans, status_code
 
 
 def clear_cache_form(response):
@@ -225,13 +226,26 @@ def clear_cache_form(response):
     return ans[0], ans[1]
 
 
+def clear_cache_webform(response):
+
+    response = json.loads(json.dumps(response))
+    if 'handles' in response:
+        list = json.loads(json.dumps(response.get('handles')))
+        list = str(list).split('&')
+        response['handles'] = list
+    ans = clear_cache_json(response)
+    return ans[0], ans[1]
+
 @app.route('/clearCache', methods=['post'])
 def clear_cache():
-    try:
+    if request.content_type == 'application/json':
         ans = clear_cache_json(request.json)
         return jsonify(ans[0]), ans[1]
-    except Exception as e:
+    elif request.content_type == 'application/form-data':
         ans = clear_cache_form(request.form)
+        return jsonify(ans[0]), ans[1]
+    elif request.content_type == 'application/x-www-form-urlencoded':
+        ans = clear_cache_webform(request.form)
         return jsonify(ans[0]), ans[1]
 
 
