@@ -228,14 +228,14 @@ def clear_cache_form(response):
 
 def clear_cache_webform(response):
 
-    response = json.loads(json.dumps(response))
     if 'handles' in response:
-        list = json.loads(json.dumps(response.get('handles')))
-        list = str(list).split('&')
+        list = response.getlist('handles')
+        response = json.loads(json.dumps(response))
         response['handles'] = list
+    else:
+        response = json.loads(json.dumps(response))
     ans = clear_cache_json(response)
     return ans[0], ans[1]
-
 @app.route('/clearCache', methods=['post'])
 def clear_cache():
     if request.content_type == 'application/json':
