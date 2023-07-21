@@ -1,1 +1,0 @@
-{"success": "true", "result": {"handle": "baobaojiao", "rating": 1219, "rank": "pupil"}}
