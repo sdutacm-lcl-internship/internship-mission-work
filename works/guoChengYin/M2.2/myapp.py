@@ -71,7 +71,7 @@ def get_user_ratings():
       return jsonify(error_message), status_code
   except Exception as e:
     # HTTP请求为未收到有效 HTTP 响应
-    if api_res is None or isinstance(e, requests.exceptions.ConnectionError):
+    if isinstance(e, requests.exceptions.ConnectionError):
       error_message = {"message": "The HTTP interface is not responding"}
       return jsonify(error_message), 502
     # 剩下的就是服务器程序运行异常
