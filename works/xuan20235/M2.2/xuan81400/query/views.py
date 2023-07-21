@@ -1,5 +1,6 @@
 from django.shortcuts import render
-
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.http import HttpResponse
 import json
@@ -26,6 +27,7 @@ def unix_to_iso(unix_time):
 
 
 #import chaojiying
+#@cache_page(60 * 5)
 def func(handle):
     #exit(1)  #测试 情况5
 
@@ -56,14 +58,17 @@ def func(handle):
                 "rank":
                 result['rank'],
                 "ratingUpdatedAt":
-                unix_to_iso(result['ratingUpdateTimeSeconds']) + "+08:00",
+                unix_to_iso(result['ratingUpdateTimeSeconds']) + '+08:00',
                 "oldRating":
                 result['oldRating'],
                 'newRating':
                 result['newRating']
             }
             ans.append(temp)
-        ans.append({"status": status})
+        ans.append({"status": 'OK'})
+        if len(ans) == 1:
+            ans.append({"result": []})
+            ans.append({"message": "no such handle"})  #这是随便加的 为了统一DEL[-1]
     elif status == 400:
         ans.append({"message": "no such handle"})
     else:
@@ -73,6 +78,7 @@ def func(handle):
     return ans
 
 
+@cache_page(15)
 def query_handles(request):
 
     r = request.GET.get("handles", "")
@@ -113,11 +119,9 @@ def query_handles(request):
     return JsonResponse(list, safe=False, status=200)
 
 
-#from django.views.decorators.cache import cache_page
-
-
-#@cache_page(60 * 5)
+@cache_page(15)
 def query_getUserRatings(request):
+    #return HttpResponse(request.path)
     handle = request.GET.get('handle')
     try:
         dir = func(handle)
@@ -132,32 +136,139 @@ def query_getUserRatings(request):
             #return HttpResponse(dir[1])
             return JsonResponse(dir, safe=False, status=a)
         else:
-            del dir[2]
+            #del dir[2]
+            del dir[-1]
             return JsonResponse(dir, safe=False, status=200)
             #return HttpResponse("222")
-    except:
+    except BaseException as e:
+        #return HttpResponse(e)
+
         ans = {'message': "异常"}
-        return JsonResponse(ans, safe=False, status=200)
+        return JsonResponse(ans, safe=False, status=500)
 
+def func1(handle):
+    #exit(1)  测试 情况5
+    headers = {
+        "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+    }
+    methodName = "user.info"
+    url_base = f"https://codeforces.com/api/{methodName}"
 
-def query_getUserRatings1(request):
-    handle = request.GET.get('handles')
+    pa = {"handles": handle}
     try:
-        dir = func(handle)
-        #return HttpResponse(dir)
-        #return HttpResponse(len(dir))
-        if len(dir) == 1:
+        response = requests.get(url=url_base, params=pa, headers=headers)
+       
+        status_code_value = response.status_code
 
-            return JsonResponse(dir, safe=False, status=404)
-        elif len(dir) == 2:
-
-            a = dir[1]["status"]
-            #return HttpResponse(dir[1])
-            return JsonResponse(dir, safe=False, status=a)
+       
+        if response.status_code != 200 and response.status_code != 400: 
+            ans = {
+                "success": 'false',
+                "type": 2,
+                "message": f"HTTP response with code {status_code_value}",
+                "details": {
+                    "status": status_code_value
+                }
+            }
+            return ans
+        load_json = json.loads(response.text)
+        if load_json["status"] == 'FAILED':
+     
+            ans = {
+                "success": "false",
+                "type": "1",
+                "message": "no such handle"
+            }
+            return ans
         else:
-            del dir[2]
-            return JsonResponse(dir, safe=False, status=200)
-            #return HttpResponse("222")
-    except:
-        ans = {'message': "异常"}
-        return JsonResponse(ans, safe=False, status=200)
+
+            load_json = json.loads(response.text)
+
+            result = load_json["result"]
+
+            if 'rating' in result[0]:
+
+                rate = result[0]["rating"]
+                rank = result[0]["rank"]
+               
+
+                ans = {
+                    "success": True,
+                    "result": {
+                        "handle": handle,
+                        "rating": rate,
+                        "rank": rank.strip(),
+                    }
+                }
+            
+                return ans
+            else:
+                ans = {
+                    "success": True,
+                    "result": {
+                        "handle": handle,
+                    }
+                }
+
+             
+                return ans
+
+    except requests.exceptions.RequestException as e: 
+        ans = {
+            "success": 'false',
+            "type": '3',
+            "message": "Internal Server Error"
+        }
+        return ans
+    except BaseException as e:
+        ans = {
+            "success": "false",
+            "type": "4",
+            "message": 'Internal Server Error'
+        }
+        return ans
+
+
+
+def query_handles1(request):
+
+    r = request.GET.get("handles", "")
+ 
+    string = ""
+
+    string = string + ','
+
+    list = []
+    r = r + ','
+    for i in r:
+        if i == ',':
+
+            try:
+                list.append(func1(string))
+
+            except:
+                ans = {
+                    "success": 'false',
+                    "type": 3,
+                    "message": "Request timeout"
+                }
+
+                list.append(ans)
+
+            string = ""
+            continue
+        string = string + i
+
+
+    return JsonResponse(list, safe=False)
+   
+
+
+
+
+
+
+
+
+
