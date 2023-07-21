@@ -121,9 +121,14 @@ def search_ratings(handle):
                     'newRating': newRating
                 }
             )
-            cache[handle] = {
-                'data': result,
-                'out': datetime.now() + timedelta(seconds=15)
+        if result == []:
+            result = {
+                'handle':handle,
+                'message':'This handle does not have a competition record'
+             }
+        cache[handle] = {
+            'data': result,
+            'out': datetime.now() + timedelta(seconds=15)
             }
         return result
 
@@ -181,6 +186,35 @@ def URL_ratings():
     else:
         return json.dumps(results)
 
+@app.route('/clearCache',methods=['POST'])
+def clear_cache():
+    try:
+        if request.content_type=='application/json':
+            data = request.get_json()
+        elif request.content_type=='application/x-www-form-urlencoded':
+            data = request.form.to_dict()
+        else:
+            return jsonify({'message':'invalid request'}),400
+
+        cache_type = data.get('cacheType')
+        handles = data.get('handles',[])
+
+        if cache_type not in ('userInfo' ,'userRatings'):
+            return jsonify({'message':'invalid request'})
+
+        if not handles:
+            cache.pop(cache_type,None)
+        else:
+            for handle in handles:
+                cache_entry = cache.get(cache_type,{}).get(handle)
+                if cache_entry:
+                    del cache[cache_type][handle]
+
+
+        return jsonify({'message':'ok'}),200
+
+    except Exception:
+        return jsonify({'message':'invalid request'}),400
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=2333, debug=True)
