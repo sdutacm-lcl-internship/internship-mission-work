@@ -16,14 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from query.views import query_handles, query_getUserRatings, query_handles1
+from query.views import query_handles, query_getUserRatings, query_handles1, ask, clearCache, ask_mul
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    #path('blue/', query_handles1),
+    path('clearCache', clearCache),
     path('', query_handles),
     #handler500 = 'your_app.views.server_error'
     #path('batchGetUserInfo/', query_batchGetUserInfo),
-    path('getUserRatings', query_getUserRatings),
-    path('batchGetUserInfo', query_handles1),
+    # path('getUserRatings', query_getUserRatings),
+    # path('batchGetUserInfo', query_handles1),
+    path('getUserRatings', ask),
+    path('batchGetUserInfo', ask_mul),
 ]
