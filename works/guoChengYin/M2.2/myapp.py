@@ -11,8 +11,8 @@ app = Flask(__name__)
 # 对于其他不可预知的错误，用一个全局异常处理器处理
 @app.errorhandler(Exception)
 def server_error(e):
-  error_message = {"message": 'Internal Server Error'}
-  return jsonify(error_message), 500
+   error_message = {"message": str(e)}
+   return jsonify(error_message), 500
 
 
 headers = {
@@ -31,6 +31,9 @@ def get_user_ratings():
     status_code = api_res.status_code
     # handle可以查询到 200
     if status_code == 200:
+      #发现请求得到的是HTML网页，抛出一个未收到有效响应异常
+      if api_res.text.startswith('<!DOCTYPE html>'):
+        raise requests.exceptions.ConnectionError
       api_json = json.loads(api_res.text)
       api_result = api_json['result']
       resList = []
@@ -46,9 +49,9 @@ def get_user_ratings():
         if "rank" in item.keys():
           context_info["rank"] = int(item["rank"])
         if "ratingUpdateTimeSeconds" in item.keys():
-          dt_object = datetime.fromtimestamp(item["ratingUpdateTimeSeconds"],pytz.timezone('Asia/Shanghai'))
-          iso_datetime_str = dt_object.isoformat()
           # 设置时区参数
+          dt = datetime.fromtimestamp(item["ratingUpdateTimeSeconds"],pytz.timezone('Asia/Shanghai'))
+          iso_datetime_str = dt.isoformat()
           context_info["ratingUpdatedAt"] = iso_datetime_str
         if "oldRating" in item.keys():
           context_info["oldRating"] = int(item["oldRating"])
@@ -63,7 +66,7 @@ def get_user_ratings():
     # 其他返回码
     else:
       error_message = {
-        "message": "An exception HTTP interface response was encountered:" + str(status_code)
+        "message": "An exception HTTP interface response was encountered:{}".format(status_code)
       }
       return jsonify(error_message), status_code
   except Exception as e:
