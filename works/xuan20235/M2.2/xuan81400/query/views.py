@@ -237,7 +237,7 @@ def query_handles1(request):
  
     string = ""
 
-    string = string + ','
+    #string = string + ','
 
     list = []
     r = r + ','
