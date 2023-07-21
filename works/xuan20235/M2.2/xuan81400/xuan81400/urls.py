@@ -24,6 +24,6 @@ urlpatterns = [
     path('', query_handles),
     #handler500 = 'your_app.views.server_error'
     #path('batchGetUserInfo/', query_batchGetUserInfo),
-    path('getUserRatings', query_getUserRatings),
-    path('batchGetUserInfo', query_handles1),
+    path('getUserRatings/', query_getUserRatings),
+    path('batchGetUserInfo/', query_handles1),
 ]
