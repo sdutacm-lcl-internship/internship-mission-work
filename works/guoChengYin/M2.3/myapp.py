@@ -111,7 +111,6 @@ def get_user_ratings():
           dt_object = datetime.fromtimestamp(item["ratingUpdateTimeSeconds"],pytz.timezone('Asia/Shanghai'))
           print(dt_object)
           iso_datetime_str = dt_object.isoformat()
-          # 比格林威治时间提前八小时
           context_info["ratingUpdatedAt"] = iso_datetime_str
         if "oldRating" in item.keys():
           context_info["oldRating"] = int(item["oldRating"])
