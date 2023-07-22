@@ -1,0 +1,1 @@
+{"jiangly": {"success": true, "result": {"handle": "jiangly", "rating": 3485, "rank": "legendary grandmaster"}}, "zxw": {"success": true, "result": {"handle": "zxw"}}}
