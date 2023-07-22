@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, Response, make_response
 import urllib.error
-import urllib.request
+import requests
 import json
 from fake_useragent import UserAgent
 from datetime import timedelta, datetime
@@ -33,11 +33,10 @@ def search_handles(handle):
     url = f"https://codeforces.es/api/user.info?handles={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
-    request = urllib.request.Request(url=url, headers=headers)
     try:
-        response = urllib.request.urlopen(request)
-        content = response.read().decode("utf-8")
-        Json = json.loads(content)
+        response = requests.get(url=url,headers=headers)
+        response.raise_for_status()
+        Json = response.json()
         info_list = Json.get('result', [])
         info = info_list[0]
         handle = info.get('handle', '')
@@ -76,8 +75,8 @@ def search_handles(handle):
             save_file(file_data, 'data_info.js')
         return data
 
-    except urllib.error.HTTPError as error:
-        if error.code == 400:
+    except requests.exceptions.HTTPError as error:
+        if error.response.status_code == 400:
             data = {
                 'success': False,
                 'type': 1,
@@ -96,9 +95,9 @@ def search_handles(handle):
             data = {
                 'success': False,
                 'type': 2,
-                'message': f'HTTP response with code {error.code}',
+                'message': f'HTTP response with code {eerror.response.status_code}',
                 'details': {
-                    'status': error.code
+                    'status': error.response.status_code
                 }
             }
     except urllib.error.URLError as error:
@@ -135,11 +134,10 @@ def search_ratings(handle):
     url = f"https://codeforces.es/api/user.rating?handle={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
-    request = urllib.request.Request(url=url, headers=headers)
     try:
-        response = urllib.request.urlopen(request)
-        content = response.read().decode("utf-8")
-        Json = json.loads(content)
+        response = requests.get(url=url,headers=headers)
+        response.raise_for_status()
+        Json = response.json()
         info_list = Json.get('result', [])
         result = []
         for info in info_list:
@@ -179,8 +177,8 @@ def search_ratings(handle):
         return result
 
 
-    except urllib.error.HTTPError as error:
-        if error.code == 400:
+    except requests.exceptions.HTTPError as error:
+        if error.response.status_code == 400:
             data = {
                 'message': 'no such handle',
                 'code': 404
@@ -197,10 +195,10 @@ def search_ratings(handle):
             return data
         else:
             return {
-                'message': f'HTTP response with code {error.code}',
-                'code': error.code
+                'message': f'HTTP response with code {error.response.status_code}',
+                'code' : error.response.status_code
             }
-    except urllib.error.URLError:
+    except requests.exceptions.ConnectionError:
         return {
             'message': "Nice! Request Failed due to Network issues.",
             'code': 503
@@ -236,7 +234,7 @@ def load_file(filename):
         return {}
 
 @app.route('/batchGetUserInfo')
-def URL_handles():  # put application's code here
+def URL_handles():
     handles = request.args.get('handles', '').split(',')
     results = []
     for handle in handles:
