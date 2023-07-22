@@ -4,7 +4,7 @@ import urllib.request
 import json
 from fake_useragent import UserAgent
 from datetime import timedelta, datetime
-import redis
+import sqlite3
 import time
 import pytz
 from urllib.parse import parse_qs
@@ -19,16 +19,18 @@ def search_handles(handle):
         return cache[handle]['data']
 
     file_data = load_file('data_info.js')
-    data = file_data.get(handle, None)
+    now = datetime.now()
+    valid_data = {key: value for key, value in file_data.items() if value.get('out', now) > now}
+    data = valid_data.get(handle, None)
 
-    if data and data.get('out', None) and data['out'] > datetime.now():
+    if data:
         cache[handle] = {
             'data': data['data'],
             'out': data['out']
         }
         return data['data']
 
-    url = f"https://codeforces.com/api/user.info?handles={handle}"
+    url = f"https://codeforces.es/api/user.info?handles={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
     request = urllib.request.Request(url=url, headers=headers)
@@ -105,7 +107,7 @@ def search_handles(handle):
             'type': 3,
             'message': "Nice! Request Failed due to Network issues."
         }
-    except Exception as e:
+    except Exception:
         data = {
             'success': False,
             'type': 4,
@@ -119,12 +121,18 @@ def search_ratings(handle):
         return cache[handle]['data']
 
     file_data = load_file('data_ratings.js')
-    data = file_data.get(handle, None)
+    now = datetime.now()
+    valid_data = {key: value for key, value in file_data.items() if value.get('out', now) > now}
+    data = valid_data.get(handle,None)
 
-    if data and data.get('out', None) > datetime.now():
-        cache[handle] = data
+    if data:
+        cache[handle] = {
+            'data': data['data'],
+            'out': data['out']
+        }
         return data['data']
-    url = f"https://codeforces.com/api/user.rating?handle={handle}"
+
+    url = f"https://codeforces.es/api/user.rating?handle={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
     request = urllib.request.Request(url=url, headers=headers)
@@ -192,12 +200,12 @@ def search_ratings(handle):
                 'message': f'HTTP response with code {error.code}',
                 'code': error.code
             }
-    except urllib.error.URLError as error:
+    except urllib.error.URLError:
         return {
             'message': "Nice! Request Failed due to Network issues.",
             'code': 503
         }
-    except Exception as error:
+    except Exception:
         return {
             'message': "Internal Server Error",
         }
@@ -208,8 +216,12 @@ def save_file(data, filename):
         if isinstance(obj, datetime):
             return obj.isoformat()
 
+    existing_data = load_file(filename)
+    for key, value in data.items():
+        existing_data[key] = value
+
     with open(filename, 'w') as f:
-        json.dump(data, f, default=json_serial)
+        json.dump(existing_data, f, default=json_serial)
 
 def load_file(filename):
     def json_deserial(obj):
@@ -244,7 +256,10 @@ def URL_ratings():
     results = []
     results = search_ratings(handle)
     if 'message' in results and 'code' in results:
-        return json.dumps(results['message']), results['code']
+        result = {
+                'message':results['message']
+        }
+        return jsonify(result), results['code']
     else:
         return json.dumps(results)
 
