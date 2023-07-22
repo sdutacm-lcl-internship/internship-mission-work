@@ -2,12 +2,14 @@ from datetime import datetime, timezone
 
 import pytz
 import requests
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, json
 from flask_caching import Cache
 
 from utils.my_utils import Crawler
+from flask_cors import cross_origin, CORS
 
 app = Flask(__name__)
+cors = CORS(app)
 #两个缓存器
 cache_1 = Cache(app, config={'CACHE_TYPE': 'simple'})
 cache_2 = Cache(app, config={'CACHE_TYPE': 'simple'})
@@ -141,11 +143,45 @@ def get_user_ratings():
         # error_message = {"message": "Internal Server Error"}
         # return jsonify(error_message), 500
 
-@app.route('/clearCache', methods=["GET", "POST"])
+
+@cross_origin()
+@app.route('/clearCache', methods=["POST","GET"])
 def clearCache():
-  if request.method=="POST":
-    request_data=request.form.to_dict()
-    print(request_data)
+  #解析数据
+  content_type=request.content_type
+  if content_type=="application/x-www-form-urlencoded":
+    response_data=request.form.to_dict()
+  elif content_type=="application/json":
+    response_data=request.get_json()
+  else:
+    #不符合要求的其他请求类型
+    message={"message": "invalid request"}
+    return jsonify(message),400
+  #获取清楚缓存名和handles列表
+  cache_type = response_data.get('cacheType',-1)
+  handles = response_data.get('handles', -1)
+  #cache_type不存在或者字段对应不上
+  if cache_type==-1 or (cache_type != 'userInfo' and cache_type !='userRatings'):
+    message={"message": "invalid request"}
+    return jsonify(message),400
+  #如果handles字段不存在，调用clear方法清除所有该类型缓存
+  if handles == -1:
+    if cache_type == 'userInfo':
+      cache_1.clear()
+    else:
+      cache_2.clear()
+  else:
+   # 如果handles字段存在，调用delete方法清除对应缓存
+    for handle in handles:
+      if cache_type == 'userInfo':
+        cache_1.delete(handle)
+      else:
+        cache_2.clear(handle)
+  message = {"message": "ok"}
+  return jsonify(message),200
+
+
+
 
 
 
