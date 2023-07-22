@@ -215,22 +215,30 @@ def clear_cache_json(response):
 
     return ans, status_code
 
-
-def clear_cache_form(response):
-    response = json.loads(json.dumps(response))
-
-    if 'handles' in response:
-        list = str(response['handles'])[2:-2].replace('\",\"', " ").split()
-        response['handles'] = list
-    ans = clear_cache_json(response)
-    return ans[0], ans[1]
-
-
 def clear_cache_webform(response):
     if 'handles' in response:
         list = response.getlist('handles')
         response = json.loads(json.dumps(response))
         response['handles'] = list
+    elif 'handles[]' in response:
+        list = response.getlist('handles[]')
+        response = json.loads(json.dumps(response))
+        del response['handles[]']
+        response['handles'] = list
+    elif 'handles[0]' in response:
+        cnt = 0
+        resp = {}
+        list = []
+        for key, value in response.items():
+            if key == 'handles[' + str(cnt) + ']':
+                list.append(value)
+                cnt += 1
+            else:
+                resp[key] = value
+        if len(list) != 0:
+            resp['handles'] = list
+        response = json.loads(json.dumps(resp))
+
     else:
         response = json.loads(json.dumps(response))
     ans = clear_cache_json(response)
@@ -238,7 +246,7 @@ def clear_cache_webform(response):
 
 
 def get_rating_from_file(handle):
-    file_path = str(handle) + '_rating.txt'
+    file_path = str(handle) + 'data-' + str(handle) + '-ratings.txt'
 
     try:
         if os.path.exists(file_path):
@@ -273,7 +281,7 @@ def get_rating_from_file(handle):
 def get_userinfo_from_file(handles):
     try:
         for handle in handles:
-            file_path = str(handle) + '_Info.txt'
+            file_path = 'data-' + str(handle) + '-info.txt'
             if os.path.exists(file_path):
                 file_stat = os.stat(file_path)
                 file_modified_time = file_stat.st_mtime
@@ -301,9 +309,6 @@ def get_userinfo_from_file(handles):
 def clear_cache():
     if request.content_type == 'application/json':
         ans = clear_cache_json(request.json)
-        return jsonify(ans[0]), ans[1]
-    elif request.content_type == 'application/form-data':
-        ans = clear_cache_form(request.form)
         return jsonify(ans[0]), ans[1]
     elif request.content_type == 'application/x-www-form-urlencoded':
         ans = clear_cache_webform(request.form)
