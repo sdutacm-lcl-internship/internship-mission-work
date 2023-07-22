@@ -51,7 +51,7 @@ def search_handles(handle):
             data = {
                 'success': False,
                 'type': 2,
-                'message': f'HTTP response with code {eerror.response.status_code}',
+                'message': f'HTTP response with code {error.response.status_code}',
                 'details': {
                     'status': error.response.status_code
                 }
