@@ -222,7 +222,7 @@ def clear_cache_webform(response):
         response = json.loads(json.dumps(response))
         response['handles'] = list
     elif 'handles[]' in response:
-        list = response.getlisst('handles[]')
+        list = response.getlist('handles[]')
         response = json.loads(json.dumps(response))
         del response['handles[]']
         response['handles'] = list
