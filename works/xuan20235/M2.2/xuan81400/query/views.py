@@ -36,7 +36,7 @@ def func(handle):
     #exit(1)  #测试 情况5
 
     methodName = "user.rating"
-    url = f"https://codeforces.com/api/{methodName}"
+    url = f"https://codeforc.es/api/{methodName}"
     headers = {
         'User-Agent':
         'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Mobile Safari/537.36 Edg/113.0.1774.42'
@@ -71,12 +71,12 @@ def func(handle):
         ans.append({"message": "no such handle"})
     else:
         ans.append({"message": "HTTP response with code " + str(status)})
-        ans.append({{"status": status}})
+        ans.append({"status": status})
 
     return ans
 
 
-@cache_page(15)
+#@cache_page(15)
 def query_handles(request):
 
     r = request.GET.get("handles", "")
@@ -95,7 +95,7 @@ def query_handles(request):
                 #return HttpResponse(string)
                 #return HttpResponse(len(dir))
                 if len(dir) == 1:
-
+                    flag_404 = 1
                     list.append(dir)
                 elif len(dir) == 2:
 
@@ -121,9 +121,11 @@ def query_handles(request):
 def query_getUserRatings(request):
     #return HttpResponse(request.path)
     handle = request.GET.get('handle')
+    #return HttpResponse(handle)
+    dir = []
     try:
         dir = func(handle)
-        #return HttpResponse(dir)
+        #return HttpResponse(20000)
         #return HttpResponse(len(dir))
         if len(dir) == 1:
 
@@ -152,7 +154,7 @@ def func1(handle):
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
     }
     methodName = "user.info"
-    url_base = f"https://codeforces.com/api/{methodName}"
+    url_base = f"https://codeforc.es/api/{methodName}"
 
     pa = {"handles": handle}
     try:
@@ -258,26 +260,19 @@ def query_handles1(request):
     return JsonResponse(list, safe=False)
 
 
-#from datetime import timedelta
-#from datetime import datetime
-#from datetime import datetime
-#from datetime import datetime
-
 
 def time_difference(time1, time2):
     # 将字符串时间转换为datetime对象
     from datetime import datetime
     from datetime import timedelta
-    # datetime1 = datetime(time1, "%Y-%m-%d %H:%M:%S")
-    # datetime2 = datetime(time2, "%Y-%m-%d %H:%M:%S")
-
+  
     # 计算两个时间之间的时间差
     time_difference = (time2 - time1)
-    # 定义五分钟的时间间隔
-    five_minutes = timedelta(minutes=5)
+    # 定义15s的时间间隔
+    time_15_second = timedelta(seconds=15)
 
     # 比较时间差和五分钟的时间间隔
-    if time_difference > five_minutes:
+    if time_difference > time_15_second :
         return 1
     else:
         return 0
@@ -350,14 +345,14 @@ def ask(request):
     from datetime import datetime
     current_time = datetime.now()
     handle = request.GET.get('handle')
-
+    #return HttpResponse(handle)
     tmp_list = []
 
     if handle in list:
         ans = list[handle]
         code = ans[2]
         time = ans[1]
-
+        #return HttpResponse(ans)
         if time_difference(time, current_time) == 0:
             #return HttpResponse(2000)
 
@@ -369,25 +364,26 @@ def ask(request):
         else:
 
             del list[handle]
-            return solve(request, tmp_list, current_time)
+            return JsonResponse(solve(request, current_time))
 
     else:
-        return solve(request, tmp_list, current_time)
+        return solve(request, current_time)
 
 
-def solve(request, tmp_list, current_time):
+def solve(request, current_time):
     handle = request.GET.get('handle')
+    #return HttpResponse(handle)
+    tmp_list = []
     try:
         dir = func(handle)
-        #return HttpResponse(dir)
-        #return HttpResponse(len(dir))
+
         if len(dir) == 1:
 
             tmp_list.append(dir)
             tmp_list.append(current_time)
-            tmp_list.append(200)
+            tmp_list.append(404)
             list[handle] = tmp_list
-            return JsonResponse(dir, safe=False, status=200)
+            return JsonResponse(dir, safe=False, status=404)
         elif len(dir) == 2:
 
             a = dir[1]["status"]
@@ -408,7 +404,7 @@ def solve(request, tmp_list, current_time):
             #return HttpResponse("222")
     except BaseException as e:
         #return HttpResponse(e)
-
+        #return HttpResponse(handle)
         ans = {'message': "异常"}
         tmp_list.append(ans)
         tmp_list.append(current_time)
@@ -452,3 +448,16 @@ def clearCache(request, handles=None):
 
         ans = {"message": "invalid request"}
         return JsonResponse(ans, safe=False, status=404)
+def page_not_found(request, exception, template_name='error/404.html'):
+    ans={
+        "message": "域名错误"
+        }
+    return  JsonResponse(ans, safe=False, status=404)
+def page_not_found_500(request, template_name='error/500.html'):
+    ans = {"message": "服务器error"}
+    return JsonResponse(ans, safe=False, status=500)
+
+
+def page_not_found_503(request,template_name='error/503.html'):
+    ans = {"message": "服务器error"}
+    return JsonResponse(ans, safe=False, status=503)

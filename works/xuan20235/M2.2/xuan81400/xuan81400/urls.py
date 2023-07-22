@@ -16,8 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from query.views import query_handles, query_getUserRatings, query_handles1, ask, clearCache, ask_mul
+from query.views import query_handles, query_getUserRatings, query_handles1, ask, clearCache, ask_mul, page_not_found, page_not_found_500, page_not_found_503
 
+handler404 = page_not_found
+handler500 = page_not_found_500
+handler503 = page_not_found_503
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('clearCache', clearCache),
