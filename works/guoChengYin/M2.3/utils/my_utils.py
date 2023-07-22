@@ -21,6 +21,7 @@ class Crawler:
       # 若成功爬取
       if response.status_code == 200:
         result_json = json.loads(response.text)
+        print(result_json)
         result_json["status"] = 200
       else:
         result_json["status"] = response.status_code

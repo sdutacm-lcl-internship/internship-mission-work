@@ -16,8 +16,7 @@ crawler = Crawler()
 # 对于其他不可预知的错误，用一个全局异常处理器处理
 @app.errorhandler(Exception)
 def server_error(e):
-  error_message = {"message": str(e)}
-  return jsonify(error_message), 500
+  return jsonify(str(e))
 
 
 # 路由1 选手信息
@@ -32,6 +31,7 @@ def batch_get_user_info():
       # 如果缓存中有该用户，则直接装进结果列表，不再请求
       if not cache_1.get(name) is None:
         request_results = cache_1.get(name)
+      #缓存中无该用户，再次请求
       else:
         request_info = crawler.crawl('https://codeforces.com/api/user.info?handles=' + name)
         if request_info['status'] == 200:
@@ -50,8 +50,10 @@ def batch_get_user_info():
             request_results['result'] = {
               "handle": result['handle']
             }
+          #缓存中只保存正常返回200的数据，不保留其他
+          cache_1.set(name, request_results, timeout=15)
         else:
-          # 未返回200
+          # 未返回200，返回400
           if request_info['status'] == 400:
             request_results['success'] = False
             request_results['type'] = 1
@@ -64,6 +66,7 @@ def batch_get_user_info():
             request_results['details'] = {
               "status": request_info['status']
             }
+      #处理异常
     except Exception as e:
       #第一种异常，请求异常，未收到有效响应
       if isinstance(e, requests.exceptions.ConnectionError):
@@ -75,10 +78,11 @@ def batch_get_user_info():
         request_results['success'] = False
         request_results['type'] = 4
         request_results['message'] = 'Internal Server Error'
+    #该次循环的name的所有情况判断完毕(包括异常情况），装进结果列表
     response_data.append(request_results)
-    cache_1.set(name, request_results, timeout=15)
     # 重置一下
     request_results = {}
+
   return jsonify(response_data), 200
 
 @app.route('/getUserRatings')
@@ -86,16 +90,15 @@ def get_user_ratings():
   try:
     handle = request.args.get('handle')
     handle = handle.replace('{', '').replace('}', '')
-
     if not cache_2.get(handle) is None:
       return jsonify(cache_2.get(handle))
-    request_results = None
-    request_results=crawler.crawl("https://codeforces.com/api/user.rating?handle=" + handle)
+    request_results=crawler.crawl("https://codeforces.com/api/user.rating?handle={}".format(handle))
     # handle可以查询到 200
     if request_results['status'] == 200:
       result = request_results['result']
       response_data = []
       for item in result:
+        #循环每一场比赛的信息
         context_info = {}
         # handle可以查询到
         if "handle" in item.keys():
@@ -109,7 +112,6 @@ def get_user_ratings():
         if "ratingUpdateTimeSeconds" in item.keys():
           #指定了时区
           dt_object = datetime.fromtimestamp(item["ratingUpdateTimeSeconds"],pytz.timezone('Asia/Shanghai'))
-          print(dt_object)
           iso_datetime_str = dt_object.isoformat()
           context_info["ratingUpdatedAt"] = iso_datetime_str
         if "oldRating" in item.keys():
@@ -117,6 +119,7 @@ def get_user_ratings():
         if "newRating" in item.keys():
           context_info["newRating"] = int(item["newRating"])
         response_data.append(context_info)
+      #只缓存200的信息
       cache_2.set(handle, response_data, timeout=15)
       return jsonify(response_data)
         # 查询不到 400 返回404
@@ -137,8 +140,6 @@ def get_user_ratings():
       # 剩下的就是服务器程序运行异常
       else:
         raise
-        # error_message = {"message": "Internal Server Error"}
-        # return jsonify(error_message), 500
 
 if __name__ == '__main__':
   app.run(host='127.0.0.1', port=2333)
