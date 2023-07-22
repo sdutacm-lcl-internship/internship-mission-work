@@ -25,13 +25,31 @@ def clear_cache():
             handles=[]
         else:
             handles=data.get('handles')
+            #判断获取的是不是字符串数组
+            if isinstance(handles, list) and all(isinstance(item, str) for item in handles):
+                handles=handles
+            else:
+                ans = {
+                    'result': {
+                        'message': 'invalid request'
+                    },
+                    'status': 400
+                }
+                return jsonify(ans["result"]), ans["status"]
     elif request.headers['Content-Type'].startswith('application/x-www-form-urlencoded'):
         data = request.form
-        type=data.get('cacheType',None)
-        if "handles" not in data:
-            handles=[]
+
+        type = data.get('cacheType', None)
+        if "handles" in data:
+            handles = data.getlist("handles")
         else:
-            handles = data.getlist('handles')
+            handles = []
+            i = 0
+            while f'handles[{i}]' in data:
+                handles.append(data[f'handles[{i}]'])
+                i += 1
+            if 'handles[]' in data:
+                handles.extend(data.getlist('handles[]'))
     else:
         ans = {
             'result': {
