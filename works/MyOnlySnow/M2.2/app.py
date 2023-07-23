@@ -100,7 +100,7 @@ def search_handles(handle):
                     'status': error.response.status_code
                 }
             }
-    except urllib.error.URLError as error:
+    except requests.exceptions.ConnectionError:
         data = {
             'success': False,
             'type': 3,
