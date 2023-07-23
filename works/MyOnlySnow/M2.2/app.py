@@ -130,6 +130,7 @@ def search_ratings(handle):
     except Exception:
         return {
             'message': "Internal Server Error",
+            'code': 500
         }
 
 
