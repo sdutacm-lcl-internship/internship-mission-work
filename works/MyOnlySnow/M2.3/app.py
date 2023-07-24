@@ -18,19 +18,7 @@ def search_handles(handle):
     if handle in cache and cache[handle]['out'] > datetime.now():
         return cache[handle]['data']
 
-    file_data = load_file('data_info.js')
-    now = datetime.now()
-    valid_data = {key: value for key, value in file_data.items() if value.get('out', now) > now}
-    data = valid_data.get(handle, None)
-
-    if data:
-        cache[handle] = {
-            'data': data['data'],
-            'out': data['out']
-        }
-        return data['data']
-
-    url = f"https://codeforces.es/api/user.info?handles={handle}"
+    url = f"https://codeforces.com/api/user.info?handles={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
     try:
@@ -52,11 +40,7 @@ def search_handles(handle):
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
             }
-            file_data[handle] = {
-                'data': data,
-                'out': datetime.now() + timedelta(seconds=30)
-            }
-            save_file(file_data, 'data_info.js')
+
         else:
             data = {
                 'success': True,
@@ -68,11 +52,7 @@ def search_handles(handle):
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
             }
-            file_data[handle] = {
-                'data': data,
-                'out': datetime.now() + timedelta(seconds=30)
-            }
-            save_file(file_data, 'data_info.js')
+
         return data
 
     except requests.exceptions.HTTPError as error:
@@ -86,11 +66,6 @@ def search_handles(handle):
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
             }
-            file_data[handle] = {
-                'data': data,
-                'out': datetime.now() + timedelta(seconds=30)
-            }
-            save_file(file_data, 'data_info.js')
         else:
             data = {
                 'success': False,
@@ -119,17 +94,6 @@ def search_ratings(handle):
     if handle in cache and cache[handle]['out'] > datetime.now():
         return cache[handle]['data']
 
-    file_data = load_file('data_ratings.js')
-    now = datetime.now()
-    valid_data = {key: value for key, value in file_data.items() if value.get('out', now) > now}
-    data = valid_data.get(handle,None)
-
-    if data:
-        cache[handle] = {
-            'data': data['data'],
-            'out': data['out']
-        }
-        return data['data']
 
     url = f"https://codeforces.com/api/user.rating?handle={handle}"
     ua = UserAgent().random
@@ -169,11 +133,6 @@ def search_ratings(handle):
             'data': result,
             'out': datetime.now() + timedelta(seconds=15)
         }
-        file_data[handle] = {
-            'data': result,
-            'out': datetime.now() + timedelta(seconds=30)
-        }
-        save_file(file_data, 'data_ratings.js')
         return result
 
 
@@ -187,11 +146,6 @@ def search_ratings(handle):
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
             }
-            file_data[handle] = {
-                'data': data,
-                'out': datetime.now() + timedelta(seconds=30)
-            }
-            save_file(file_data, 'data_ratings.js')
             return data
         else:
             return {
@@ -210,29 +164,7 @@ def search_ratings(handle):
         }
 
 
-def save_file(data, filename):
-    def json_serial(obj):
-        if isinstance(obj, datetime):
-            return obj.isoformat()
 
-    existing_data = load_file(filename)
-    for key, value in data.items():
-        existing_data[key] = value
-
-    with open(filename, 'w') as f:
-        json.dump(existing_data, f, default=json_serial)
-
-def load_file(filename):
-    def json_deserial(obj):
-        if 'out' in obj:
-            obj['out'] = datetime.fromisoformat(obj['out'])
-        return obj
-
-    try:
-        with open(filename, 'r') as f:
-            return json.load(f, object_hook=json_deserial)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
 
 @app.route('/batchGetUserInfo')
 def URL_handles():
@@ -309,3 +241,4 @@ def clear_cache():
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=2333, debug=True)
+
