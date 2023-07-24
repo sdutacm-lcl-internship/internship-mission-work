@@ -41,7 +41,7 @@ def batch_get_user_info():
 
       # 发起请求,并准备一个空的字典
       request_info = crawler.crawl('https://codeforces.com/api/user.info?handles={}'.format(name))
-      request_results.clear()
+      request_results={}
 
 
       #返回值为400的情况
