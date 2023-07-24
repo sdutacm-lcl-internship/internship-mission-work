@@ -22,21 +22,16 @@ class Utils:
       # 再将更改的字典，写入文件
       json.dump(file_data, f)
 
-  '''
-    data_read()数据读取函数
-    path:保存路径
-    s:保存文本内容'''
 
   def read_file(self, path):
     with open(path, "r") as f:
       txt =  f.read()
       return json.loads(txt)
 
-    '''
-    爬虫
-    '''
 
-
+'''
+爬虫
+'''
 class Crawler:
   def __init__(self):
     self.headers = {
