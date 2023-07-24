@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, Response, make_response
+import urllib.error
 import requests
 import json
 from fake_useragent import UserAgent
@@ -6,13 +7,17 @@ from datetime import timedelta, datetime
 import sqlite3
 import time
 import pytz
-
+from urllib.parse import parse_qs
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
+cache = {}
 
 
 def search_handles(handle):
+    if handle in cache and cache[handle]['out'] > datetime.now():
+        return cache[handle]['data']
+
     url = f"https://codeforces.com/api/user.info?handles={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
@@ -31,6 +36,11 @@ def search_handles(handle):
                 'success': True,
                 'handle': handle
             }
+            cache[handle] = {
+                'data': data,
+                'out': datetime.now() + timedelta(seconds=15)
+            }
+
         else:
             data = {
                 'success': True,
@@ -38,6 +48,11 @@ def search_handles(handle):
                 'rating': rating,
                 'rank': rank
             }
+            cache[handle] = {
+                'data': data,
+                'out': datetime.now() + timedelta(seconds=15)
+            }
+
         return data
 
     except requests.exceptions.HTTPError as error:
@@ -46,6 +61,10 @@ def search_handles(handle):
                 'success': False,
                 'type': 1,
                 'message': 'no such handle'
+            }
+            cache[handle] = {
+                'data': data,
+                'out': datetime.now() + timedelta(seconds=15)
             }
         else:
             data = {
@@ -56,7 +75,7 @@ def search_handles(handle):
                     'status': error.response.status_code
                 }
             }
-    except requests.exceptions.ConnectionError:
+    except urllib.error.URLError as error:
         data = {
             'success': False,
             'type': 3,
@@ -72,6 +91,9 @@ def search_handles(handle):
 
 
 def search_ratings(handle):
+    if handle in cache and cache[handle]['out'] > datetime.now():
+        return cache[handle]['data']
+
 
     url = f"https://codeforces.com/api/user.rating?handle={handle}"
     ua = UserAgent().random
@@ -107,6 +129,10 @@ def search_ratings(handle):
                 'handle': handle,
                 'message': 'This handle does not have a competition record'
             }
+        cache[handle] = {
+            'data': result,
+            'out': datetime.now() + timedelta(seconds=15)
+        }
         return result
 
 
@@ -115,6 +141,10 @@ def search_ratings(handle):
             data = {
                 'message': 'no such handle',
                 'code': 404
+            }
+            cache[handle] = {
+                'data': data,
+                'out': datetime.now() + timedelta(seconds=15)
             }
             return data
         else:
@@ -132,6 +162,7 @@ def search_ratings(handle):
             'message': "Internal Server Error",
             'code': 500
         }
+
 
 
 
@@ -164,5 +195,50 @@ def URL_ratings():
         return json.dumps(results)
 
 
+@app.route('/clearCache', methods=['POST'])
+def clear_cache():
+    try:
+        if request.content_type == 'application/json':
+            data = request.get_json()
+        elif request.content_type == 'application/x-www-form-urlencoded':
+            # response = request.form
+            # print(response)
+            # data = request.form.to_dict()
+            data = {}
+            for key, value in request.form.items():
+                if '[' in key and key.endswith(']'):
+                    field_name, index = key.split('[')
+                    index = index[:-1]
+                    if field_name not in data:
+                        data[field_name] = []
+                    data[field_name].append(value)
+                else:
+                    data[key] = value
+        else:
+            return jsonify({'message': 'invalid request'}), 400
+
+        cache_type = data.get('cacheType')
+        #print(cache_type)
+        handles = data.get('handles', [])
+        #print(handles)
+
+        if cache_type not in ('userInfo', 'userRatings'):
+            return jsonify({'message': 'invalid request'})
+
+        if not handles:
+            cache.pop(cache_type, None)
+        else:
+            for handle in handles:
+                cache_entry = cache.get(cache_type, {}).get(handle)
+                if cache_entry:
+                    del cache[cache_type][handle]
+
+        return jsonify({'message': 'ok'}), 200
+
+    except Exception:
+        return jsonify({'message': 'invalid request'}), 400
+
+
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=2333, debug=True)
+
