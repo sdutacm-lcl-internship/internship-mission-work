@@ -100,7 +100,7 @@ def search_handles(handle):
                     'status': error.response.status_code
                 }
             }
-    except requests.exceptions.ConnectionError:
+    except urllib.error.URLError as error:
         data = {
             'success': False,
             'type': 3,
@@ -131,7 +131,7 @@ def search_ratings(handle):
         }
         return data['data']
 
-    url = f"https://codeforces.es/api/user.rating?handle={handle}"
+    url = f"https://codeforces.com/api/user.rating?handle={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
     try:
@@ -231,7 +231,7 @@ def load_file(filename):
     try:
         with open(filename, 'r') as f:
             return json.load(f, object_hook=json_deserial)
-    except (FileNotFoundError, json.JSONDecoderror):
+    except (FileNotFoundError, json.JSONDecodeError):
         return {}
 
 @app.route('/batchGetUserInfo')
