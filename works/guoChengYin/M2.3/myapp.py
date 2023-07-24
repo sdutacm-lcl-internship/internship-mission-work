@@ -17,8 +17,9 @@ crawler = Crawler()
 
 # 对于其他不可预知的错误，用一个全局异常处理器处理
 @app.errorhandler(Exception)
-def server_error(e):
-  return jsonify(str(e))
+def server_error():
+  error_message = {"message": 'Internal Server Error'}
+  return jsonify(error_message), 500
 
 
 # 路由1 选手信息
@@ -141,7 +142,7 @@ def get_user_ratings():
     if request_results is None or isinstance(e, requests.exceptions.ConnectionError):
       error_message = {"message": "The HTTP interface is not responding"}
       return jsonify(error_message), 502
-    # 剩下的就是服务器程序运行异常
+    # 剩下的就是服务器程序运行异常,交给全局异常处理器处理
     else:
       raise
 
