@@ -30,7 +30,7 @@ def search_handles(handle):
         }
         return data['data']
 
-    url = f"https://codeforces.es/api/user.info?handles={handle}"
+    url = f"https://codeforces.com/api/user.info?handles={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
     try:
@@ -131,7 +131,7 @@ def search_ratings(handle):
         }
         return data['data']
 
-    url = f"https://codeforces.es/api/user.rating?handle={handle}"
+    url = f"https://codeforces.com/api/user.rating?handle={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
     try:
