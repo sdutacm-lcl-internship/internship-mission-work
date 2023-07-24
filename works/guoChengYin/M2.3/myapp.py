@@ -17,7 +17,7 @@ crawler = Crawler()
 
 # 对于其他不可预知的错误，用一个全局异常处理器处理
 @app.errorhandler(Exception)
-def server_error():
+def server_error(e):
   error_message = {"message": 'Internal Server Error'}
   return jsonify(error_message), 500
 
@@ -95,6 +95,7 @@ def get_user_ratings():
   try:
     handle = request.args.get('handle')
     handle = handle.replace('{', '').replace('}', '')
+    # print(1/0)
     if not cache_2.get(handle) is None:
       return jsonify(cache_2.get(handle))
     request_results = crawler.crawl("https://codeforces.com/api/user.rating?handle={}".format(handle))
