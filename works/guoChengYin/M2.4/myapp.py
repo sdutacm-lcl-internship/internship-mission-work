@@ -92,7 +92,7 @@ def get_user_ratings():
     if not cache_2.get(handle) is None:
       return jsonify(cache_2.get(handle))
     request_results = None
-    request_results=crawler.crawl("https://codeforces.com/api/user.rating?handle=" + handle)
+    request_results=crawler.crawl("https://codeforces.com/api/user.rating?handle={}".format(handle))
     # handle可以查询到 200
     if request_results['status'] == 200:
       result = request_results['result']
@@ -111,9 +111,7 @@ def get_user_ratings():
         if "ratingUpdateTimeSeconds" in item.keys():
           #指定了时区
           dt_object = datetime.fromtimestamp(item["ratingUpdateTimeSeconds"],pytz.timezone('Asia/Shanghai'))
-          print(dt_object)
           iso_datetime_str = dt_object.isoformat()
-          # 比格林威治时间提前八小时
           context_info["ratingUpdatedAt"] = iso_datetime_str
         if "oldRating" in item.keys():
           context_info["oldRating"] = int(item["oldRating"])
@@ -179,8 +177,6 @@ def clearCache():
         cache_2.clear(handle)
   message = {"message": "ok"}
   return jsonify(message),200
-
-
 
 
 
