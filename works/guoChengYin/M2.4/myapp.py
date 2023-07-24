@@ -34,17 +34,18 @@ def batch_get_user_info():
   for name in names:
     try:
       # 如果缓存中有该用户，则直接装进结果列表，不再请求并跳过这次循环
+      print("-----")
+      print(cache_user_info.get(name))
       if not cache_user_info.get(name) is None:
         request_results = cache_user_info.get(name)
+        response_data.append(cache_user_info.get(name))
         continue
-
 
       # 发起请求,并准备一个空的字典
       request_info = crawler.crawl('https://codeforces.com/api/user.info?handles={}'.format(name))
-      request_results={}
+      request_results = {}
 
-
-      #返回值为400的情况
+      # 返回值为400的情况
       if request_info['status'] == 400:
         request_results['success'] = False
         request_results['type'] = 1
@@ -52,9 +53,8 @@ def batch_get_user_info():
         response_data.append(request_results)
         continue
 
-
-      #返回值不等于400并且不等于200
-      if request_results['status'] != 200:
+      # 返回值不等于400并且不等于200
+      if request_info['status'] != 200:
         request_results['success'] = False
         request_results['type'] = 2
         request_results['message'] = 'An exception HTTP interface response was encountered: ' + request_info[
@@ -65,19 +65,18 @@ def batch_get_user_info():
         response_data.append(request_results)
         continue
 
-
-      #剩下的就是返回值为200的情况
+      # 剩下的就是返回值为200的情况
       result = request_info['result'][0]
       # 有rating的情况
       if 'rating' in result:
-        request_results={
+        request_results = {
 
-          "success":True,
-          "result":{
-          "handle": result['handle'],
-          "rating": int(result['rating']),
-          "rank": result['rank']
-        }
+          "success": True,
+          "result": {
+            "handle": result['handle'],
+            "rating": int(result['rating']),
+            "rank": result['rank']
+          }
         }
       else:
         # 无rating的情况
@@ -115,7 +114,7 @@ def get_user_ratings():
       return jsonify(cache_ratings_info.get(handle))
 
     # 缓存中没有数据，发起请求
-    request_results = crawler.crawl("https://codeforces.com/api/user.rating?handle={}".format(handle))
+    request_results = crawler.crawl("https://codeforc.es/api/user.rating?handle={}".format(handle))
 
     # 2.请求后返回码为400
     if request_results['status'] == 400:
@@ -176,18 +175,17 @@ def clearCache():
   # 解析数据
   content_type = request.content_type
 
-  if content_type !="application/x-www-form-urlencoded" and content_type != "application/x-www-form-urlencoded":
+  if content_type != "application/json" and content_type != "application/x-www-form-urlencoded":
     # 不是规定的请求类型之一
     message = {"message": "invalid request"}
     return jsonify(message), 400
 
-  #转化为python对象
+  # 转化为python对象
   response_data = dict()
   if content_type == "application/x-www-form-urlencoded":
     response_data = request.form.to_dict()
   elif content_type == "application/json":
     response_data = request.get_json()
-
   # 获取清除缓存名和handles列表
   cache_type = response_data.get('cacheType', -1)
   handles = response_data.get('handles', -1)
@@ -206,10 +204,12 @@ def clearCache():
     message = {"message": "ok"}
     return jsonify(message), 200
 
-
   # 如果handles字段存在，调用delete方法清除对应缓存
-  if handles !=-1:
+  if handles != -1:
     if cache_type == 'userInfo':
+      # json和x-www-form-urlencoded 返回的类型不同，但是统一转化为字符串。再进行用eval函数转为列表
+      handles = str(handles)
+      handles = eval(handles)
       for handle in handles:
         cache_user_info.delete(handle)
     else:
