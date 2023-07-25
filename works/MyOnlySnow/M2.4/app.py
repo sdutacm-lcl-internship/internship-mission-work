@@ -214,9 +214,9 @@ def clear_cache():
             return jsonify({'message': 'invalid request'}), 400
 
         cache_type = data.get('cacheType')
-        print(cache_type)
+        #print(cache_type)
         handles = data.get('handles', [])
-        print(handles)
+        #print(handles)
 
         if cache_type not in ('userInfo', 'userRatings'):
             return jsonify({'message': 'invalid request'}),400
