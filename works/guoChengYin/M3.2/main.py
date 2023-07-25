@@ -134,6 +134,7 @@ def get_user_ratings():
       error_message = {
         "message": "An exception HTTP interface response was encountered:{}".format(request_results['status'])
       }
+      return jsonify(error_message), 502
 
     # 4.剩下的就是200，取出result。并定义一个搜集结果的列表
     result = request_results['result']
