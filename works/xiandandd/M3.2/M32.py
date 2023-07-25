@@ -47,6 +47,7 @@ def init_db():
                    rank INT NOT NULL,
                    old_rating INT NOT NULL,
                    new_rating INT NOT NULL,
+                   rating_updated_at NOT NULL,
                    updated_at DATETIME NOT NULL,
                    FOREIGN KEY (handle) REFERENCES user_info(handle)
                ); 
@@ -71,10 +72,10 @@ def insertinfo(handle, rating, rank, updated_at):
     cursor=db.cursor()
     cursor.execute("INSERT INTO user_info (handle, rating, rank, updated_at) VALUES (?, ?, ?, ?)", (handle, rating, rank, updated_at))
     db.commit()
-def insertratig(id,handle,contest_id,name,rank,old_rating,new_rating,updated_at):
+def insertratig(id,handle,contest_id,name,rank,old_rating,new_rating,time,updated_at):
     db=get_db()
     cursor=db.cursor()
-    cursor.execute("INSERT INTO user_rating(user_rating_id,handle,contest_id,contest_name,rank,old_rating,new_rating,updated_at) VALUES(?,?,?,?,?,?,?,?) ",(id,handle,contest_id,name,rank,old_rating,new_rating,updated_at))
+    cursor.execute("INSERT INTO user_rating(user_rating_id,handle,contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?) ",(id,handle,contest_id,name,rank,old_rating,new_rating,time,updated_at))
     db.commit()
 # 查询数据
 def findinfo(username):
@@ -424,9 +425,9 @@ def getUserRatings():
                 "contestId": finds[2],
                 "contestName": finds[3],
                 "rank": finds[4],
-                "ratingUpdatedAt": finds[-1],
-                "oldRating": finds[-3],
-                "newRating": finds[-2],
+                "ratingUpdatedAt": finds[-2],
+                "oldRating": finds[-4],
+                "newRating": finds[-3],
             }
             ps['result'].append(p)
             find_list=ps
@@ -441,7 +442,7 @@ def getUserRatings():
                 else:
                     ratingid=ratingid+1
                 insertratig(ratingid, handle, value['contestId'], value['contestName'], value['rank'], value['oldRating'],
-                            value['newRating'], datetime.now())
+                            value['newRating'], value['ratingUpdatedAt'],datetime.now())
 
     # jsonify函数返回的是一个response对象，所以可以在后面直接加状态码
     return jsonify(find_list["result"]), find_list["status"]
