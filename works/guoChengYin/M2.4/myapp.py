@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from urllib.parse import parse_qs
 
 import pytz
 import requests
@@ -174,6 +175,7 @@ def get_user_ratings():
 def clearCache():
   # 解析数据
   content_type = request.content_type
+  print(content_type)
 
   if content_type != "application/json" and content_type != "application/x-www-form-urlencoded":
     # 不是规定的请求类型之一
@@ -183,15 +185,29 @@ def clearCache():
   # 转化为python对象
   response_data = dict()
   if content_type == "application/x-www-form-urlencoded":
-    response_data = request.form.to_dict()
+    response_data = request.get_data(as_text=True)
+    response_data = parse_qs(response_data)
   elif content_type == "application/json":
     response_data = request.get_json()
   # 获取清除缓存名和handles列表
+
   cache_type = response_data.get('cacheType', -1)
   handles = response_data.get('handles', -1)
 
+  print(cache_type)
+  print(handles)
+
+  # 若为x-www-form-urlencoded格式下的列表，重置为字符串
+  if isinstance(cache_type, list):
+    cache_type = cache_type[0]
+
   # cache_type不存在或者字段对应不上
   if cache_type == -1 or (cache_type != 'userInfo' and cache_type != 'userRatings'):
+    message = {"message": "invalid request"}
+    return jsonify(message), 400
+
+  # 如果handles 不是列表
+  if not isinstance(handles, list):
     message = {"message": "invalid request"}
     return jsonify(message), 400
 
@@ -205,16 +221,12 @@ def clearCache():
     return jsonify(message), 200
 
   # 如果handles字段存在，调用delete方法清除对应缓存
-  if handles != -1:
-    if cache_type == 'userInfo':
-      # json和x-www-form-urlencoded 返回的类型不同，但是统一转化为字符串。再进行用eval函数转为列表
-      handles = str(handles)
-      handles = eval(handles)
-      for handle in handles:
-        cache_user_info.delete(handle)
-    else:
-      for handle in handles:
-        cache_ratings_info.delete(handle)
+  if cache_type == 'userInfo':
+    for handle in handles:
+      cache_user_info.delete(handle)
+  else:
+    for handle in handles:
+      cache_ratings_info.delete(handle)
 
   message = {"message": "ok"}
   return jsonify(message), 200
