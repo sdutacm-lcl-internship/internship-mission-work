@@ -39,7 +39,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    # "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -123,7 +123,7 @@ STATIC_URL = "static/"
 #         'BACKEND':
 #         'django.core.cache.backends.locmem.LocMemCache',  # 指定缓存使用的引擎
 #         'LOCATION': 'unique-snowflake',
-#         'TIMEOUT': 300,  # 单位秒 blue要5分钟的
+#         'TIMEOUT': 15,  # 单位秒 blue要15s的
 #         'OPTIONS': {
 #             'MAX_ENTRIES': 300,
 #             'CULL_FREQUENCY': 3,  # 缓存到达最大个数之后，剔除缓存个数的比例，

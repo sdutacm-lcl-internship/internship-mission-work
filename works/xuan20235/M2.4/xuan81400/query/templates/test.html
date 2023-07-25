@@ -1,9 +1,104 @@
-<title>xuan</title>
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>数据查询页面</title>
+    <style>
+        .box {
+            /*background-color: red;*/
+            margin: 0 auto;
+            width: 300px;
+            height: 300px;
+            text-align: center;
+        }
+    </style>
+</head>
 
 <body>
-    <div>
-        {% for item in n3 %}
-        <span>{{item}}<br /></span>
-        {% endfor %}
+    <div class="box">
+        <h1>查询选手</h1>
+        <form id="queryForm">
+            <label for="handle">请输入选手姓名：</label>
+            <input type="text" id="handle" name="handle" required placeholder="输入要查询的用户">
+            <button type="submit">查询</button>
+        </form>
+
+        <div id="result" style="margin-top: 20px;">
+            <!-- 查询结果将会动态展示在这里 -->
+        </div>
     </div>
+    <script>
+        // 监听表单提交事件
+        document.getElementById("queryForm").addEventListener("submit", function (event) {
+            event.preventDefault(); // 阻止表单默认提交行为
+
+            // 获取用户输入的选手姓名
+            var handle = document.getElementById("handle").value;
+
+            // 发起 AJAX 请求
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "http://127.0.0.1:2333/getUserRatings?handle=" + handle);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        // 请求成功时更新页面内容
+                        var response = JSON.parse(xhr.responseText);
+                        updateResult(response);
+                    } else {
+                        // 请求失败时提示错误信息
+                        alert("查询失败，请稍后重试！");
+                    }
+                }
+            };
+            xhr.send();
+        });
+
+        // 更新查询结果
+        function updateResult(data) {
+            var resultContainer = document.getElementById("result");
+            resultContainer.innerHTML = ""; // 清空之前的结果
+
+            if (data.length === 0) {
+                resultContainer.innerText = "未查询到相关选手信息";
+            } else {
+                // 创建表格
+                var table = document.createElement("table");
+                table.border = "1";
+                table.style.margin = "auto";
+                table.width = "500px";
+                document.body.appendChild(table);
+                table.createCaption().innerHTML = "rating history";
+                // 表头
+                var thead = document.createThead();
+                var headerRow = document.createElement("tr");
+                var headers = ["时间", "比赛", "Rank", "∆"];
+                var tr1 = thead.insertRow(0);
+
+                var td1 = tr1.insertCell(0);
+                var td2 = tr1.insertCell(1);
+                var td3 = tr1.insertCell(2);
+                var td4 = tr1.insertCell(3);
+                td1.innerHTML = "时间";
+                td2.innerHTML = "比赛";
+                td3.innerHTML = "Rank";
+                td4.innerHTML = "∆";
+                // for (var i = 0; i < 4; i++) {
+                //     var td${ i } = thead.insertRow(i);
+                // }
+                var tbody = document.createElement('tbody');
+                var tr2 = tbody.insertRow(0);
+                // 表格内容
+                for (var i = 0; i < data.length; i++) {
+                    var tr = document.createElement('tr');
+                    tbody.appendChild(tr);
+                    // var td = document.createElement('td');
+                    //for()
+                    var td = document.createElement('td');
+                    tr
+                }
+            }
+        }
+    </script>
 </body>
+
+</html>

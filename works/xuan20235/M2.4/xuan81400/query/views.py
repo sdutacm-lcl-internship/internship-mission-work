@@ -36,7 +36,7 @@ def func(handle):
     #exit(1)  #测试 情况5
 
     methodName = "user.rating"
-    url = f"https://codeforc.es/api/{methodName}"
+    url = f"https://codeforces.com/api/{methodName}"
     headers = {
         'User-Agent':
         'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Mobile Safari/537.36 Edg/113.0.1774.42'
@@ -154,7 +154,7 @@ def func1(handle):
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
     }
     methodName = "user.info"
-    url_base = f"https://codeforc.es/api/{methodName}"
+    url_base = f"https://codeforces.com/api/{methodName}"
 
     pa = {"handles": handle}
     try:
@@ -260,19 +260,18 @@ def query_handles1(request):
     return JsonResponse(list, safe=False)
 
 
-
 def time_difference(time1, time2):
     # 将字符串时间转换为datetime对象
     from datetime import datetime
     from datetime import timedelta
-  
+
     # 计算两个时间之间的时间差
     time_difference = (time2 - time1)
     # 定义15s的时间间隔
     time_15_second = timedelta(seconds=15)
 
     # 比较时间差和五分钟的时间间隔
-    if time_difference > time_15_second :
+    if time_difference > time_15_second:
         return 1
     else:
         return 0
@@ -448,16 +447,22 @@ def clearCache(request, handles=None):
 
         ans = {"message": "invalid request"}
         return JsonResponse(ans, safe=False, status=404)
+
+
 def page_not_found(request, exception, template_name='error/404.html'):
-    ans={
-        "message": "域名错误"
-        }
-    return  JsonResponse(ans, safe=False, status=404)
+    ans = {"message": "域名错误"}
+    return JsonResponse(ans, safe=False, status=404)
+
+
 def page_not_found_500(request, template_name='error/500.html'):
     ans = {"message": "服务器error"}
     return JsonResponse(ans, safe=False, status=500)
 
 
-def page_not_found_503(request,template_name='error/503.html'):
+def page_not_found_503(request, template_name='error/503.html'):
     ans = {"message": "服务器error"}
     return JsonResponse(ans, safe=False, status=503)
+
+
+def user_query(request):
+    return render(request, "test.html")
