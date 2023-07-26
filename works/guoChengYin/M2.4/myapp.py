@@ -175,55 +175,64 @@ def get_user_ratings():
 def clearCache():
   # 解析数据
   content_type = request.content_type
-  print(content_type)
+
 
   if content_type != "application/json" and content_type != "application/x-www-form-urlencoded":
     # 不是规定的请求类型之一
     message = {"message": "invalid request"}
     return jsonify(message), 400
 
+  cache_type=""
+  handles=[]
+  #判断handles是否存在
+  is_exits_handles=False
   # 转化为python对象
-  response_data = dict()
   if content_type == "application/x-www-form-urlencoded":
     response_data = request.get_data(as_text=True)
     response_data = parse_qs(response_data)
-  elif content_type == "application/json":
-    response_data = request.get_json()
-  print(response_data)
-
-  handles = []
-  # 重新构造一下返回数据
-  for key, value in response_data.items():
-    if key.startswith('handles'):
-      if isinstance(value, list):
-        handles = handles + value
-      else:
-        handles.append(value)
-  print(handles)
-  cache_type = ""
-  if content_type == "application/json":
-    cache_type = response_data.get("cacheType", -1)
-  else:
+    #检查cache_type格式
     cache_type = response_data.get("cacheType", -1)
     if cache_type != -1:
       cache_type = cache_type[0]
+    if cache_type != "userRatings" and cache_type != "userInfo":
+      message = {"message": "invalid request"}
+      return jsonify(message), 400
+    for key, value in response_data.items():
+      if key.startswith('handles'):
+        is_exits_handles=True
+        if isinstance(value, list):
+          handles = handles + value
+        else:
+          handles.append(value)
+
+  elif content_type == "application/json":
+    response_data = request.get_json()
+    #检查格式
+    cache_type = response_data.get("cacheType", -1)
+    if cache_type != "userRatings" and cache_type != "userInfo":
+      message = {"message": "invalid request"}
+      return jsonify(message), 400
+    handles = response_data.get("handles",-1)
+
+    if handles!=-1:
+      #handles存在，检查格式问题
+      is_exits_handles=True
+      if not isinstance(handles, list):
+        message = {"message": "invalid request"}
+        return jsonify(message), 400
 
   print(cache_type)
   print(handles)
 
-  # cache_type不存在或者字段对应不上
-  if cache_type == -1 or (cache_type != 'userInfo' and cache_type != 'userRatings'):
-    message = {"message": "invalid request"}
-    return jsonify(message), 400
-
-  # 如果handles字段不存在，调用clear方法清除所有该类型缓存,返回200
-  if len(handles) == 0:
+  #handles不存在
+  if is_exits_handles==False:
     if cache_type == 'userInfo':
       cache_user_info.clear()
     else:
       cache_ratings_info.clear()
     message = {"message": "ok"}
     return jsonify(message), 200
+
 
   # 如果handles字段存在，调用delete方法清除对应缓存
   if cache_type == 'userInfo':

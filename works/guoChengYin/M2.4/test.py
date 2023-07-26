@@ -15,8 +15,8 @@ headers = {
   'Content-Type': 'application/json'
 }
 form_data = {
-  # "cacheType": "userRatings",
-  "handles": ['jiangly', 'zxw']
+  "cacheType": "userInfo",
+   # "handles": ['jiangly','zxw']
 }
 response = requests.post(url, json=form_data, headers=headers)
 print(response.text)
