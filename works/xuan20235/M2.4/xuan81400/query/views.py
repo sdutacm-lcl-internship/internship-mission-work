@@ -268,8 +268,8 @@ def time_difference(time1, time2):
     # 计算两个时间之间的时间差
     time_difference = (time2 - time1)
     # 定义15s的时间间隔
-    time_15_second = timedelta(seconds=15)
-
+    #time_15_second = timedelta(seconds=15)
+    time_15_second = timedelta(minutes=15)
     # 比较时间差和五分钟的时间间隔
     if time_difference > time_15_second:
         return 1
@@ -414,39 +414,89 @@ def solve(request, current_time):
 
 def clearCache(request, handles=None):
     cache_type = request.POST.get("cacheType")
-    if cache_type == 'userInfo':
+    if request.content_type == 'application/json':
+        data = json.loads(request.body)
         #return HttpResponse("222")
-        r = request.POST.getlist('handles')
-        ans = {"message": "ok"}
 
-        if len(r) == 0:
-            list_old.clear()
+        cache_type = data.get('cacheType')
+        handles = data.get('handles')
+        #return HttpResponse(handles)
+        if cache_type == 'userInfo':
+            #return HttpResponse("222")
+            #r = request.POST.getlist('handles')
+            r = data.get('handles')
+            #return HttpResponse(r[1])
+            ans = {"message": "ok"}
+
+            if len(r) == 0:
+                list_old.clear()
+                return JsonResponse(ans, safe=False, status=200)
+            for i in r:
+
+                if i in list_old:
+                    del list_old[i]
+
             return JsonResponse(ans, safe=False, status=200)
-        for i in r:
+        elif cache_type == 'userRatings':
+            ans = {"message": "ok"}
+            #r = request.POST.getlist('handles')
+            r = handles
+            #return HttpResponse(r[1])
+            if len(r) == 0:
+                list.clear()
+                return JsonResponse(ans, safe=False, status=200)
+            for i in r:
 
-            if i in list_old:
-                del list_old[i]
+                if i in list:
+                    del list[i]
 
-        return JsonResponse(ans, safe=False, status=200)
-    elif cache_type == 'userRatings':
-        ans = {"message": "ok"}
-        r = request.POST.getlist('handles')
-
-        if len(r) == 0:
-            list.clear()
             return JsonResponse(ans, safe=False, status=200)
-        for i in r:
 
-            if i in list:
-                del list[i]
+        else:
+            # 不支持的缓存类型
 
-        return JsonResponse(ans, safe=False, status=200)
+            ans = {"message": "invalid request"}
+            return JsonResponse(ans, safe=False, status=404)
+
+    elif request.content_type == 'application/x-www-form-urlencoded':
+        data = request.POST
+        if cache_type == 'userInfo':
+            #return HttpResponse("222")
+            #r = request.POST.getlist('handles')
+            r = data.getlist('handles')
+            ans = {"message": "ok"}
+
+            if len(r) == 0:
+                list_old.clear()
+                return JsonResponse(ans, safe=False, status=200)
+            for i in r:
+
+                if i in list_old:
+                    del list_old[i]
+
+                return JsonResponse(ans, safe=False, status=200)
+        elif cache_type == 'userRatings':
+            ans = {"message": "ok"}
+            #r = request.POST.getlist('handles')
+            r = data.getlist('handles')
+            if len(r) == 0:
+                list.clear()
+                return JsonResponse(ans, safe=False, status=200)
+            for i in r:
+
+                if i in list:
+                    del list[i]
+
+            return JsonResponse(ans, safe=False, status=200)
+
+        else:
+            # 不支持的缓存类型
+
+            ans = {"message": "invalid request"}
+            return JsonResponse(ans, safe=False, status=404)
 
     else:
-        # 不支持的缓存类型
-
-        ans = {"message": "invalid request"}
-        return JsonResponse(ans, safe=False, status=404)
+        return JsonResponse({'message': 'invalid request'}, status=400)
 
 
 def page_not_found(request, exception, template_name='error/404.html'):
@@ -466,3 +516,19 @@ def page_not_found_503(request, template_name='error/503.html'):
 
 def user_query(request):
     return render(request, "test.html")
+
+
+# def get_rating_from_file(handle):
+#     with open("data-user-info.txt", 'r+') as fp:
+#         from datetime import datetime
+#         current_time = datetime.now()
+#         print(1)
+
+
+def get_userInfo(request):
+    handle = request.GET.get('handle')
+    ans = func1(handle)
+    ans["result"]["rank"]
+    ans["result"]["rating"]
+    res = {"rank": ans["result"]["rank"], "rating": ans["result"]["rating"]}
+    return JsonResponse(res, safe=False, status=200)

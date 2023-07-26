@@ -51,17 +51,24 @@
                 }
             };
             xhr.send();
+
         });
 
         // 更新查询结果
         function updateResult(data) {
-            var resultContainer = document.getElementById("result");
+            var resultContainer = document.getElementsByTagName("table");
             resultContainer.innerHTML = ""; // 清空之前的结果
 
             if (data.length === 0) {
-                resultContainer.innerText = "未查询到相关选手信息";
+
             } else {
+
+
                 // 创建表格
+                //console.log(data);
+                // 获取表格元素
+
+
                 var table = document.createElement("table");
                 table.border = "1";
                 table.style.margin = "auto";
@@ -69,33 +76,41 @@
                 document.body.appendChild(table);
                 table.createCaption().innerHTML = "rating history";
                 // 表头
-                var thead = document.createThead();
+
+                var thead = document.createElement("thead");
                 var headerRow = document.createElement("tr");
                 var headers = ["时间", "比赛", "Rank", "∆"];
-                var tr1 = thead.insertRow(0);
-
-                var td1 = tr1.insertCell(0);
-                var td2 = tr1.insertCell(1);
-                var td3 = tr1.insertCell(2);
-                var td4 = tr1.insertCell(3);
-                td1.innerHTML = "时间";
-                td2.innerHTML = "比赛";
-                td3.innerHTML = "Rank";
-                td4.innerHTML = "∆";
-                // for (var i = 0; i < 4; i++) {
-                //     var td${ i } = thead.insertRow(i);
-                // }
-                var tbody = document.createElement('tbody');
-                var tr2 = tbody.insertRow(0);
-                // 表格内容
-                for (var i = 0; i < data.length; i++) {
-                    var tr = document.createElement('tr');
-                    tbody.appendChild(tr);
-                    // var td = document.createElement('td');
-                    //for()
-                    var td = document.createElement('td');
-                    tr
+                for (var i = 0; i < 4; i++) {
+                    var th = document.createElement("th");
+                    headerRow.appendChild(th);
+                    th.innerHTML = headers[i];
                 }
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                // 表格内容
+                var tbody = document.createElement("tbody");
+                table.appendChild(tbody);
+                for (var i = 0; i < data.length; i++)  //外面的for循环 是 行tr
+                {
+                    var tmp = data.length - i - 1;
+                    var tr = document.createElement("tr");
+                    tbody.appendChild(tr);
+                    //3,往tr每一行里面创建单元格（跟数据有关系的3个单元格），td单元格的数量取决于每个对象的属性个数 for循环遍历对象 datas[i]
+                    var td = document.createElement("td");  //创建单元格
+                    tr.appendChild(td);
+                    td.innerHTML = data[tmp]["ratingUpdatedAt"];
+                    var td = document.createElement("td");  //创建单元格
+                    tr.appendChild(td);
+                    td.innerHTML = data[tmp]["contestName"];
+                    var td = document.createElement("td");  //创建单元格
+                    tr.appendChild(td);
+                    td.innerHTML = data[tmp]["rank"];
+                    var td = document.createElement("td");  //创建单元格
+                    tr.appendChild(td);
+                    td.innerHTML = data[tmp]["oldRating"] + '→' + data[tmp]["newRating"];;
+                }
+                table.appendChild(tbody);
             }
         }
     </script>
