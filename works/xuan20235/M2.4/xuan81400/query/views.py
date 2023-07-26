@@ -414,6 +414,7 @@ def solve(request, current_time):
 
 def clearCache(request, handles=None):
     cache_type = request.POST.get("cacheType")
+    #return HttpResponse("222")
     if request.content_type == 'application/json':
         data = json.loads(request.body)
         #return HttpResponse("222")
@@ -421,12 +422,17 @@ def clearCache(request, handles=None):
         cache_type = data.get('cacheType')
         handles = data.get('handles')
         #return HttpResponse(handles)
+
         if cache_type == 'userInfo':
             #return HttpResponse("222")
             #r = request.POST.getlist('handles')
             r = data.get('handles')
             #return HttpResponse(r[1])
             ans = {"message": "ok"}
+            if r == None:
+
+                ans = {"message": "invalid request"}
+                return JsonResponse(ans, safe=False, status=404)
 
             if len(r) == 0:
                 list_old.clear()
@@ -440,8 +446,15 @@ def clearCache(request, handles=None):
         elif cache_type == 'userRatings':
             ans = {"message": "ok"}
             #r = request.POST.getlist('handles')
+            #return HttpResponse(r)
             r = handles
-            #return HttpResponse(r[1])
+            #return HttpResponse(r)
+            if r == None:
+
+                ans = {"message": "invalid request"}
+                return JsonResponse(ans, safe=False, status=404)
+
+            #return HttpResponse(r)
             if len(r) == 0:
                 list.clear()
                 return JsonResponse(ans, safe=False, status=200)
@@ -464,11 +477,18 @@ def clearCache(request, handles=None):
             #return HttpResponse("222")
             #r = request.POST.getlist('handles')
             r = data.getlist('handles')
+            #return HttpResponse(r)
             ans = {"message": "ok"}
+            r.append(0)
+            #return HttpResponse(len(r))
 
-            if len(r) == 0:
+            if len(r) == 1:
+                ans = {"message": "invalid request"}
+                return JsonResponse(ans, safe=False, status=404)
+            if len(r) == 2:
                 list_old.clear()
                 return JsonResponse(ans, safe=False, status=200)
+
             for i in r:
 
                 if i in list_old:
@@ -479,7 +499,15 @@ def clearCache(request, handles=None):
             ans = {"message": "ok"}
             #r = request.POST.getlist('handles')
             r = data.getlist('handles')
-            if len(r) == 0:
+            #return HttpResponse(len(r))
+            r.append(0)
+            #return HttpResponse(len(r))
+
+            if len(r) == 1:
+                ans = {"message": "invalid request"}
+                return JsonResponse(ans, safe=False, status=404)
+            if len(r) == 2:
+                #return HttpResponse("wdad")
                 list.clear()
                 return JsonResponse(ans, safe=False, status=200)
             for i in r:
