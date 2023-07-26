@@ -189,30 +189,35 @@ def clearCache():
     response_data = parse_qs(response_data)
   elif content_type == "application/json":
     response_data = request.get_json()
-  # 获取清除缓存名和handles列表
+  print(response_data)
 
-  cache_type = response_data.get('cacheType', -1)
-  handles = response_data.get('handles', -1)
+  handles = []
+  # 重新构造一下返回数据
+  for key, value in response_data.items():
+    if key.startswith('handles'):
+      if isinstance(value, list):
+        handles = handles + value
+      else:
+        handles.append(value)
+  print(handles)
+  cache_type = ""
+  if content_type == "application/json":
+    cache_type = response_data.get("cacheType", -1)
+  else:
+    cache_type = response_data.get("cacheType", -1)
+    if cache_type != -1:
+      cache_type = cache_type[0]
 
   print(cache_type)
   print(handles)
-
-  # 若为x-www-form-urlencoded格式下的列表，重置为字符串
-  if isinstance(cache_type, list):
-    cache_type = cache_type[0]
 
   # cache_type不存在或者字段对应不上
   if cache_type == -1 or (cache_type != 'userInfo' and cache_type != 'userRatings'):
     message = {"message": "invalid request"}
     return jsonify(message), 400
 
-  # 如果handles 不是列表
-  if not isinstance(handles, list):
-    message = {"message": "invalid request"}
-    return jsonify(message), 400
-
   # 如果handles字段不存在，调用clear方法清除所有该类型缓存,返回200
-  if handles == -1:
+  if len(handles) == 0:
     if cache_type == 'userInfo':
       cache_user_info.clear()
     else:
