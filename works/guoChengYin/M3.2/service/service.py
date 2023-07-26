@@ -20,57 +20,67 @@ class Service:
 
   def get_user_ratings(self, handle):
     try:
+      #缓存中有数据，直接返回
       if not cache_user_ratings.get(handle) is None:
-        return jsonify(cache_user_ratings.get(handle))
+        return cache_user_ratings.get(handle)
 
-        # 缓存中没有数据，30s已过。再次爬取数据
+      #查询数据库中是否有数据,返回一个结果列表
+      ls=dao.query_ratings(handle)
+      if len(ls)!=0:
+        #返回结果不为空，存入缓存
+        cache_user_ratings.set(handle,ls,timeout=30)
+        return ls
+
+      # 缓存和数据库中均中没有数据，30s已过。再次爬取数据并保存在数据库与缓存中
       request_results = crawler.crawl("https://codeforces.com/api/user.rating?handle={}".format(handle))
 
       # 2.请求后返回码为400
       if request_results['status'] == 400:
         error_message = {"message": "no such handle"}
-        return jsonify(error_message), 404
+        return error_message, 404
 
       # 3.请求后返回码不是400也不是200
       if request_results['status'] != 200:
         error_message = {
           "message": "An exception HTTP interface response was encountered:{}".format(request_results['status'])
         }
-        return jsonify(error_message), 502
+        return error_message, 502
 
       # 4.剩下的就是200，取出result。并定义一个搜集结果的列表
       result = request_results['result']
       response_data = []
 
+
       # 循环每场比赛信息
       for item in result:
-        context_info = {}
+        #引入对象实例user_rating
+        user_rating=UserRating
         # handle可以查询到
         if "handle" in item.keys():
-          context_info['handle'] = item["handle"]
+          user_rating.set_handle(item["handle"])
         if "contestId" in item.keys():
-          context_info["contestId"] = int(item["contestId"])
+          user_rating.set_user_rating_id(item['contestId'])
         if "contestName" in item.keys():
-          context_info["contestName"] = item["contestName"]
+          user_rating.set_contest_name(item["contestName"])
         if "rank" in item.keys():
-          context_info["rank"] = int(item["rank"])
+          user_rating.set_rank(int(item["rank"]))
         if "ratingUpdateTimeSeconds" in item.keys():
           # 指定了时区
           dt_object = datetime.fromtimestamp(item["ratingUpdateTimeSeconds"], pytz.timezone('Asia/Shanghai'))
           iso_datetime_str = dt_object.isoformat()
-          context_info["ratingUpdatedAt"] = iso_datetime_str
+          user_rating.set_updated_at(iso_datetime_str)
         if "oldRating" in item.keys():
-          context_info["oldRating"] = int(item["oldRating"])
+          user_rating.set_old_rating(int(item["oldRating"]))
         if "newRating" in item.keys():
-          context_info["newRating"] = int(item["newRating"])
-        response_data.append(context_info)
+          user_rating.set_new_rating(int(item["newRating"]))
+        response_data.append(user_rating)
       # 循环结束后将结果列表存入缓存和数据库
       cache_user_ratings.set(handle, response_data, timeout=30)
       # myUtils.data_save('data-user-ratings.txt', {"handle": handle, "info": response_data})
       # 改为存到数据库
-      for item in response_data:
 
-      dao.save_ratings()
+
+        dao.save_ratings()
 
       return jsonify(response_data)
     except Exception:

@@ -1,5 +1,8 @@
+import datetime
 import sqlite3
 import sys
+import time
+
 from bean import UserInfo
 
 class Dao:
@@ -9,8 +12,15 @@ class Dao:
     cursor = conn.cursor()
     sql = "SELECT * FROM user_info WHERE handle IN ({})".format(','.join(['?'] * len(handles)))
     cursor.execute(sql,tuple(handles))
+
+    res=cursor.fetchall()
+    res = list(res[0])
+    updatated = res[3]
+    if self.get_time_diff(updatated)>30:
+      res=[]
     conn.close()
-    return list(cursor.fetchall())
+
+    return res
 
   def save_user_info(self,user_info):
     conn = sqlite3.connect('cf.db')
@@ -43,12 +53,25 @@ class Dao:
     conn = sqlite3.connect('cf.db')
     # 获取游标对象
     cursor = conn.cursor()
-    sql = "SELECT * FROM user_rating WHERE handle={}".format(handle)
+    sql = "SELECT * FROM user_rating WHERE handle='{}'".format(handle)
     cursor.execute(sql)
+    res = cursor.fetchall()
+    print(res)
+    res=list(res[0])
+    update_at = res[8]
+    if self.get_time_diff(update_at)>30:
+      res=[]
     conn.close()
-    return list(cursor.fetchall())
+    return res
 
+  @classmethod
+  def get_time_diff(self,dt):
+    dt=dt/1000
+    #将数据库中的时间减去8h    dt=dt-28800
+    return round(time.time())-dt
 
+dao = Dao()
+dao.query_user_info(['jiangly'])
 
 
 
