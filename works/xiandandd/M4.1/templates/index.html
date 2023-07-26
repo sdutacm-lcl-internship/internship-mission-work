@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #htmlContainer {
+            text-align: center;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        td, th {
+            border: 1px solid black;
+            padding: 5px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 500px;
+            margin: 0 auto;
+        }
+
+        .container input,
+        .container button {
+            padding: 10px;
+            font-size: 16px;
+            height: 40px;
+            box-sizing: border-box;
+        }
+
+        .container > input {
+            width: 150px;
+            /* 调整宽度为较小的值 */
+            flex-grow: 1;
+        }
+
+        .container button {
+            margin-left: 10px;
+        }
+        #handle{
+            color: darkturquoise;
+            font-size: 25px
+        }
+        #rating{
+            font-size: 25px;
+            display: inline;
+        white-space: nowrap;
+            color: darkturquoise
+        }
+    </style>
+</head>
+
+<body>
+<div>
+    <h1>查询选手</h1>
+    <div class='container'>
+        <input type="text" id='name' placeholder="请输入handle" style="border-radius: 0px;">
+        <button style="border-radius: 0%;" onclick="add()">查询</button>
+    </div>
+
+</div>
+<div id="htmlContainer"></div>
+
+</body>
+
+
+<script>
+    // 保存最初的 HTML 代码
+    var originalHtml = document.body.innerHTML;
+
+    function add() {
+        // 重置 HTML 为最初的代码
+        var name = document.getElementById('name').value
+        console.log(name)
+        document.body.innerHTML = originalHtml;
+        var dataToSend1 = {
+            handle: name
+            // 其他要发送到 Flask 的数据
+        };
+        var dataToSend2 = {
+            handles: name
+            // 其他要发送到 Flask 的数据
+        };
+
+        var queryString = Object.keys(dataToSend1).map(key => key + '=' + dataToSend1['handle']).join('&');
+        var url = 'http://127.0.0.1:2333/getUserRatings?' + queryString;
+        var dome1;
+        var dome2;
+        var num1, num2;
+        fetch(url)
+            .then(response => {
+                num1 = response.status
+                if (num1 == 200) {
+                    var newElement = document.createElement('div');
+                    newElement.innerHTML = '<div align="center">\n' +
+                        '    <h2>查询结果</h2>\n' +
+                        '    <div align="center">\n' +
+                        '        <p id="handle"></p>\n' +
+                        '        <span style="font-size: 25px">rating:</span>\n' +
+                        '        <p id="rating"></p>\n' +
+                        '    </div>\n' +
+                        '</div>\n' +
+                        '<div align="center" style="margin-top:50px">\n' +
+                        '    <p style="align-content: center;color: darkgrey">rating history</p>\n' +
+                        '    <table style="border: 1px solid black">\n' +
+                        '        <thead>\n' +
+                        '        <tr>\n' +
+                        '            <th>时间</th>\n' +
+                        '            <th>比赛</th>\n' +
+                        '            <th>rank</th>\n' +
+                        '            <th>△</th>\n' +
+                        '        </tr>\n' +
+                        '        </thead>\n' +
+                        '        <tbody id="td">\n' +
+
+                        '        </tbody>\n' +
+                        '    </table>\n' +
+                        '</div>';
+                    document.getElementById('htmlContainer').appendChild(newElement);
+                }
+                else if(num1==404)
+                {
+                    var newElement = document.createElement('div');
+                    newElement.innerHTML = '<p style="align-content: center">查无此人</p>'
+                    document.getElementById('htmlContainer').appendChild(newElement);
+                }
+                else {
+                    var newElement = document.createElement('div');
+                    newElement.innerHTML = '<p style="align-content: center">出现了' + num1 + '异常</p>'
+                    document.getElementById('htmlContainer').appendChild(newElement);
+                }
+                return response.json(); // 将结果传递给下一个处理程序
+            })
+            .then(data => {
+                // 在这里处理从 Flask 返回的 JSON 数据
+                console.log(data)
+                if (data.length == 0 && num1 == 200) {
+                    var newElement = document.createElement('div');
+                    newElement.innerHTML = '<p style="align-content: center">比赛记录为空</p>'
+                    document.getElementById('htmlContainer').appendChild(newElement);
+                } else if (num1 == 200) {
+                    console.log(data.length)
+                    var newElement = document.createElement('div');
+                    for (var i = 0; i < data.length; i++) {
+                        var newElement = document.createElement('tr');
+                        newElement.innerHTML =
+                            '<td>' + data[i]['ratingUpdatedAt'] + '</td>' +
+                            '<td>' + data[i]['contestName'] + '</td>' +
+                            '<td>' + data[i]['rank'] + '</td>' +
+                            '<td>' + data[i]['oldRating'] + '->' + data[i]['newRating'] + '</td>';
+                        // 将新行添加到目标元素中
+                        document.getElementById('td').appendChild(newElement);
+                    }
+                }
+                if (num1 == 200) {
+                    var queryString2 = Object.keys(dataToSend2).map(key => key + '=' + dataToSend2['handles']).join('&');
+                    var url2 = 'http://127.0.0.1:2333/batchGetUserInfo?' + queryString2;
+                    fetch(url2)
+                        .then(response => {
+
+                            num2 = response.status
+                            return response.json(); // 将结果传递给下一个处理程序
+                        })
+                        .then(data => {
+                            // 在这里处理从 Flask 返回的 JSON 数据
+                            console.log(data)
+                            var pElement = document.getElementById('handle');
+                            pElement.innerHTML = data[0]['result']['handle']+'('+data[0]['result']['rank']+')';
+                            var pElement1 = document.getElementById('rating');
+                            pElement1.innerHTML = data[0]['result']['rating'];
+                        })
+                        .catch(error => {
+                            // 处理请求错误
+                        });
+                }
+
+            })
+            .catch(error => {
+                // 处理请求错误
+
+            });
+
+
+
+    }
+</script>
