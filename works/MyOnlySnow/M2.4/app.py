@@ -15,8 +15,8 @@ cache = {}
 
 
 def search_handles(handle):
-    if handle in cache and cache[handle]['out'] > datetime.now():
-        return cache[handle]['data']
+    if handle in cache and cache[handle]['userInfo']['out'] > datetime.now():
+        return cache[handle]['userInfo']['data']
 
     url = f"https://codeforces.com/api/user.info?handles={handle}"
     ua = UserAgent().random
@@ -36,10 +36,10 @@ def search_handles(handle):
                 'success': True,
                 'handle': handle
             }
-            cache[handle] = {
+            cache[handle] = {'userInfo': {
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
-            }
+            }}
 
         else:
             data = {
@@ -48,11 +48,11 @@ def search_handles(handle):
                 'rating': rating,
                 'rank': rank
             }
-            cache[handle] = {
+            cache[handle] = {'userInfo':{
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
-            }
-
+            }}
+        # print(cache)
         return data
 
     except requests.exceptions.HTTPError as error:
@@ -62,7 +62,7 @@ def search_handles(handle):
                 'type': 1,
                 'message': 'no such handle'
             }
-            cache[handle] = {
+            cache[handle]['userInfo'] = {
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
             }
@@ -91,8 +91,8 @@ def search_handles(handle):
 
 
 def search_ratings(handle):
-    if handle in cache and cache[handle]['out'] > datetime.now():
-        return cache[handle]['data']
+    if handle in cache and cache[handle]['userRatings']['out'] > datetime.now():
+        return cache[handle]['userRatings']['data']
 
 
     url = f"https://codeforces.com/api/user.rating?handle={handle}"
@@ -129,10 +129,11 @@ def search_ratings(handle):
                 'handle': handle,
                 'message': 'This handle does not have a competition record'
             }
-        cache[handle] = {
+        cache[handle]={'userRatings':{
             'data': result,
             'out': datetime.now() + timedelta(seconds=15)
-        }
+        }}
+
         return result
 
 
@@ -142,10 +143,10 @@ def search_ratings(handle):
                 'message': 'no such handle',
                 'code': 404
             }
-            cache[handle] = {
-                'data': data,
+            cache[handle] = {'userRatings': {
+                'data': result,
                 'out': datetime.now() + timedelta(seconds=15)
-            }
+            }}
             return data
         else:
             return {
@@ -202,8 +203,6 @@ def clear_cache():
             data = request.get_json()
             handles = data.get('handles', [])
             if isinstance(handles, str):
-                handles = [handles]
-            if handles == []:
                 return jsonify({'message': 'Invalid request'}), 400
             for h in handles:
                 if not isinstance(h, str) or len(h) <= 1:
@@ -240,12 +239,13 @@ def clear_cache():
             for handle in handles:
                 cache_entry = cache.get(cache_type, {}).get(handle)
                 if cache_entry:
-                    del cache[cache_type][handle]
-
+                    del cache[handle][cache_type]
+                # print(cache)
         return jsonify({'message': 'ok'}), 200
 
     except Exception:
         return jsonify({'message': 'invalid request'}), 400
+
 
 
 if __name__ == '__main__':
