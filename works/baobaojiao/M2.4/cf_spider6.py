@@ -185,7 +185,8 @@ def clear_cache_json(response):
             if json_key != 'handles' and json_key != 'cacheType':
                 status_code = 400
                 return ans, status_code
-        if (not 'cacheType' in response) or (response['cacheType'] != 'userInfo' and response['cacheType'] != 'userRatings'):
+        if (not 'cacheType' in response) or (
+                response['cacheType'] != 'userInfo' and response['cacheType'] != 'userRatings'):
             status_code = 400
             return ans, status_code
         if response['cacheType'] == 'userInfo' and 'handles' in response:
@@ -215,34 +216,40 @@ def clear_cache_json(response):
 
     return ans, status_code
 
-
-def clear_cache_form(response):
-    response = json.loads(json.dumps(response))
-
-    if 'handles' in response:
-        list = str(response['handles'])[2:-2].replace('\",\"', " ").split()
-        response['handles'] = list
-    ans = clear_cache_json(response)
-    return ans[0], ans[1]
-
-
 def clear_cache_webform(response):
-
     if 'handles' in response:
         list = response.getlist('handles')
         response = json.loads(json.dumps(response))
         response['handles'] = list
+    elif 'handles[]' in response:
+        list = response.getlist('handles[]')
+        response = json.loads(json.dumps(response))
+        del response['handles[]']
+        response['handles'] = list
+    elif 'handles[0]' in response:
+        cnt = 0
+        resp = {}
+        list = []
+        for key, value in response.items():
+            if key == 'handles[' + str(cnt) + ']':
+                list.append(value)
+                cnt += 1
+            else:
+                resp[key] = value
+        if len(list) != 0:
+            resp['handles'] = list
+        response = json.loads(json.dumps(resp))
+
     else:
         response = json.loads(json.dumps(response))
     ans = clear_cache_json(response)
     return ans[0], ans[1]
+
+
 @app.route('/clearCache', methods=['post'])
 def clear_cache():
     if request.content_type == 'application/json':
         ans = clear_cache_json(request.json)
-        return jsonify(ans[0]), ans[1]
-    elif request.content_type == 'application/form-data':
-        ans = clear_cache_form(request.form)
         return jsonify(ans[0]), ans[1]
     elif request.content_type == 'application/x-www-form-urlencoded':
         ans = clear_cache_webform(request.form)

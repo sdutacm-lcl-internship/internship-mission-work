@@ -71,7 +71,8 @@ def grep_user(user):
         if resp_status_code == 200:  # 请求发送正常
             if 'rating' in page['result'][0]:
                 ans = {
-                    "success": "true",
+                    "handle": user,
+                    'out_time': time.time() + 30,
                     "result": {
                         "handle": user,
                         "rating": page['result'][0]['rating'],
@@ -80,46 +81,44 @@ def grep_user(user):
                 }
             else:
                 ans = {
-                    "success": "true",
+                    "handle": user,
+                    'out_time': time.time() + 30,
                     "result": {
                         "handle": user
                     }
                 }
+            return ans, 200
         elif page['status'] == "FAILED":
             ans = {
-                "success": "false",
-                "type": 1,
+                'handle': user,
                 "message": "no such handle"
             }
+            return ans, 404
         elif resp_status_code == 401 or resp_status_code == 403 or resp_status_code == 404 or resp_status_code == 500 or resp_status_code == 502 or resp_status_code == 503 or resp_status_code == 504:
             # 请求响应异常
             ans = {
-                "success": 'false',
-                "type": '2',
+                'handle': user,
                 "message": "HTTP response with code" + str(resp_status_code),
-                "details": {
-                    "status": str(resp_status_code)
-                }
             }
+            return ans, resp_status_code
         else:  # 除去响应异常以及程序异常，剩下的为未收到合法响应
             ans = {
-                "success": 'false',
-                "type": '3',
+                'handle': user,
                 "message": "No valid HTTP response was received when querying this item"
             }
+            return ans, 400
     except requests.exceptions.RequestException as e:  # 程序抛出异常
         ans = {
-            "success": 'false',
-            "type": '4',
+            'handle': user,
             "message": "Internal Server Error"
         }
+        return ans, 500
     except Exception as e:
         ans = {
-            "success": 'false',
-            "type": "4",
+            'handle': user,
             "message": "Internal Server Error"
         }
-    return ans
+        return ans, 500
 
 
 def grep_rating(handle):
@@ -138,11 +137,12 @@ def grep_rating(handle):
         resp_status = response.status_code
         status_code = resp_status
 
-        ans = []
+        res = []
+        ans = {}
         if resp_status == 200:
             for rating_info in page['result']:
                 temp = {
-                    "handle": rating_info['handle'],
+                    # "handle": rating_info['handle'],
                     "contestId": rating_info['contestId'],
                     "contestName": rating_info['contestName'],
                     "rank": rating_info['rank'],
@@ -150,7 +150,12 @@ def grep_rating(handle):
                     "oldRating": rating_info['oldRating'],
                     'newRating': rating_info['newRating']
                 }
-                ans.append(temp)
+                res.append(temp)
+            ans = {
+                'handle': handle,
+                'out_time': time.time() + 30,
+                'result': res
+            }
         elif resp_status == 400:
             status_code = 404
             ans = {
@@ -215,6 +220,7 @@ def clear_cache_json(response):
 
     return ans, status_code
 
+
 def clear_cache_webform(response):
     if 'handles' in response:
         list = response.getlist('handles')
@@ -246,60 +252,93 @@ def clear_cache_webform(response):
 
 
 def get_rating_from_file(handle):
-    file_path = str(handle) + 'data-' + str(handle) + '-ratings.txt'
-
     try:
+        file_path = 'data-user-ratings.txt'
+
         if os.path.exists(file_path):
-            file_stat = os.stat(file_path)
-            file_modified_time = file_stat.st_mtime
-            current_time = time.time()
-            if (current_time - file_modified_time) <= 30:
-                print('文件有效')
-            else:
-                print('文件过期')
-                resp_page = grep_rating(handle)
-                if resp_page[1] != 200:
-                    return resp_page
-                else:
+            fp = open(file_path, 'r', encoding='utf-8')
+            page_text = fp.read()
+            fp.close()
+            page_text = page_text.split(';')
+            list = page_text
+            for index, p in enumerate(list):
+                pp = eval(p)
+                if pp['handle'] == handle and time.time() <= pp['out_time']:
+                    return {'message': 'ok'}, 200
+                elif pp['handle'] == handle and time.time() > pp['out_time']:
+                    res = grep_rating(handle)
+                    if res[1] != 200:
+                        return res[0], res[1]
+                    page_text[index] = str(res[0])
                     fp = open(file_path, 'w', encoding='utf-8')
-                    fp.write(json.dumps(resp_page[0]))
-                    return {"message": "文件写入成功！"}, 200
+                    fp.write(str(';'.join(map(str, page_text))))
+                    fp.close()
+                    return {'message': 'ok'}, 200
+            res = grep_rating(handle)
+            if res[1] != 200:
+                return res[0], res[1]
+            fp = open(file_path, 'a', encoding='utf-8')
+            fp.write(';' + str(res[0]))
+            fp.close()
+            return {'message': 'ok'}, 200
         else:
-            print('文件不存在')
-            resp_page = grep_rating(handle)
-            if resp_page[1] != 200:
-                return resp_page
-            else:
-                fp = open(file_path, 'w', encoding='utf-8')
-                fp.write(json.dumps(resp_page[0]))
-                return {"message": "文件写入成功！"}, 200
+            res = grep_rating(handle)
+            if res[1] != 200:
+                return res[0], res[1]
+            fp = open(file_path, 'w', encoding='utf-8')
+            fp.write(str(res[0]))
+            fp.close()
+            return {'message': 'ok'}, 200
+
     except Exception as e:
         return {"message": "Internal Server Error"}, 500
-    return {'message': 'ok'}, 200
 
 
 def get_userinfo_from_file(handles):
     try:
-        for handle in handles:
-            file_path = 'data-' + str(handle) + '-info.txt'
-            if os.path.exists(file_path):
-                file_stat = os.stat(file_path)
-                file_modified_time = file_stat.st_mtime
-                current_time = time.time()
-                if (current_time - file_modified_time) <= 30:
-                    print('文件有效')
-                else:
-                    print('文件过期')
-                    resp_page = grep_user(handle)
-                    fp = open(file_path, 'w', encoding='utf-8')
-                    fp.write(json.dumps(resp_page))
-            else:
-                print('文件不存在')
-                resp_page = grep_user(handle)
-                fp = open(file_path, 'w', encoding='utf-8')
-                fp.write(json.dumps(resp_page))
+        file_path = 'data-user-info.txt'
+
+        if os.path.exists(file_path):
+            for handle in handles:
+                fp = open(file_path, 'r', encoding='utf-8')
+                page_text = fp.read()
+                fp.close()
+                page_text = page_text.split(';')
+                list = page_text
+                judge = 0
+                for index, p in enumerate(list):
+                    pp = eval(p)
+                    if handle in pp['handle'] and time.time() > pp['out_time']:
+                        judge = 1
+                        res = grep_user(handle)
+                        if res[1] != 200:
+                            return res[0], res[1]
+                        page_text[index] = str(res[0])
+                        fp = open(file_path, 'w', encoding='utf-8')
+                        fp.write(';'.join(page_text))
+                        fp.close()
+                    elif handle in pp['handle'] and time.time() <= pp['out_time']:
+                        judge = 1
+                if judge == 0:
+                    res = grep_user(handle)
+                    if res[1] != 200:
+                        return res[0], res[1]
+                    fp = open(file_path, 'a', encoding='utf-8')
+                    fp.write(';' + str(res[0]))
+                    fp.close()
+        else:
+            res = grep_user(handles[0])
+            if res[1] != 200:
+                return res[0], res[1]
+            fp = open(file_path, 'w', encoding='utf-8')
+            fp.write(str(res[0]))
+            fp.close()
+            del handles[0]
+            if len(handles) != 0:
+                return get_userinfo_from_file(handles)
 
     except Exception as e:
+        print(e)
         return {"message": "Internal Server Error"}, 500
 
     return {"message": "ok"}, 200
