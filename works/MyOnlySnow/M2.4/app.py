@@ -15,8 +15,9 @@ cache = {}
 
 
 def search_handles(handle):
-    if handle in cache and cache[handle]['userInfo']['out'] > datetime.now():
-        return cache[handle]['userInfo']['data']
+    if handle in cache and cache[handle]:
+        if cache[handle]['userInfo']['out'] > datetime.now():
+            return cache[handle]['userInfo']['data']
 
     url = f"https://codeforces.com/api/user.info?handles={handle}"
     ua = UserAgent().random
@@ -52,7 +53,7 @@ def search_handles(handle):
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
             }}
-        # print(cache)
+        print(cache)
         return data
 
     except requests.exceptions.HTTPError as error:
@@ -91,8 +92,9 @@ def search_handles(handle):
 
 
 def search_ratings(handle):
-    if handle in cache and cache[handle]['userRatings']['out'] > datetime.now():
-        return cache[handle]['userRatings']['data']
+    if handle in cache and cache[handle]:
+        if cache[handle]['userRatings']['out'] > datetime.now():
+            return cache[handle]['userRatings']['data']
 
 
     url = f"https://codeforces.com/api/user.rating?handle={handle}"
@@ -133,7 +135,7 @@ def search_ratings(handle):
             'data': result,
             'out': datetime.now() + timedelta(seconds=15)
         }}
-
+        print(cache)
         return result
 
 
@@ -144,7 +146,7 @@ def search_ratings(handle):
                 'code': 404
             }
             cache[handle] = {'userRatings': {
-                'data': result,
+                'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
             }}
             return data
@@ -237,10 +239,11 @@ def clear_cache():
             cache.pop(cache_type, None)
         else:
             for handle in handles:
-                cache_entry = cache.get(cache_type, {}).get(handle)
+                print(handle)
+                cache_entry = cache.get(handle, {}).get(cache_type)
                 if cache_entry:
                     del cache[handle][cache_type]
-                # print(cache)
+                print(cache)
         return jsonify({'message': 'ok'}), 200
 
     except Exception:
