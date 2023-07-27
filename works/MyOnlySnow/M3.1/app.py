@@ -268,6 +268,13 @@ def clear_cache():
     try:
         if request.content_type == 'application/json':
             data = request.get_json()
+            handles = data.get('handles', [])
+            if isinstance(handles, str):
+                return jsonify({'message': 'Invalid request'}), 400
+            for h in handles:
+                if not isinstance(h, str) or len(h) <= 1:
+                    return jsonify({'message': 'Invalid request'}), 400
+
         elif request.content_type == 'application/x-www-form-urlencoded':
             data = {}
             for key, values in request.form.lists():
@@ -280,7 +287,7 @@ def clear_cache():
                     for value in values:
                         if not isinstance(value, str) or len(value) <= 1:
                             return jsonify({'message': 'invalid request'}), 400
-                        elif value == 'TRUE' or 'FALSE':
+                        elif value == 'TRUE' or value == 'FALSE' or value == 'false' or value == 'true' or value == 'True' or value == 'False':
                             return jsonify({'message': 'invalid request'}), 400
                         data[field_name].append(value)
         else:
@@ -297,10 +304,11 @@ def clear_cache():
             cache.pop(cache_type, None)
         else:
             for handle in handles:
-                cache_entry = cache.get(cache_type, {}).get(handle)
+                print(handle)
+                cache_entry = cache.get(handle, {}).get(cache_type)
                 if cache_entry:
-                    del cache[cache_type][handle]
-
+                    del cache[handle][cache_type]
+                print(cache)
         return jsonify({'message': 'ok'}), 200
 
     except Exception:
