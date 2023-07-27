@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, Response, make_response
-import urllib.error
+from urllib.parse import parse_qs
 import requests
 import json
 from fake_useragent import UserAgent
@@ -7,7 +7,7 @@ from datetime import timedelta, datetime
 import sqlite3
 import time
 import pytz
-from urllib.parse import parse_qs
+from collections import defaultdict
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -15,22 +15,11 @@ cache = {}
 
 
 def search_handles(handle):
-    if handle in cache and cache[handle]['out'] > datetime.now():
-        return cache[handle]['data']
+    if handle in cache and cache[handle]:
+        if cache[handle]['userInfo']['out'] > datetime.now():
+            return cache[handle]['userInfo']['data']
 
-    file_data = load_file('data_info.js')
-    now = datetime.now()
-    valid_data = {key: value for key, value in file_data.items() if value.get('out', now) > now}
-    data = valid_data.get(handle, None)
-
-    if data:
-        cache[handle] = {
-            'data': data['data'],
-            'out': data['out']
-        }
-        return data['data']
-
-    url = f"https://codeforces.es/api/user.info?handles={handle}"
+    url = f"https://codeforces.com/api/user.info?handles={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
     try:
@@ -48,15 +37,11 @@ def search_handles(handle):
                 'success': True,
                 'handle': handle
             }
-            cache[handle] = {
+            cache[handle] = {'userInfo': {
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
-            }
-            file_data[handle] = {
-                'data': data,
-                'out': datetime.now() + timedelta(seconds=30)
-            }
-            save_file(file_data, 'data_info.js')
+            }}
+
         else:
             data = {
                 'success': True,
@@ -64,15 +49,11 @@ def search_handles(handle):
                 'rating': rating,
                 'rank': rank
             }
-            cache[handle] = {
+            cache[handle] = {'userInfo':{
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
-            }
-            file_data[handle] = {
-                'data': data,
-                'out': datetime.now() + timedelta(seconds=30)
-            }
-            save_file(file_data, 'data_info.js')
+            }}
+        print(cache)
         return data
 
     except requests.exceptions.HTTPError as error:
@@ -82,15 +63,10 @@ def search_handles(handle):
                 'type': 1,
                 'message': 'no such handle'
             }
-            cache[handle] = {
+            cache[handle]['userInfo'] = {
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
             }
-            file_data[handle] = {
-                'data': data,
-                'out': datetime.now() + timedelta(seconds=30)
-            }
-            save_file(file_data, 'data_info.js')
         else:
             data = {
                 'success': False,
@@ -116,22 +92,12 @@ def search_handles(handle):
 
 
 def search_ratings(handle):
-    if handle in cache and cache[handle]['out'] > datetime.now():
-        return cache[handle]['data']
+    if handle in cache and cache[handle]:
+        if cache[handle]['userRatings']['out'] > datetime.now():
+            return cache[handle]['userRatings']['data']
 
-    file_data = load_file('data_ratings.js')
-    now = datetime.now()
-    valid_data = {key: value for key, value in file_data.items() if value.get('out', now) > now}
-    data = valid_data.get(handle,None)
 
-    if data:
-        cache[handle] = {
-            'data': data['data'],
-            'out': data['out']
-        }
-        return data['data']
-
-    url = f"https://codeforces.es/api/user.rating?handle={handle}"
+    url = f"https://codeforces.com/api/user.rating?handle={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
     try:
@@ -165,15 +131,11 @@ def search_ratings(handle):
                 'handle': handle,
                 'message': 'This handle does not have a competition record'
             }
-        cache[handle] = {
+        cache[handle]={'userRatings':{
             'data': result,
             'out': datetime.now() + timedelta(seconds=15)
-        }
-        file_data[handle] = {
-            'data': result,
-            'out': datetime.now() + timedelta(seconds=30)
-        }
-        save_file(file_data, 'data_ratings.js')
+        }}
+        print(cache)
         return result
 
 
@@ -183,15 +145,10 @@ def search_ratings(handle):
                 'message': 'no such handle',
                 'code': 404
             }
-            cache[handle] = {
+            cache[handle] = {'userRatings': {
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
-            }
-            file_data[handle] = {
-                'data': data,
-                'out': datetime.now() + timedelta(seconds=30)
-            }
-            save_file(file_data, 'data_ratings.js')
+            }}
             return data
         else:
             return {
@@ -210,29 +167,7 @@ def search_ratings(handle):
         }
 
 
-def save_file(data, filename):
-    def json_serial(obj):
-        if isinstance(obj, datetime):
-            return obj.isoformat()
 
-    existing_data = load_file(filename)
-    for key, value in data.items():
-        existing_data[key] = value
-
-    with open(filename, 'w') as f:
-        json.dump(existing_data, f, default=json_serial)
-
-def load_file(filename):
-    def json_deserial(obj):
-        if 'out' in obj:
-            obj['out'] = datetime.fromisoformat(obj['out'])
-        return obj
-
-    try:
-        with open(filename, 'r') as f:
-            return json.load(f, object_hook=json_deserial)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
 
 @app.route('/batchGetUserInfo')
 def URL_handles():
@@ -268,6 +203,13 @@ def clear_cache():
     try:
         if request.content_type == 'application/json':
             data = request.get_json()
+            handles = data.get('handles', [])
+            if isinstance(handles, str):
+                return jsonify({'message': 'Invalid request'}), 400
+            for h in handles:
+                if not isinstance(h, str) or len(h) <= 1:
+                    return jsonify({'message': 'Invalid request'}), 400
+
         elif request.content_type == 'application/x-www-form-urlencoded':
             data = {}
             for key, values in request.form.lists():
@@ -280,7 +222,7 @@ def clear_cache():
                     for value in values:
                         if not isinstance(value, str) or len(value) <= 1:
                             return jsonify({'message': 'invalid request'}), 400
-                        elif value == 'TRUE' or 'FALSE':
+                        elif value == 'TRUE' or value == 'FALSE' or value == 'false' or value == 'true' or value == 'True' or value == 'False':
                             return jsonify({'message': 'invalid request'}), 400
                         data[field_name].append(value)
         else:
@@ -297,15 +239,18 @@ def clear_cache():
             cache.pop(cache_type, None)
         else:
             for handle in handles:
-                cache_entry = cache.get(cache_type, {}).get(handle)
+                print(handle)
+                cache_entry = cache.get(handle, {}).get(cache_type)
                 if cache_entry:
-                    del cache[cache_type][handle]
-
+                    del cache[handle][cache_type]
+                print(cache)
         return jsonify({'message': 'ok'}), 200
 
     except Exception:
         return jsonify({'message': 'invalid request'}), 400
 
 
+
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=2333, debug=True)
+
