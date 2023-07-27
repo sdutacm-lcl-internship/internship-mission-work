@@ -34,15 +34,9 @@ class UserInfo:
 
 
 class UserRating:
-  def __init__(self, user_rating_id, handle, contest_id, contest_name, rank, old_rating, new_rating, updated_at):
-    self.__user_rating_id = user_rating_id
-    self.__handle = handle
-    self.__contest_id = contest_id
-    self.__contest_name = contest_name
-    self.__rank = rank
-    self.__old_rating = old_rating
-    self.__new_rating = new_rating
-    self.__updated_at = updated_at
+
+  def __init__(self):
+    pass
 
   # Getter methods
   def get_user_rating_id(self):
