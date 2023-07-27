@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 import os
 import openpyxl
@@ -225,10 +227,10 @@ def query_handles():
     handle_list = handles.split(',')
     response_data = []
     global infos
+    infos=read_file(infoname)
     for handle in handle_list:
         if isinfo(handle):
             response_data.append(infos[handle]["result"])
-
         else:
             result = solve(handle)
             p = {
@@ -303,6 +305,7 @@ def find(username):
 @app.route('/getUserRatings', methods=['GET'])
 def getUserRatings():
     global ratings
+    ratings=read_file(ratingname)
     handle = request.args.get('handle')
     if israting(handle):
         find_list = ratings[handle]
@@ -316,7 +319,9 @@ def getUserRatings():
         ratings=read_file(ratingname)
         ratings[handle]=p
         write_file(ratingname,ratings)
-
+    if type(find_list["result"]) == str:
+        find_list["result"] = find_list["result"].replace("'", "\"")
+        find_list["result"]=json.loads(find_list["result"])
     # jsonify函数返回的是一个response对象，所以可以在后面直接加状态码
     return jsonify(find_list["result"]), find_list["status"]
 
