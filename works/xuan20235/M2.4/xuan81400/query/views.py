@@ -268,8 +268,8 @@ def time_difference(time1, time2):
     # 计算两个时间之间的时间差
     time_difference = (time2 - time1)
     # 定义15s的时间间隔
-    #time_15_second = timedelta(seconds=15)
-    time_15_second = timedelta(minutes=15)
+    time_15_second = timedelta(seconds=15)
+    #time_15_second = timedelta(minutes=15) #方便测试
     # 比较时间差和五分钟的时间间隔
     if time_difference > time_15_second:
         return 1
@@ -414,7 +414,7 @@ def solve(request, current_time):
 
 def clearCache(request, handles=None):
     cache_type = request.POST.get("cacheType")
-    #return HttpResponse("222")
+
     if request.content_type == 'application/json':
         data = json.loads(request.body)
         #return HttpResponse("222")
@@ -424,44 +424,43 @@ def clearCache(request, handles=None):
         #return HttpResponse(handles)
 
         if cache_type == 'userInfo':
-            #return HttpResponse("222")
-            #r = request.POST.getlist('handles')
-            r = data.get('handles')
-            #return HttpResponse(r[1])
+
             ans = {"message": "ok"}
-            if r == None:
+            r = data.get('handles')
+            #return HttpResponse(r)
 
-                ans = {"message": "invalid request"}
-                return JsonResponse(ans, safe=False, status=404)
-
-            if len(r) == 0:
+            if len(data) == 1:
+                #return HttpResponse("222")
                 list_old.clear()
                 return JsonResponse(ans, safe=False, status=200)
-            for i in r:
+            elif r == None:
+                ans = {"message": "invalid request"}
+                return JsonResponse(ans, safe=False, status=400)
+            else:
 
-                if i in list_old:
-                    del list_old[i]
+                for i in r:
+                    #return HttpResponse(i)
+                    if i in list_old:
+                        del list_old[i]
 
             return JsonResponse(ans, safe=False, status=200)
+
         elif cache_type == 'userRatings':
             ans = {"message": "ok"}
             #r = request.POST.getlist('handles')
             #return HttpResponse(r)
             r = handles
-            #return HttpResponse(r)
-            if r == None:
-
-                ans = {"message": "invalid request"}
-                return JsonResponse(ans, safe=False, status=404)
-
-            #return HttpResponse(r)
-            if len(r) == 0:
+            if len(data) == 1:
                 list.clear()
                 return JsonResponse(ans, safe=False, status=200)
-            for i in r:
+            elif r == None:
+                ans = {"message": "invalid request"}
+                return JsonResponse(ans, safe=False, status=400)
+            else:
+                for i in r:
 
-                if i in list:
-                    del list[i]
+                    if i in list:
+                        del list[i]
 
             return JsonResponse(ans, safe=False, status=200)
 
@@ -469,59 +468,67 @@ def clearCache(request, handles=None):
             # 不支持的缓存类型
 
             ans = {"message": "invalid request"}
-            return JsonResponse(ans, safe=False, status=404)
+            return JsonResponse(ans, safe=False, status=400)
 
     elif request.content_type == 'application/x-www-form-urlencoded':
         data = request.POST
+        #return HttpResponse(cache_type)
         if cache_type == 'userInfo':
             #return HttpResponse("222")
             #r = request.POST.getlist('handles')
             r = data.getlist('handles')
-            #return HttpResponse(r)
+            #x = request.POST
+
+            #return HttpResponse(len(x))
             ans = {"message": "ok"}
-            r.append(0)
+            #r.append(0)
             #return HttpResponse(len(r))
 
-            if len(r) == 1:
-                ans = {"message": "invalid request"}
-                return JsonResponse(ans, safe=False, status=404)
-            if len(r) == 2:
+            if len(data) == 1:
                 list_old.clear()
                 return JsonResponse(ans, safe=False, status=200)
-
-            for i in r:
-
-                if i in list_old:
-                    del list_old[i]
+            elif len(r) == 0:
+                ans = {"message": "invalid request"}
+                return JsonResponse(ans, safe=False, status=400)
+            else:
+                for i in r:
+                    #return HttpResponse(i)
+                    if i in list_old:
+                        del list_old[i]
 
                 return JsonResponse(ans, safe=False, status=200)
+
         elif cache_type == 'userRatings':
             ans = {"message": "ok"}
             #r = request.POST.getlist('handles')
             r = data.getlist('handles')
             #return HttpResponse(len(r))
-            r.append(0)
+            #x = request.POST
+
+            #return HttpResponse(len(x))
+            ans = {"message": "ok"}
+            #r.append(0)
             #return HttpResponse(len(r))
 
-            if len(r) == 1:
-                ans = {"message": "invalid request"}
-                return JsonResponse(ans, safe=False, status=404)
-            if len(r) == 2:
-                #return HttpResponse("wdad")
+            if len(data) == 1:
                 list.clear()
                 return JsonResponse(ans, safe=False, status=200)
-            for i in r:
+            elif len(r) == 0:
+                ans = {"message": "invalid request"}
+                return JsonResponse(ans, safe=False, status=400)
+            else:
+                for i in r:
 
-                if i in list:
-                    del list[i]
+                    if i in list:
+                        del list[i]
 
-            return JsonResponse(ans, safe=False, status=200)
+                return JsonResponse(ans, safe=False, status=200)
 
         else:
             # 不支持的缓存类型
 
             ans = {"message": "invalid request"}
-            return JsonResponse(ans, safe=False, status=404)
+            return JsonResponse(ans, safe=False, status=400)
 
     else:
         return JsonResponse({'message': 'invalid request'}, status=400)
