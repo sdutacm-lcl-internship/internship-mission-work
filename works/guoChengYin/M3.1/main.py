@@ -1,20 +1,37 @@
 import json
+import logging
+import time
 
 from my_utils.utils import Utils
-
 from datetime import datetime
-
 import pytz
 import requests
 from flask import Flask, request, jsonify
 from flask_caching import Cache
-
 from my_utils.utils import Crawler
 
 app = Flask(__name__)
 # 两个缓存器 1放
 cache_user_info = Cache(app, config={'CACHE_TYPE': 'simple'})
 cache_user_ratings = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+# 设置日志级别为 DEBUG（也可以选择其他级别，例如 INFO、WARNING、ERROR、CRITICAL）
+app.logger.setLevel(logging.DEBUG)
+# # 创建一个文件处理器来记录日志到文件中
+# file_handler = logging.FileHandler('app.log')
+# file_handler.setLevel(logging.DEBUG)
+
+# 创建一个控制台处理器来输出日志到控制台
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
+
+# 设置日志记录的格式
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+# 添加文件处理器到日志记录器中
+app.logger.addHandler(console_handler)
+
+
 # 自定义爬虫
 crawler = Crawler()
 
@@ -24,6 +41,7 @@ myUtils = Utils()
 # 捕捉其他不可预知的错误，用一个全局异常处理器处理
 @app.errorhandler(Exception)
 def server_error(e):
+  app.logger.debug(e)
   error_message = {"message": 'Internal Server Error'}
   return jsonify(error_message), 500
 
@@ -92,8 +110,9 @@ def batch_get_user_info():
       print(response_data)
       cache_user_info.set(name, request_results, timeout=30)
       # 存入文件
-      myUtils.data_save('data-user-info.txt', {"handle": name, "info": request_results})
+      myUtils.data_save('data-user-info.txt', {"handle": name, "info": {"update_at":round(time.time()),"results":request_results}})
     except Exception as e:
+      app.logger.debug(str(e))
       # 第一种异常，请求异常，未收到有效响应
       if isinstance(e, requests.exceptions.ConnectionError):
         request_results['success'] = False
@@ -163,11 +182,12 @@ def get_user_ratings():
       response_data.append(context_info)
     # 循环结束后将结果列表存入缓存和文件
     cache_user_ratings.set(handle, response_data, timeout=30)
-    myUtils.data_save('data-user-ratings.txt', {"handle": handle, "info": response_data})
+    myUtils.data_save('data-user-ratings.txt', {"handle":handle,"info": {"update_at":round(time.time()),"result":response_data}})
 
     return jsonify(response_data)
   except Exception as e:
     # HTTP请求为未收到有效 HTTP 响应
+    app.logger.debug(str(e))
     if isinstance(e, requests.exceptions.ConnectionError):
       error_message = {"message": "The HTTP interface is not responding"}
       return jsonify(error_message), 502
@@ -181,12 +201,20 @@ def load_cache():
   user_info = myUtils.read_file('data-user-info.txt')
   user_ratings = myUtils.read_file('data-user-ratings.txt')
   for name in user_info.keys():
-    cache_user_info.set(name, user_info[name], timeout=30)
+    #计算时间差，只有时间小于30s的才可以填入缓存，并且还可以在缓存中存在(30-diff)秒
+    time_diff=round(time.time())-user_info[name]["update_at"]
+    if time_diff<30:
+      cache_user_info.set(name, user_info[name]["result"], timeout=30-time_diff)
   for name in user_ratings.keys():
-    cache_user_ratings.set(name, user_ratings[name], timeout=30)
+    time_diff = round(time.time()) - user_info[name]["update_at"]
+    if time_diff < 30:
+      cache_user_ratings.set(name, user_ratings[name]["result"], timeout=30-time_diff)
 
 
 if __name__ == '__main__':
   # 项目启动前先将文件中的数据填充到缓存中
-  load_cache()
+  try:
+    load_cache()
+  except Exception as e:
+    app.logger.debug(str(e))
   app.run(host='127.0.0.1', port=2333)

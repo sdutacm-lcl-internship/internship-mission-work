@@ -13,20 +13,28 @@ class Utils:
   s:保存内容'''
 
   def data_save(self, path, s):
-    with open(path, "r+") as f:
-      # 先读取文件数据,并将其转为字典
-      file_data = self.read_file(path)
+    try:
+      with open(path, "r+") as f:
+        # 先读取文件数据,并将其转为字典
+        file_data = self.read_file(path)
 
-      # 更新选手信息,将数据写入字典
-      file_data[s["handle"]] = s["info"]
-      # 再将更改的字典，写入文件
-      json.dump(file_data, f)
+        # 更新选手信息,将数据写入字典
+        file_data[s["handle"]] = s["info"]
+        # 再将更改的字典，写入文件
+        json.dump(file_data, f)
+    except Exception:
+      raise
+
 
 
   def read_file(self, path):
-    with open(path, "r") as f:
-      txt =  f.read()
-      return json.loads(txt)
+    try:
+      with open(path, "r") as f:
+        txt = f.read()
+        return json.loads(txt)
+    except Exception:
+      raise
+
 
 
 '''
