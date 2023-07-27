@@ -15,7 +15,7 @@ import lxml
 import sys
 import time
 import json
-
+#import models
 import pytz
 
 #from tests import time_differences
@@ -413,56 +413,77 @@ def solve(request, current_time):
 
 
 def clearCache(request, handles=None):
+    if request.method != 'POST':
+        ans = {"message": "invalid request"}
+        return JsonResponse(ans, safe=False, status=400)
     cache_type = request.POST.get("cacheType")
 
     if request.content_type == 'application/json':
-        data = json.loads(request.body)
+        #return HttpResponse(handles)
+        #data = json.loads(request.body)
         #return HttpResponse("222")
 
-        cache_type = data.get('cacheType')
-        handles = data.get('handles')
-        #return HttpResponse(handles)
+        #cache_type = data.get('cacheType')
+        # return HttpResponse(handles)
+        try:
+            data = json.loads(request.body)
+            #return HttpResponse("222")
 
+            cache_type = data.get('cacheType')
+            handles = data.get('handles')
+        # return HttpResponse(handles)
+        except:
+            ans = {"message": "invalid request"}
+            return JsonResponse(ans, safe=False, status=400)
         if cache_type == 'userInfo':
 
             ans = {"message": "ok"}
-            r = data.get('handles')
-            #return HttpResponse(r)
-
-            if len(data) == 1:
-                #return HttpResponse("222")
-                list_old.clear()
-                return JsonResponse(ans, safe=False, status=200)
-            elif r == None:
+            r = handles
+            #return HttpResponse(len(r))
+            if isinstance(r, str):
                 ans = {"message": "invalid request"}
                 return JsonResponse(ans, safe=False, status=400)
             else:
+                if len(data) == 1:
+                    #return HttpResponse("222")
+                    list_old.clear()
+                    return JsonResponse(ans, safe=False, status=200)
+                elif r == None:
+                    ans = {"message": "invalid request"}
+                    return JsonResponse(ans, safe=False, status=400)
+                else:
+                    if len(r) == 0:
+                        #return HttpResponse(20)
+                        return JsonResponse(ans, safe=False, status=200)
+                    for i in r:
+                        return HttpResponse(i)
+                        if i in list_old:
+                            del list_old[i]
 
-                for i in r:
-                    #return HttpResponse(i)
-                    if i in list_old:
-                        del list_old[i]
-
-            return JsonResponse(ans, safe=False, status=200)
+                return JsonResponse(ans, safe=False, status=200)
 
         elif cache_type == 'userRatings':
             ans = {"message": "ok"}
             #r = request.POST.getlist('handles')
             #return HttpResponse(r)
             r = handles
-            if len(data) == 1:
-                list.clear()
-                return JsonResponse(ans, safe=False, status=200)
-            elif r == None:
+            if isinstance(r, str):
                 ans = {"message": "invalid request"}
                 return JsonResponse(ans, safe=False, status=400)
             else:
-                for i in r:
+                if len(data) == 1:
+                    list.clear()
+                    return JsonResponse(ans, safe=False, status=200)
+                elif r == None:
+                    ans = {"message": "invalid request"}
+                    return JsonResponse(ans, safe=False, status=400)
+                else:
+                    for i in r:
 
-                    if i in list:
-                        del list[i]
+                        if i in list:
+                            del list[i]
 
-            return JsonResponse(ans, safe=False, status=200)
+                return JsonResponse(ans, safe=False, status=200)
 
         else:
             # 不支持的缓存类型
@@ -479,10 +500,10 @@ def clearCache(request, handles=None):
             r = data.getlist('handles')
             #x = request.POST
 
-            #return HttpResponse(len(x))
+            #return HttpResponse(len(r))
             ans = {"message": "ok"}
             #r.append(0)
-            #return HttpResponse(len(r))
+            #return HttpResponse(len(data))
 
             if len(data) == 1:
                 list_old.clear()
@@ -567,3 +588,17 @@ def get_userInfo(request):
     ans["result"]["rating"]
     res = {"rank": ans["result"]["rank"], "rating": ans["result"]["rating"]}
     return JsonResponse(res, safe=False, status=200)
+
+
+# def addcustomer(request):
+
+#     info = request.params['data']
+
+#     # 从请求消息中 获取要添加客户的信息
+#     # 并且插入到数据库中
+#     # 返回值 就是对应插入记录的对象
+#     record = models.user_info.objects.create(name=info['name'],
+#                                       phonenumber=info['phonenumber'],
+#                                       address=info['address'])
+
+#     return JsonResponse({'ret': 0, 'id': record.id})
