@@ -304,10 +304,11 @@ def clear_cache():
             cache.pop(cache_type, None)
         else:
             for handle in handles:
-                cache_entry = cache.get(cache_type, {}).get(handle)
+                print(handle)
+                cache_entry = cache.get(handle, {}).get(cache_type)
                 if cache_entry:
                     del cache[handle][cache_type]
-                # print(cache)
+                print(cache)
         return jsonify({'message': 'ok'}), 200
 
     except Exception:
