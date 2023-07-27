@@ -268,44 +268,51 @@ def clear_cache():
     try:
         if request.content_type == 'application/json':
             data = request.get_json()
+            handles = data.get('handles', [])
+            if isinstance(handles, str):
+                return jsonify({'message': 'Invalid request'}), 400
+            for h in handles:
+                if not isinstance(h, str) or len(h) <= 1:
+                    return jsonify({'message': 'Invalid request'}), 400
+
         elif request.content_type == 'application/x-www-form-urlencoded':
-            # response = request.form
-            # print(response)
-            # data = request.form.to_dict()
             data = {}
-            for key, value in request.form.items():
-                if '[' in key and key.endswith(']'):
-                    field_name, index = key.split('[')
-                    index = index[:-1]
+            for key, values in request.form.lists():
+                if key == 'cacheType':
+                    data[key] = values[0]
+                elif key.startswith('handles'):
+                    field_name = key.split('[')[0]
                     if field_name not in data:
                         data[field_name] = []
-                    data[field_name].append(value)
-                else:
-                    data[key] = value
+                    for value in values:
+                        if not isinstance(value, str) or len(value) <= 1:
+                            return jsonify({'message': 'invalid request'}), 400
+                        elif value == 'TRUE' or value == 'FALSE' or value == 'false' or value == 'true' or value == 'True' or value == 'False':
+                            return jsonify({'message': 'invalid request'}), 400
+                        data[field_name].append(value)
         else:
             return jsonify({'message': 'invalid request'}), 400
 
         cache_type = data.get('cacheType')
-        #print(cache_type)
+        print(cache_type)
         handles = data.get('handles', [])
-        #print(handles)
+        print(handles)
 
         if cache_type not in ('userInfo', 'userRatings'):
-            return jsonify({'message': 'invalid request'})
-
+            return jsonify({'message': 'invalid request'}),400
         if not handles:
             cache.pop(cache_type, None)
         else:
             for handle in handles:
-                cache_entry = cache.get(cache_type, {}).get(handle)
+                print(handle)
+                cache_entry = cache.get(handle, {}).get(cache_type)
                 if cache_entry:
-                    del cache[cache_type][handle]
-
+                    del cache[handle][cache_type]
+                print(cache)
         return jsonify({'message': 'ok'}), 200
 
     except Exception:
         return jsonify({'message': 'invalid request'}), 400
-
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=2333, debug=True)
