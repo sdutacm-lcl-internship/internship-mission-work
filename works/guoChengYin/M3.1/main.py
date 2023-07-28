@@ -110,7 +110,7 @@ def batch_get_user_info():
       print(response_data)
       cache_user_info.set(name, request_results, timeout=30)
       # 存入文件
-      myUtils.data_save('data-user-info.txt', {"handle": name, "info": {"update_at":round(time.time()),"results":request_results}})
+      myUtils.data_save('data-user-info.txt', {"handle": name, "info": {"update_at":round(time.time()),"result":request_results}})
     except Exception as e:
       app.logger.debug(str(e))
       # 第一种异常，请求异常，未收到有效响应
@@ -206,15 +206,15 @@ def load_cache():
     if time_diff<30:
       cache_user_info.set(name, user_info[name]["result"], timeout=30-time_diff)
   for name in user_ratings.keys():
-    time_diff = round(time.time()) - user_info[name]["update_at"]
+    time_diff = round(time.time()) - user_ratings[name]["update_at"]
     if time_diff < 30:
       cache_user_ratings.set(name, user_ratings[name]["result"], timeout=30-time_diff)
 
 
 if __name__ == '__main__':
-  # 项目启动前先将文件中的数据填充到缓存中
+  # 项目启动前先将文件中的数据填充到
   try:
     load_cache()
   except Exception as e:
-    app.logger.debug(str(e))
+    logging.debug(e)
   app.run(host='127.0.0.1', port=2333)
