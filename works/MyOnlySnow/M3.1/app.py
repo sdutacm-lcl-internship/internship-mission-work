@@ -305,7 +305,7 @@ def clear_cache():
             return jsonify({'message': 'invalid request'}),400
         elif cache_type=='userInfo':
             if not handles:
-                cache_Info.pop(cache_type, None)
+                 cache_Info.clear()
             else:
                 for handle in handles:
                     print(handle)
@@ -316,7 +316,7 @@ def clear_cache():
             return jsonify({'message': 'ok'}), 200
         else:
             if not handles:
-                cache_Ratings.pop(cache_type, None)
+                cache_Ratings.clear()
             else:
                 for handle in handles:
                     print(handle)
