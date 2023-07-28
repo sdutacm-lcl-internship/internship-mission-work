@@ -1,3 +1,6 @@
+import json
+
+
 class UserInfo:
   def __init__(self, handle, rating, rank, updated_at):
     self.__handle = handle
@@ -87,3 +90,6 @@ class UserRating:
 
   def set_updated_at(self, updated_at):
     self.__updated_at = updated_at
+
+  def __repr__(self):
+    return self.__str__()

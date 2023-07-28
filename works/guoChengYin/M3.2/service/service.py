@@ -1,41 +1,45 @@
 import datetime
+from linecache import cache
 
 import pytz
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, current_app
 from flask_caching import Cache
 from utils import Crawler, Utils
-from dao import Dao
+from user_dao import Dao
 from bean import UserInfo, UserRating
 
-app = Flask(__name__)
+
+
+
 # 两个缓存器 1放
-cache_user_info = Cache(app, config={'CACHE_TYPE': 'simple'})
-cache_user_ratings = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+
+
 crawler = Crawler()
 myUtils = Utils()
 dao = Dao()
 
 
 class Service:
-  def __init__(self):
-    pass
+  def __init__(self,cache_user_info,cache_user_ratings):
+    self.cache_user_info=cache_user_info
+    self.cache_user_ratings=cache_user_ratings
 
   def get_user_ratings(self, handle):
     try:
       # 缓存中有数据，直接返回
-      if not cache_user_ratings.get(handle) is None:
-        return cache_user_ratings.get(handle)
+      if not self.cache_user_ratings.get(handle) is None:
+        return self.cache_user_ratings.get(handle)
 
       # 查询数据库中是否有数据,返回一个结果列表
       ls = dao.query_ratings(handle)
       if len(ls) != 0:
         # 返回结果不为空，存入缓存
-        cache_user_ratings.set(handle, ls, timeout=30)
+        self.cache_user_ratings.set(handle, ls, timeout=30)
         return ls
 
       # 缓存和数据库中均中没有数据，30s已过。再次爬取数据并保存在数据库与缓存中
       request_results = crawler.crawl("https://codeforces.com/api/user.rating?handle={}".format(handle))
-      print(request_results)
       # 2.请求后返回码为400
       if request_results['status'] == 400:
         error_message = {"message": "no such handle"}
@@ -57,7 +61,6 @@ class Service:
         # 引入对象实例user_rating
         user_rating = UserRating()
         # handle可以查询到
-        print(item)
         if "handle" in item.keys():
           user_rating.set_handle(item["handle"])
         if "contestId" in item.keys():
@@ -67,7 +70,6 @@ class Service:
         if "rank" in item.keys():
           user_rating.set_rank(int(item["rank"]))
         if "ratingUpdateTimeSeconds" in item.keys():
-
           # 指定了时区
           dt_object = datetime.datetime.fromtimestamp(item["ratingUpdateTimeSeconds"], pytz.timezone('Asia/Shanghai'))
           iso_datetime_str = dt_object.isoformat()
@@ -78,18 +80,18 @@ class Service:
           user_rating.set_new_rating(int(item["newRating"]))
         response_data.append(user_rating)
       # 循环结束后将结果列表存入缓存和数据库
-      cache_user_ratings.set(handle, response_data, timeout=30)
+      print("yyyy")
+      self.cache_user_ratings.set(handle, response_data, timeout=30)
       dao.save_ratings(response_data)
       # myUtils.data_save('data-user-ratings.txt', {"handle": handle, "info": response_data})
       # 改为存到数据
-      print(response_data)
       return response_data
     except Exception:
       raise
 
 
-service = Service()
-print(service.get_user_ratings('jiangly'))
+
+# print(service.get_user_ratings('jiangly'))
 
 
 # def batch_get_user_info(handles):

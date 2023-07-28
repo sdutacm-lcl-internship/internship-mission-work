@@ -5,19 +5,20 @@ import time
 
 from bean import UserInfo
 
+
 class Dao:
-  def query_user_info(self,handles):
-    conn = sqlite3.connect('../cf.db')
+  def query_user_info(self, handles):
+    conn = sqlite3.connect('cf.db')
     # 获取游标对象
     cursor = conn.cursor()
     sql = "SELECT * FROM user_info WHERE handle IN ({})".format(','.join(['?'] * len(handles)))
-    cursor.execute(sql,tuple(handles))
+    cursor.execute(sql, tuple(handles))
 
-    res=cursor.fetchall()
+    res = cursor.fetchall()
     res = list(res[0])
     updatated = res[3]
-    if self.get_time_diff(updatated)>30:
-      res=[]
+    if self.get_time_diff(updatated) > 30:
+      res = []
     conn.close()
 
     return res
@@ -37,48 +38,43 @@ class Dao:
   #   conn.commit()
   #   conn.close()
 
-
   def save_ratings(self, ratings):
-    conn = sqlite3.connect('../cf.db')
+    conn = sqlite3.connect('cf.db')
     cursor = conn.cursor()
     for rating_info in ratings:
       handle = rating_info.get_handle()
 
-      contest_id=rating_info.get_contest_id()
-      contest_name=rating_info.get_contest_name()
-      rank=rating_info.get_rank()
-      old_rating=rating_info.get_old_rating()
-      new_rating=rating_info.get_new_rating()
+      contest_id = rating_info.get_contest_id()
+      contest_name = rating_info.get_contest_name()
+      rank = rating_info.get_rank()
+      old_rating = rating_info.get_old_rating()
+      new_rating = rating_info.get_new_rating()
       updated_at = rating_info.get_updated_at()
-      cursor.execute("insert into user_rating (handle,contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at,updated_at) VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".
-                     format(handle,contest_id,contest_name,rank,old_rating,new_rating,updated_at,time.time()))
+      cursor.execute(
+        "insert into user_rating (handle,contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at,updated_at) VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".
+        format(handle, contest_id, contest_name, rank, old_rating, new_rating, updated_at, round(time.time())))
     conn.commit()
     conn.close()
-  def query_ratings(self,handle):
-    conn = sqlite3.connect('../cf.db')
+
+  def query_ratings(self, handle):
+    conn = sqlite3.connect('cf.db')
     # 获取游标对象
     cursor = conn.cursor()
     sql = "SELECT * FROM user_rating WHERE handle='{}'".format(handle)
+    print(sql)
     cursor.execute(sql)
     res = cursor.fetchall()
-    print(res)
-    res=list(res[0])
-    update_at = res[8]
-    if self.get_time_diff(update_at)>30:
-      res=[]
-    print(self.get_time_diff(update_at))
+    res = [list(item) for item in res]
+    result=[]
+
+    if len(res)!=0:
+      for item in res:
+        if self.get_time_diff(item[8])<30:
+          result.append(item)
     conn.close()
-    return res
+    return result
 
   @classmethod
-  def get_time_diff(self,dt):
-    dt=dt/1000
-    dt=dt-28800
-    return round(time.time())-dt
-
-
-
-
-
-
-
+  def get_time_diff(self, dt):
+    print(round(time.time()) - dt)
+    return round(time.time()) - dt
