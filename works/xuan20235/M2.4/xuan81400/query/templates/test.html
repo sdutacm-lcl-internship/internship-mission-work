@@ -55,10 +55,13 @@
         });
 
         // 更新查询结果
+        var originalHtml = document.body.innerHTML;
         function updateResult(data) {
-            var resultContainer = document.getElementsByTagName("table");
-            resultContainer.innerHTML = ""; // 清空之前的结果
-
+            var name = document.getElementsByClassName('yuanshen')
+            //console.log(name)
+            //document.body.innerHTML = originalHtml;
+            //name.remove()
+            //console.log(name)
             if (data.length === 0) {
 
             } else {
@@ -70,6 +73,7 @@
 
 
                 var table = document.createElement("table");
+                table.className = "yuanshen"
                 table.border = "1";
                 table.style.margin = "auto";
                 table.width = "500px";

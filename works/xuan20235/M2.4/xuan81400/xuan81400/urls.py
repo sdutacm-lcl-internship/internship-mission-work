@@ -16,14 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from query.views import query_handles, query_getUserRatings, query_handles1, ask, clearCache, ask_mul, page_not_found, page_not_found_500, page_not_found_503, user_query, get_userInfo
+from query.views import ask, ask_mul, user_query, tet, solve_ask
+from query.models import page_not_found, page_not_found_500, page_not_found_503
 
 handler404 = page_not_found
 handler500 = page_not_found_500
 handler503 = page_not_found_503
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('clearCache', clearCache),
+    path('clearCache', solve_ask),
     #path('', query_handles),
     #handler500 = 'your_app.views.server_error'
     #path('batchGetUserInfo/', query_batchGetUserInfo),
@@ -32,5 +33,6 @@ urlpatterns = [
     path('getUserRatings', ask),
     path('batchGetUserInfo', ask_mul),
     path('', user_query),
-    path('userInfo', get_userInfo)
+    #path('userInfo', get_userInfo),
+    path('test', tet)
 ]
