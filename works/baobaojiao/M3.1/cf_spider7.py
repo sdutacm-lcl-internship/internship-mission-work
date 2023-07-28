@@ -264,7 +264,7 @@ def get_rating_from_file(handle):
             for index, p in enumerate(list):
                 pp = eval(p)
                 if pp['handle'] == handle and time.time() <= pp['out_time']:
-                    return {'message': 'ok'}, 200
+                    return pp, 200
                 elif pp['handle'] == handle and time.time() > pp['out_time']:
                     res = grep_rating(handle)
                     if res[1] != 200:
@@ -273,14 +273,14 @@ def get_rating_from_file(handle):
                     fp = open(file_path, 'w', encoding='utf-8')
                     fp.write(str(';'.join(map(str, page_text))))
                     fp.close()
-                    return {'message': 'ok'}, 200
+                    return pp, 200
             res = grep_rating(handle)
             if res[1] != 200:
                 return res[0], res[1]
             fp = open(file_path, 'a', encoding='utf-8')
             fp.write(';' + str(res[0]))
             fp.close()
-            return {'message': 'ok'}, 200
+            return res[0], res[1]
         else:
             res = grep_rating(handle)
             if res[1] != 200:
@@ -288,7 +288,7 @@ def get_rating_from_file(handle):
             fp = open(file_path, 'w', encoding='utf-8')
             fp.write(str(res[0]))
             fp.close()
-            return {'message': 'ok'}, 200
+            return res[0], res[1]
 
     except Exception as e:
         return {"message": "Internal Server Error"}, 500
@@ -297,6 +297,8 @@ def get_rating_from_file(handle):
 def get_userinfo_from_file(handles):
     try:
         file_path = 'data-user-info.txt'
+
+        ans = []
 
         if os.path.exists(file_path):
             for handle in handles:
@@ -312,27 +314,35 @@ def get_userinfo_from_file(handles):
                         judge = 1
                         res = grep_user(handle)
                         if res[1] != 200:
-                            return res[0], res[1]
+                            ans.append(res[0])
+                            continue
+                            # return res[0], res[1]
                         page_text[index] = str(res[0])
                         fp = open(file_path, 'w', encoding='utf-8')
                         fp.write(';'.join(page_text))
                         fp.close()
+                        ans.append(res[0])
                     elif handle in pp['handle'] and time.time() <= pp['out_time']:
                         judge = 1
+                        ans.append(pp)
                 if judge == 0:
                     res = grep_user(handle)
                     if res[1] != 200:
-                        return res[0], res[1]
+                        ans.append(res[0])
+                        continue
+                        # return res[0], res[1]
                     fp = open(file_path, 'a', encoding='utf-8')
                     fp.write(';' + str(res[0]))
                     fp.close()
+                    ans.append(res[0])
         else:
             res = grep_user(handles[0])
             if res[1] != 200:
-                return res[0], res[1]
+                ans.append(res[0])
             fp = open(file_path, 'w', encoding='utf-8')
             fp.write(str(res[0]))
             fp.close()
+            ans.append(res[0])
             del handles[0]
             if len(handles) != 0:
                 return get_userinfo_from_file(handles)
@@ -341,7 +351,7 @@ def get_userinfo_from_file(handles):
         print(e)
         return {"message": "Internal Server Error"}, 500
 
-    return {"message": "ok"}, 200
+    return ans, 200
 
 
 @app.route('/clearCache', methods=['post'])
