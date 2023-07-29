@@ -28,7 +28,9 @@ class Utils:
         name_file = str(e).split("directory:")[1]
         name_file=name_file[2:len(name_file)-1]
         f=open(name_file,'a')
-        f.write('{}')
+        print("-----------------------------------------")
+
+        json.dump({s["handle"]:s['info']},f)
         f.close()
       else:
         raise

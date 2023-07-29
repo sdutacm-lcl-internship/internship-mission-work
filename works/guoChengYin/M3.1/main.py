@@ -121,12 +121,13 @@ def batch_get_user_info():
         request_results['type'] = 3
         request_results['message'] = 'The HTTP interface is not responding'
       else:
+        raise
         # 剩下的其他异常认为是服务器异常
-        request_results['success'] = False
-        request_results['type'] = 4
-        request_results['message'] = 'Internal Server Error'
-
-        response_data.append(request_results)
+        # request_results['success'] = False
+        # request_results['type'] = 4
+        # request_results['message'] = 'Internal Server Error'
+        #
+        # response_data.append(request_results)
 
   return jsonify(response_data), 200
 
@@ -199,24 +200,30 @@ def get_user_ratings():
 
 
 # 项目启动前将txt文件中保存的数据加载到缓存中
-def load_cache():
+def load_cache_user_info():
   user_info = myUtils.read_file('data-user-info.txt')
-  user_ratings = myUtils.read_file('data-user-ratings.txt')
   for name in user_info.keys():
     #计算时间差，只有时间小于30s的才可以填入缓存，并且还可以在缓存中存在(30-diff)秒
     time_diff=round(time.time())-user_info[name]["update_at"]
     if time_diff<30:
       cache_user_info.set(name, user_info[name]["result"], timeout=30-time_diff)
+def load_cache_user_ratings():
+  user_ratings = myUtils.read_file('data-user-ratings.txt')
   for name in user_ratings.keys():
     time_diff = round(time.time()) - user_ratings[name]["update_at"]
     if time_diff < 30:
       cache_user_ratings.set(name, user_ratings[name]["result"], timeout=30-time_diff)
 
 
+
 if __name__ == '__main__':
-  # 项目启动前先将文件中的数据填充到
+  # 项目启动前分两次加载数据，防止因一个数据加载不成功导致都无法加载
   try:
-    load_cache()
+    load_cache_user_info()
+  except Exception as e:
+    logging.debug(e)
+  try:
+    load_cache_user_ratings()
   except Exception as e:
     logging.debug(e)
   app.run(host='127.0.0.1', port=2333)
