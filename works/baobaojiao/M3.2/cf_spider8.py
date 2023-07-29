@@ -183,7 +183,7 @@ def init_database():
         rank INT NOT NULL,
         old_rating INT NOT NULL,
         new_rating INT NOT NULL,
-        rating_updated_at NOT NULL,
+        rating_updated_at DATETIME NOT NULL,
         updated_at DATETIME NOT NULL,
         FOREIGN KEY (handle) REFERENCES user_info(handle)
         )
@@ -197,10 +197,12 @@ def init_database():
 
 def get_userinfo_from_database(handles):
     ans = []
-    for handle in handles:
-        try:
-            conn = sqlite3.connect('cf.db')
-            cursor = conn.cursor()
+
+    try:
+        conn = sqlite3.connect('cf.db')
+        conn.execute("PRAGMA foreign_keys = ON")
+        cursor = conn.cursor()
+        for handle in handles:
             sql = "SELECT * FROM user_info WHERE handle = ?"
             handle = handle
             cursor.execute(sql, (handle,))
@@ -217,7 +219,6 @@ def get_userinfo_from_database(handles):
                     sql = "INSERT INTO user_info (handle, updated_at) VALUES(?, ?)"
                     cursor.execute(sql, (res[0]['handle'], res[0]['updated_at']))
                 conn.commit()
-                conn.close()
                 del res[0]['updated_at']
                 ans.append(res[0])
             elif datetime_to_unix(result[0][3]) + 30 >= time.time():
@@ -243,17 +244,17 @@ def get_userinfo_from_database(handles):
                     sql = "UPDATE user_info SET handle = ?, updated_at = ? WHERE handle = ?"
                     cursor.execute(sql, (res[0]['handle'], res[0]['updated_at'], handle))
                 conn.commit()
-                conn.close()
                 del res[0]['updated_at']
                 ans.append(res[0])
-
-        except Exception as e:
-            return {"message": "Internal Server Error"}, 500
+        conn.close()
+    except Exception as e:
+        return {"message": "Internal Server Error"}, 500
     return ans, 200
 
 def get_ratings_from_database(handle):
     try:
         conn = sqlite3.connect('cf.db')
+        conn.execute("PRAGMA foreign_keys = ON")
         cursor = conn.cursor()
         sql = "SELECT * FROM user_rating WHERE handle = ?"
         cursor.execute(sql, (handle,))
@@ -268,8 +269,8 @@ def get_ratings_from_database(handle):
                 temp['ratingUpdatedAt'] = unix_to_datetime(convert_to_unix(temp['ratingUpdatedAt']))
                 cursor.execute(sql, (handle, temp['contestId'], temp['contestName'], temp['rank'], temp['ratingUpdatedAt'], temp['oldRating'], temp['newRating'], res[0]['updated_at']))
                 conn.commit()
-            conn.close()
             del res[0]['updated_at']
+            conn.close()
             return res[0], res[1]
         elif datetime_to_unix(result[0][8]) + 30 >= time.time():
             ans = []
@@ -283,6 +284,7 @@ def get_ratings_from_database(handle):
                     "oldRating": contest[5],
                     'newRating': contest[6]
                 })
+            conn.close()
             return ans, 200
         else:
             res = grep_rating(handle)
@@ -301,8 +303,8 @@ def get_ratings_from_database(handle):
                     sql = "UPDATE user_rating SET updated_at = ? WHERE contest_id = ?"
                     cursor.execute(sql, (res[0]['updated_at'], contest_Id))
                     conn.commit()
-            conn.close()
             del res[0]['updated_at']
+            conn.close()
             return res[0], res[1]
     except Exception as e:
         return {"message": "Internal Server Error"}, 500
@@ -332,7 +334,6 @@ def rating_query():
     ans = get_ratings_from_database(handle)
 
     return jsonify(ans[0]), ans[1]
-
 
 if __name__ == '__main__':
     server = pywsgi.WSGIServer(('127.0.0.1', 2333), app)
