@@ -264,6 +264,7 @@ def get_rating_from_file(handle):
             for index, p in enumerate(list):
                 pp = eval(p)
                 if pp['handle'] == handle and time.time() <= pp['out_time']:
+                    del pp['out_time']
                     return pp, 200
                 elif pp['handle'] == handle and time.time() > pp['out_time']:
                     res = grep_rating(handle)
@@ -273,6 +274,7 @@ def get_rating_from_file(handle):
                     fp = open(file_path, 'w', encoding='utf-8')
                     fp.write(str(';'.join(map(str, page_text))))
                     fp.close()
+                    del pp['out_time']
                     return pp, 200
             res = grep_rating(handle)
             if res[1] != 200:
@@ -280,6 +282,7 @@ def get_rating_from_file(handle):
             fp = open(file_path, 'a', encoding='utf-8')
             fp.write(';' + str(res[0]))
             fp.close()
+            del res[0]['out_time']
             return res[0], res[1]
         else:
             res = grep_rating(handle)
@@ -288,6 +291,7 @@ def get_rating_from_file(handle):
             fp = open(file_path, 'w', encoding='utf-8')
             fp.write(str(res[0]))
             fp.close()
+            del res[0]['out_time']
             return res[0], res[1]
 
     except Exception as e:
@@ -316,14 +320,15 @@ def get_userinfo_from_file(handles):
                         if res[1] != 200:
                             ans.append(res[0])
                             continue
-                            # return res[0], res[1]
                         page_text[index] = str(res[0])
                         fp = open(file_path, 'w', encoding='utf-8')
                         fp.write(';'.join(page_text))
                         fp.close()
+                        del res[0]['out_time']
                         ans.append(res[0])
                     elif handle in pp['handle'] and time.time() <= pp['out_time']:
                         judge = 1
+                        del pp['out_time']
                         ans.append(pp)
                 if judge == 0:
                     res = grep_user(handle)
@@ -334,6 +339,7 @@ def get_userinfo_from_file(handles):
                     fp = open(file_path, 'a', encoding='utf-8')
                     fp.write(';' + str(res[0]))
                     fp.close()
+                    del res[0]['out_time']
                     ans.append(res[0])
         else:
             res = grep_user(handles[0])
@@ -342,13 +348,13 @@ def get_userinfo_from_file(handles):
             fp = open(file_path, 'w', encoding='utf-8')
             fp.write(str(res[0]))
             fp.close()
+            del res[0]['out_time']
             ans.append(res[0])
             del handles[0]
             if len(handles) != 0:
                 return get_userinfo_from_file(handles)
 
     except Exception as e:
-        print(e)
         return {"message": "Internal Server Error"}, 500
 
     return ans, 200
