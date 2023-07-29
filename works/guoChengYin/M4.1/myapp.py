@@ -2,10 +2,10 @@ import json
 import pickle
 
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_caching import Cache
 from service.service import Service
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 
 
 cache_user_info = Cache(app, config={'CACHE_TYPE': 'simple'})
@@ -13,10 +13,10 @@ cache_user_ratings = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 service=Service(cache_user_info,cache_user_ratings)
 
-@app.errorhandler(Exception)
-def server_error(e):
-  error_message = {"message": 'Internal Server Error'}
-  return jsonify(error_message), 500
+# @app.errorhandler(Exception)
+# def server_error(e):
+#   error_message = {"message": 'Internal Server Error'}
+#   return jsonify(error_message), 500
 @app.route('/getUserRatings')
 def get_user_ratings():
   handle = request.args.get('handle')
@@ -25,14 +25,24 @@ def get_user_ratings():
   return jsonify(res[0]),res[1]
 
 
-
-@app.route('//batchGetUserInfo')
+@app.route('/batchGetUserInfo')
 def get_user_info():
   handles = request.args.get('handles')
   handles = handles.replace('{', '').replace('}', '').split(',')
   user_infos=service.batch_get_user_info(handles)
   return jsonify(user_infos)
 
+@app.route('/')
+def show_index():
+  return render_template("index.html")
+
+@app.route('/requestUserInfo')
+def requestUserInfo():
+  print(request.url)
+  print(request.content_type)
+  print("handle=")
+  print(request.args.get("handle"))
+  return ''
 
 
 
