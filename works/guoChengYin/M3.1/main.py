@@ -39,11 +39,11 @@ myUtils = Utils()
 
 
 # 捕捉其他不可预知的错误，用一个全局异常处理器处理
-# @app.errorhandler(Exception)
-# def server_error(e):
-#   app.logger.debug(e)
-#   error_message = {"message": 'Internal Server Error'}
-#   return jsonify(error_message), 500
+@app.errorhandler(Exception)
+def server_error(e):
+  app.logger.debug(e)
+  error_message = {"message": 'Internal Server Error'}
+  return jsonify(error_message), 500
 
 
 # 路由1 选手信息
@@ -121,13 +121,12 @@ def batch_get_user_info():
         request_results['type'] = 3
         request_results['message'] = 'The HTTP interface is not responding'
       else:
-        raise
         # 剩下的其他异常认为是服务器异常
-        # request_results['success'] = False
-        # request_results['type'] = 4
-        # request_results['message'] = 'Internal Server Error'
-        #
-        # response_data.append(request_results)
+        request_results['success'] = False
+        request_results['type'] = 4
+        request_results['message'] = 'Internal Server Error'
+
+        response_data.append(request_results)
 
   return jsonify(response_data), 200
 
