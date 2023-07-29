@@ -1,1 +1,1 @@
-{"jiangly": {"update_at": 1690505719, "result": {"success": true, "result": {"handle": "jiangly", "rating": 3625, "rank": "legendary grandmaster"}}}, "zxw": {"update_at": 1690505721, "result": {"success": true, "result": {"handle": "zxw"}}}}
+{"fff": {"update_at": 1690614511, "result": {"success": true, "result": {"handle": "fff", "rating": 1312, "rank": "pupil"}}}}

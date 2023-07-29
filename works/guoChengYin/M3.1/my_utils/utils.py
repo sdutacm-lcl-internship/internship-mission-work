@@ -1,4 +1,5 @@
 import json
+import logging
 
 import requests
 
@@ -17,13 +18,25 @@ class Utils:
       with open(path, "r+") as f:
         # 先读取文件数据,并将其转为字典
         file_data = self.read_file(path)
-
         # 更新选手信息,将数据写入字典
         file_data[s["handle"]] = s["info"]
         # 再将更改的字典，写入文件
         json.dump(file_data, f)
-    except Exception:
-      raise
+    except Exception as e:
+      logging.debug(e)
+      if isinstance(e,FileNotFoundError):
+        name_file = str(e).split("directory:")[1]
+        name_file=name_file[2:len(name_file)-1]
+        f=open(name_file,'a')
+        f.write('{}')
+        f.close()
+      else:
+        raise
+
+
+
+
+
 
 
 

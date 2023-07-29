@@ -39,11 +39,11 @@ myUtils = Utils()
 
 
 # 捕捉其他不可预知的错误，用一个全局异常处理器处理
-@app.errorhandler(Exception)
-def server_error(e):
-  app.logger.debug(e)
-  error_message = {"message": 'Internal Server Error'}
-  return jsonify(error_message), 500
+# @app.errorhandler(Exception)
+# def server_error(e):
+#   app.logger.debug(e)
+#   error_message = {"message": 'Internal Server Error'}
+#   return jsonify(error_message), 500
 
 
 # 路由1 选手信息
@@ -113,6 +113,8 @@ def batch_get_user_info():
       myUtils.data_save('data-user-info.txt', {"handle": name, "info": {"update_at":round(time.time()),"result":request_results}})
     except Exception as e:
       app.logger.debug(str(e))
+      #分配一个新的字典
+      request_results={}
       # 第一种异常，请求异常，未收到有效响应
       if isinstance(e, requests.exceptions.ConnectionError):
         request_results['success'] = False
