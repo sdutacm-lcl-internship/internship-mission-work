@@ -172,6 +172,7 @@ class Service:
         # 存入数据库
         dao.save_user_info(handle,request_results,round(time.time()))
       except Exception as e:
+        request_results={}
         if isinstance(e, requests.exceptions.ConnectionError):
           request_results['success'] = False
           request_results['type'] = 3

@@ -4,13 +4,19 @@
 
 <script>
   function requestInfo(){
-    handle = document.getElementsByName('handle')
-    console.log(handle)
+    handle = document.getElementsByName('handle')[0].value
     let xmlHttpRequest = new XMLHttpRequest();
-    xmlHttpRequest.open("get","/requestUserInfo?"+handle,true);
+    xmlHttpRequest.open("get","/requestUserInfo?handle="+handle,true);
     xmlHttpRequest.setRequestHeader("content-Type","application/json");
     xmlHttpRequest.send()
   }
+  if (httpRequest.readyState === XMLHttpRequest.DONE) {
+
+  }
+  else {
+
+  }
+
 
   </script>
 <head>
