@@ -221,7 +221,6 @@ def get_userinfo_from_database(handles):
                 del res[0]['updated_at']
                 ans.append(res[0])
             elif datetime_to_unix(result[0][3]) + 30 >= time.time():
-                print(result[0][1])
                 if not result[0][1]:
                     ans.append({
                         'handle': result[0][0],
