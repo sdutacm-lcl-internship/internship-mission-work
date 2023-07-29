@@ -1,13 +1,10 @@
 from flask import Flask, request, jsonify, Response, make_response
-import urllib.error
 import requests
 import json
 from fake_useragent import UserAgent
 from datetime import timedelta, datetime
-import sqlite3
-import time
 import pytz
-from urllib.parse import parse_qs
+
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -16,13 +13,13 @@ cache_Ratings={}
 
 
 def search_handles(handle):
-       if handle in cache_Info and cache_Info[handle]:
-            if cache_Info[handle]['out'] > datetime.now():
-                return cache_Info[handle]['data']
+    if handle in cache_Info and cache_Info[handle]:
+        if cache_Info[handle]['out'] > datetime.now():
+            return cache_Info[handle]['data']
 
     file_data = load_file('data_info.js')
     now = datetime.now()
-    valid_data = {key: value for key, value in file_data.items() if value.get('out', now) > now}
+    valid_data = {data['handle']:data for data in file_data if data.get('out', now) > now}
     data = valid_data.get(handle, None)
 
     if data:
@@ -32,7 +29,7 @@ def search_handles(handle):
         }
         return data['data']
 
-    url = f"https://codeforces.es/api/user.info?handles={handle}"
+    url = f"https://codeforces.com/api/user.info?handles={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
     try:
@@ -54,11 +51,11 @@ def search_handles(handle):
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
             }
-            file_data[handle] = {
+            valid_data[handle] = {
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=30)
             }
-            save_file(file_data, 'data_info.js')
+            save_file(list(valid_data.values()), 'data_info.js')
         else:
             data = {
                 'success': True,
@@ -70,11 +67,11 @@ def search_handles(handle):
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
             }
-            file_data[handle] = {
+            valid_data[handle] = {
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=30)
             }
-            save_file(file_data, 'data_info.js')
+            save_file(list(valid_data.values()), 'data_info.js')
         return data
 
     except requests.exceptions.HTTPError as error:
@@ -88,11 +85,11 @@ def search_handles(handle):
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
             }
-            file_data[handle] = {
+            valid_data[handle] = {
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=30)
             }
-            save_file(file_data, 'data_info.js')
+            save_file(list(valid_data.values()), 'data_info.js')
         else:
             data = {
                 'success': False,
@@ -118,23 +115,31 @@ def search_handles(handle):
 
 
 def search_ratings(handle):
-        if handle in cache_Ratings and cache_Ratings[handle]:
-            if cache_Ratings[handle]['out'] > datetime.now():
-                 return cache_Ratings[handle]['data']
+    if handle in cache_Ratings and cache_Ratings[handle]:
+        if cache_Ratings[handle]['out'] > datetime.now():
+            return cache_Ratings[handle]['data']
 
     file_data = load_file('data_ratings.js')
     now = datetime.now()
-    valid_data = {key: value for key, value in file_data.items() if value.get('out', now) > now}
-    data = valid_data.get(handle,None)
+    file_data_dict = {}
+    for data in file_data:
+        if isinstance(data, dict) and 'handle' in data:
+            file_data_dict[data['handle']] = data
 
-    if data:
+    valid_data = file_data_dict.get(handle, None) if file_data_dict.get(handle, None) and file_data_dict[handle].get(
+        'out', now) > now else None
+    if valid_data is None:
+        valid_data = {}
+
+    if valid_data:
+        data = valid_data['data']
         cache_Ratings[handle] = {
-            'data': data['data'],
-            'out': data['out']
+            'data': data,
+            'out': valid_data['out']
         }
-        return data['data']
+        return data
 
-    url = f"https://codeforces.es/api/user.rating?handle={handle}"
+    url = f"https://codeforces.com/api/user.rating?handle={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
     try:
@@ -172,11 +177,11 @@ def search_ratings(handle):
             'data': result,
             'out': datetime.now() + timedelta(seconds=15)
         }
-        file_data[handle] = {
+        valid_data[handle] = {
             'data': result,
             'out': datetime.now() + timedelta(seconds=30)
         }
-        save_file(file_data, 'data_ratings.js')
+        save_file(list(valid_data.values()), 'data_ratings.js')
         return result
 
 
@@ -190,11 +195,11 @@ def search_ratings(handle):
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=15)
             }
-            file_data[handle] = {
+            valid_data[handle] = {
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=30)
             }
-            save_file(file_data, 'data_ratings.js')
+            save_file(list(valid_data.values()), 'data_ratings.js')
             return data
         else:
             return {
@@ -206,9 +211,9 @@ def search_ratings(handle):
             'message': "Nice! Request Failed due to Network issues.",
             'code': 503
         }
-    except Exception:
+    except Exception as ee :
         return {
-            'message': "Internal Server Error",
+            'message':str(ee) ,
             'code': 500
         }
 
@@ -218,12 +223,9 @@ def save_file(data, filename):
         if isinstance(obj, datetime):
             return obj.isoformat()
 
-    existing_data = load_file(filename)
-    for key, value in data.items():
-        existing_data[key] = value
 
     with open(filename, 'w') as f:
-        json.dump(existing_data, f, default=json_serial)
+        json.dump(data, f, default=json_serial)
 
 def load_file(filename):
     def json_deserial(obj):
@@ -233,9 +235,11 @@ def load_file(filename):
 
     try:
         with open(filename, 'r') as f:
-            return json.load(f, object_hook=json_deserial)
+            data_list = json.load(f, object_hook=json_deserial)
+            return data_list
     except (FileNotFoundError, json.JSONDecodeError):
-        return {}
+        return []
+
 
 @app.route('/batchGetUserInfo')
 def URL_handles():
@@ -259,11 +263,15 @@ def URL_ratings():
     results = search_ratings(handle)
     if 'message' in results and 'code' in results:
         result = {
-                'message':results['message']
+            'message': results['message']
         }
-        return jsonify(result), results['code']
+        response = make_response(json.dumps(result), results['code'])
+        response.headers['Content-Type'] = 'application/json'
+        return response
     else:
-        return json.dumps(results)
+        response = make_response(json.dumps(results), 200)
+        response.headers['Content-Type'] = 'application/json'
+        return response
 
 
 @app.route('/clearCache', methods=['POST'])
