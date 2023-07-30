@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>数据查询页面</title>
+    <style>
+        .box {
+            /*background-color: red;*/
+            margin: 0 auto;
+            width: 300px;
+            height: 300px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <h1>查询选手</h1>
+        <form id="queryForm">
+            <label for="handle">请输入选手姓名：</label>
+            <input type="text" id="handle" name="handle" required placeholder="输入要查询的用户">
+            <button type="submit">查询</button>
+        </form>
+
+        <div id="result" style="margin-top: 20px;">
+            <!-- 查询结果将会动态展示在这里 -->
+        </div>
+    </div>
+    <script>
+        // 监听表单提交事件
+        document.getElementById("queryForm").addEventListener("submit", function (event) {
+            event.preventDefault(); // 阻止表单默认提交行为
+
+            // 获取用户输入的选手姓名
+            var handle = document.getElementById("handle").value;
+
+            // 发起 AJAX 请求
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "http://127.0.0.1:2333/getUserRatings?handle=" + handle);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        // 请求成功时更新页面内容
+                        var response = JSON.parse(xhr.responseText);
+                        updateResult(response);
+                    } else {
+                        // 请求失败时提示错误信息
+                        alert("查询失败，请稍后重试！");
+                    }
+                }
+            };
+            xhr.send();
+
+        });
+
+        // 更新查询结果
+        var originalHtml = document.body.innerHTML;
+        function updateResult(data) {
+            var name = document.getElementsByClassName('yuanshen')
+            //console.log(name)
+            //document.body.innerHTML = originalHtml;
+            //name.remove()
+            //console.log(name)
+            if (data.length === 0) {
+
+            } else {
+
+
+                // 创建表格
+                //console.log(data);
+                // 获取表格元素
+
+
+                var table = document.createElement("table");
+                table.className = "yuanshen"
+                table.border = "1";
+                table.style.margin = "auto";
+                table.width = "500px";
+                document.body.appendChild(table);
+                table.createCaption().innerHTML = "rating history";
+                // 表头
+
+                var thead = document.createElement("thead");
+                var headerRow = document.createElement("tr");
+                var headers = ["时间", "比赛", "Rank", "∆"];
+                for (var i = 0; i < 4; i++) {
+                    var th = document.createElement("th");
+                    headerRow.appendChild(th);
+                    th.innerHTML = headers[i];
+                }
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                // 表格内容
+                var tbody = document.createElement("tbody");
+                table.appendChild(tbody);
+                for (var i = 0; i < data.length; i++)  //外面的for循环 是 行tr
+                {
+                    var tmp = data.length - i - 1;
+                    var tr = document.createElement("tr");
+                    tbody.appendChild(tr);
+                    //3,往tr每一行里面创建单元格（跟数据有关系的3个单元格），td单元格的数量取决于每个对象的属性个数 for循环遍历对象 datas[i]
+                    var td = document.createElement("td");  //创建单元格
+                    tr.appendChild(td);
+                    td.innerHTML = data[tmp]["ratingUpdatedAt"];
+                    var td = document.createElement("td");  //创建单元格
+                    tr.appendChild(td);
+                    td.innerHTML = data[tmp]["contestName"];
+                    var td = document.createElement("td");  //创建单元格
+                    tr.appendChild(td);
+                    td.innerHTML = data[tmp]["rank"];
+                    var td = document.createElement("td");  //创建单元格
+                    tr.appendChild(td);
+                    td.innerHTML = data[tmp]["oldRating"] + '→' + data[tmp]["newRating"];;
+                }
+                table.appendChild(tbody);
+            }
+        }
+    </script>
+</body>
+
+</html>
