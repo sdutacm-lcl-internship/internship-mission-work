@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        #htmlContainer {
+            text-align: center;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        td, th {
+            border: 1px solid black;
+            padding: 5px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 500px;
+            margin: 0 auto;
+        }
+
+        .container input,
+        .container button {
+            padding: 10px;
+            font-size: 16px;
+            height: 40px;
+            box-sizing: border-box;
+        }
+
+        .container > input {
+            width: 150px;
+            /* 调整宽度为较小的值 */
+            flex-grow: 1;
+        }
+
+        .container button {
+            margin-left: 10px;
+        }
+        #handle{
+            color: darkturquoise;
+            font-size: 25px
+        }
+        #rating{
+            font-size: 25px;
+            display: inline;
+        white-space: nowrap;
+            color: darkturquoise
+        }
+    </style>
+</head>
+
+<body>
+<div id="app">
+    <h1>查询选手</h1>
+    <div class='container'>
+        <input v-model="name" type="text" id='name' placeholder="请输入handle" style="border-radius: 0px;">
+        <button style="border-radius: 0%;" @click="add">查询</button>
+    </div>
+
+
+<div id="htmlContainer"  v-for="item in contents" :key="item.id">
+    <div v-html="item.content"></div>
+</div>
+</div>
+</body>
+
+
+<script src="../static/vue1.js"></script>
