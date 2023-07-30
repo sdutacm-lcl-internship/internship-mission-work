@@ -15,8 +15,10 @@ from werkzeug.datastructures import MultiDict
 # 获取数据库连接
 def get_db():
     db = getattr(g, '_database', None)
+
     if db is None:
         db = g._database = sqlite3.connect("cf.db")
+        db.execute("PRAGMA foreign_keys = ON")
     return db
 def close_connection(exception):
     db = getattr(g, '_database', None)
@@ -47,7 +49,7 @@ def init_db():
                    rank INT NOT NULL,
                    old_rating INT NOT NULL,
                    new_rating INT NOT NULL,
-                   rating_updated_at NOT NULL,
+                   rating_updated_at DATETIME NOT NULL,
                    updated_at DATETIME NOT NULL,
                    FOREIGN KEY (handle) REFERENCES user_info(handle)
                ); 
@@ -75,8 +77,26 @@ def insertinfo(handle, rating, rank, updated_at):
 def insertratig(id,handle,contest_id,name,rank,old_rating,new_rating,time,updated_at):
     db=get_db()
     cursor=db.cursor()
-    cursor.execute("INSERT INTO user_rating(user_rating_id,handle,contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?) ",(id,handle,contest_id,name,rank,old_rating,new_rating,time,updated_at))
-    db.commit()
+    try:
+        cursor.execute(
+            "INSERT INTO user_rating(user_rating_id, handle, contest_id, contest_name, rank, old_rating, new_rating, rating_updated_at, updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
+            (id, handle, contest_id, name, rank, old_rating, new_rating, time, updated_at))
+        db.commit()
+        return
+    except sqlite3.IntegrityError as e:
+        #如果不加这句话就会报错，显示表格被锁定了
+        db.commit()
+        url = "http://127.0.0.1:2333/batchGetUserInfo"
+        # 请求的handles参数
+        params = {
+            "handles": handle
+        }
+        response = requests.get(url, params=params)
+        cursor.execute(
+            "INSERT INTO user_rating(user_rating_id, handle, contest_id, contest_name, rank, old_rating, new_rating, rating_updated_at, updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
+            (id, handle, contest_id, name, rank, old_rating, new_rating, time, updated_at))
+        db.commit()
+        return
 # 查询数据
 def findinfo(username):
     db = get_db()
@@ -116,6 +136,18 @@ def deleterating(username):
     db=get_db()
     cursor=db.cursor()
     cursor.execute("DELETE FROM user_rating where handle = ?",(username,))
+    db.commit()
+    return
+def updateinfo(username,rating,rank,updated_at):
+    db=get_db()
+    cursor=db.cursor()
+    cursor.execute("update user_info set handle=?,rating=?,rank=?,updated_at=? where handle=?",(username,rating,rank,updated_at,username))
+    db.commit()
+    return
+def updaterating(id,handle,contest_id,name,rank,old_rating,new_rating,time,updated_at):
+    db=get_db()
+    cursor=db.cursor()
+    cursor.execute("update user_rating set user_rating_id=?,handle=?,contest_id=?,contest_name=?,rank=?,old_rating=?,new_rating=?,rating_updated_at=?,updated_at=? where user_rating_id=?)",(id,handle,contest_id,name,rank,old_rating,new_rating,time,updated_at,id))
     db.commit()
     return
 def process(data):
@@ -335,6 +367,7 @@ def query_handles():
 
         else:
             value = solve(handle)
+            f=findinfo(handle)
             if 'result' in value:
                 if 'rating' in value['result']:
                     rating = value['result'].get('rating')
@@ -348,7 +381,11 @@ def query_handles():
                 rating = None
                 rank = None
             if value['success'] is True:
-                insertinfo(handle, rating, rank, datetime.now())
+                f=findinfo(handle)
+                if f==[]:
+                    insertinfo(handle, rating, rank, datetime.now())
+                else:
+                    updateinfo(handle,rating,rank,datetime.now())
             response_data.append(value)
 
     # jsonify()函数简化了将数据转换为JSON响应的过程，并确保响应的Content-Type标头正确设置为application/json
@@ -460,6 +497,7 @@ def israting(username):
             if t < 30:
                 return True
             else:
+                #因为这里如果是用update的话就比较麻烦了，所以我只在查询info的时候使用update，
                 deleterating(username)
                 return False
     else:
@@ -478,7 +516,6 @@ def isinfo(username):
             if t < 30:
                 return True
             else:
-                deleteinfo(username)
                 return False
     return False
 
