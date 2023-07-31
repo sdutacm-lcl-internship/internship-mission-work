@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cf用户rating查询</title>
+
+    <script src="vue.js"></script>
+    <script src="axios.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .w {
+            width: 80%;
+            margin: 50px auto;
+            text-align: center;
+        }
+
+        .title {
+            display: inline-block;
+        }
+
+        .btn {
+            width: 50px;
+            height: 30px;
+        }
+
+        .search {
+            height: 25px;
+            margin-right: 20px;
+        }
+
+        .result {
+            text-align: center;
+        }
+
+        .result h3 {
+            margin-bottom: 20px;
+        }
+
+        .result h4 {
+            font-weight: normal;
+        }
+
+        .table {
+            margin: 30px auto;
+            width: 850px;
+            /* border: 1px solid black; */
+        }
+
+        .table {
+            table-layout: fixed;
+        }
+
+        .table th,
+        td {
+            font-size: 14px;
+            padding: 3px 3px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .contest_th {
+            width: 300px;
+        }
+
+        .time_th {
+            width: 300px;
+        }
+
+        #table_result {
+            display: none;
+        }
+    </style>
+
+</head>
+
+<body id="body">
+    <div id="app">
+        <div class="w ">
+            <h3 cass='title'>查询选手</h3>
+        </div>
+        <div class="w ">
+            <input type="input" class="search" id='handle'>
+            <input type="button" class="btn" value='查询' @click="handle_find">
+        </div>
+
+        <div class="result" id="result"></div>
+        <div class="rating_table w" id="table_result">
+            <h5>rating history</h5>
+            <table class="table" border="1" cellspacing="0" cellpadding="8">
+                <tr>
+                    <th class="time_th">时间</th>
+                    <th class="contest_th">比赛</th>
+                    <th>rank</th>
+                    <th>Δ</th>
+                </tr>
+                <tr v-for="contest in contest_info">
+                    <td>{{contest['ratingUpdatedAt']}}</td>
+                    <td>{{contest['contestName']}}</td>
+                    <td>{{contest['rank']}}</td>
+                    <td>{{contest['oldRating']}} -> {{contest['newRating']}}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+</body>
+
+<script>
+    new Vue({
+        el: "#app",
+        data() {
+            return {
+                handle: 'handle',
+                contest_info: []
+            }
+        },
+        methods: {
+            handle_find() {
+                let _this = this
+                _this.handle = document.getElementById('handle').value
+                document.getElementById('table_result').style.display = 'none'
+                axios({
+                    methods: 'get',
+                    url: `http://127.0.0.1:2333/getUserRatings?handle=${_this.handle}`
+                }).then(function (response) {
+                    if (response.status === 200) {
+                        let contests = response.data.result
+                        let len = contests.length
+                        let div_result = document.getElementById('result')
+                        let table_result = document.getElementById('table_result')
+                        _this.contest_info = response.data.result
+
+                        if (len == 0) {
+                            div_result.innerHTML = `
+                            <h3>查询结果</h3>
+                            <h4>${_this.handle}</h4>
+                            <h4>rating: 0</h4>`
+                        }
+                        else {
+                            let now_rating = contests[len - 1]['newRating']
+                            div_result.innerHTML = `
+                            <h3>查询结果</h3>
+                            <h4>${_this.handle}</h4>
+                            <h4>rating: ${now_rating}</h4>`
+
+                        }
+                        table_result.style.display = 'block'
+                    }
+                    let search_ = document.getElementById('handle')
+                    search_.value = ''
+                }).catch((err) => {
+                    if (err.response.status === 404) {
+                        let div_result = document.getElementById('result')
+                        let table_result = document.getElementById('table_result')
+                        div_result.innerHTML = `
+                        <h3>查询结果</h3>
+                        <h4>请输入正确的用户名！</h4>`
+                    }
+                    else {
+                        let div_result = document.getElementById('result')
+                        div_result.innerHTML = `
+                        <h3>查询结果</h3>
+                        <h4>HTTP response with code ${err.response.status}</h4>`
+                    }
+                    let search_ = document.getElementById('handle')
+                    search_.value = ''
+                })
+            }
+        }
+    })
+</script>
+
+</html>
