@@ -19,9 +19,10 @@ def search_handles(handle):
 
     file_data = load_file('data_info.js')
     now = datetime.now()
-    valid_data = {data['handle']:data for data in file_data if data.get('out', now) > now}
-    data = valid_data.get(handle, None)
+    valid_data = {data['handle']: data for data in file_data if 'handle' in data and data.get('out', now) > now}
 
+
+    data = valid_data.get(handle, None)
     if data:
         cache_Info[handle] = {
             'data': data['data'],
@@ -217,15 +218,14 @@ def search_ratings(handle):
             'code': 500
         }
 
-
 def save_file(data, filename):
+    existing_data = load_file(filename)
+    existing_data.extend(data)
     def json_serial(obj):
         if isinstance(obj, datetime):
             return obj.isoformat()
-
-
     with open(filename, 'w') as f:
-        json.dump(data, f, default=json_serial)
+        json.dump(existing_data, f, default=json_serial)
 
 def load_file(filename):
     def json_deserial(obj):
