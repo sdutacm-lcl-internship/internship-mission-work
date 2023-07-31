@@ -13,36 +13,31 @@ class Dao:
     cursor.execute(sql)
 
     res = cursor.fetchall()
-    if len(res)!=0:
+    if len(res) != 0:
       res = list(res[0])
       updatated = res[3]
-      diff=self.get_time_diff(updatated)
-      if  diff> 30:
+      diff = self.get_time_diff(updatated)
+      if diff > 30:
         res = []
       else:
         res.append(diff)
     conn.close()
     return res
-  def delete_user_info(self,handle):
-    conn = sqlite3.connect('cf.db')
-    cursor = conn.cursor()
-    cursor.execute("delete from user_rating where handle = '{}'".format(handle))
-    conn.commit()
-    conn.close()
 
-  def save_user_info(self,handle,user_info,update_at):
+  def save_user_info(self, handle, user_info, update_at):
     conn = sqlite3.connect('cf.db')
     # 获取游标对象
     cursor = conn.cursor()
-    rating = user_info["result"]["rating"]
-    rank = user_info["result"]["rank"]
-
-    cursor.execute("insert into user_info (handle,rating,rank,updated_at) VALUES ('{}','{}','{}','{}')".format(handle, rating,
-                                                                                                    rank, update_at))
+    rating = user_info["result"].get("rating", None)
+    rank = user_info["result"].get("rank", None)
+    cursor.execute("delete from user_info where handle = '{}'".format(handle))
+    cursor.execute(
+      "insert into user_info (handle,rating,rank,updated_at) VALUES ('{}','{}','{}','{}')".format(handle, rating,
+                                                                                                  rank, update_at))
     conn.commit()
     conn.close()
 
-  def save_ratings(self, ratings,update_time_at):
+  def save_ratings(self, ratings, update_time_at):
     conn = sqlite3.connect('cf.db')
     cursor = conn.cursor()
     for rating in ratings:
@@ -53,8 +48,9 @@ class Dao:
       old_rating = rating["oldRating"]
       new_rating = rating["newRating"]
       updated_at = rating["ratingUpdatedAt"]
+      cursor.execute("delete from user_rating where handle = '{}'".format(handle))
       cursor.execute(
-        "replace into user_rating (handle,contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at,updated_at) VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".
+        "insert into user_rating (handle,contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at,updated_at) VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".
         format(handle, contest_id, contest_name, rank, old_rating, new_rating, updated_at, update_time_at))
     conn.commit()
     conn.close()
@@ -64,14 +60,14 @@ class Dao:
     # 获取游标对象
     cursor = conn.cursor()
     sql = "SELECT * FROM user_rating WHERE handle='{}'".format(handle)
-    print(sql)
+
     cursor.execute(sql)
     res = cursor.fetchall()
 
-    result=[]
-    if len(res)!=0:
+    result = []
+    if len(res) != 0:
       diff = self.get_time_diff(res[0][8])
-      print(diff)
+
       if diff < 30:
         for item in res:
           result.append({

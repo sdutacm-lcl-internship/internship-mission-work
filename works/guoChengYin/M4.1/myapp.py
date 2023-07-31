@@ -1,6 +1,8 @@
 import json
 import pickle
 
+from flask_cors import CORS
+from flask_cors import cross_origin
 from flask import Flask, request, jsonify, render_template
 from flask_caching import Cache
 from service.service import Service
@@ -17,6 +19,8 @@ service = Service(cache_user_info, cache_user_ratings)
 # def server_error(e):
 #   error_message = {"message": 'Internal Server Error'}
 #   return jsonify(error_message), 500
+
+
 @app.route('/getUserRatings')
 def get_user_ratings():
   handle = request.args.get('handle')
@@ -38,18 +42,42 @@ def show_index():
   return render_template("index.html")
 
 
-@app.route('/requestUserInfo')
+@app.route('/requestUserInfo', methods=["GET", "POST"])
+@cross_origin(supports_credentials=True)
 def request_use_info():
   handle = request.args.get("handle")
+  handle = str(handle).strip()
   response_data = {}
   response_data["handle"] = handle
-  info=service.batch_get_user_info(handle)
-  print(info)
+  handles = []
+  handles.append(handle)
+  info_res = service.batch_get_user_info(handles)[0]
 
-  return ''
+  if info_res.get("success") == False:
+    return jsonify(info_res["message"]), 400
+  response_data["rating"] = "暂无"
+  if "result" in info_res.keys():
+    response_data["rating"] = info_res["result"].get("rating", "暂无")
+  info_res = service.get_user_ratings(handle)
+  if info_res[1] != 200:
+    return jsonify(info_res[0]["message"]), info_res[1]
+
+  info_res = info_res[0]
+  rating_history = []
+  for item in info_res:
+    rating = {}
+    if not isinstance(item, dict):
+      continue
+    rating["contestName"] = item["contestName"]
+    rating["ratingUpdatedAt"] = item["ratingUpdatedAt"]
+    rating["rank"] = item["rank"]
+    rating["oldRating"] = item["oldRating"]
+    rating["newRating"] = item["newRating"]
+    rating_history.append(rating)
+  response_data["rating_history"] = rating_history
+  response_data["success"] = True
+  return jsonify(response_data)
 
 
 if __name__ == '__main__':
-  # 项目启动前先将文件中的数据填充到缓存中
-
   app.run(host='127.0.0.1', port=2333)

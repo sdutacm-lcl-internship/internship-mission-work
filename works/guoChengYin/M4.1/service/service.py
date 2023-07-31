@@ -9,10 +9,7 @@ from flask_caching import Cache
 from utils import Crawler, Utils
 from user_dao import Dao
 
-
-
 # 两个缓存器 1放
-
 
 
 crawler = Crawler()
@@ -21,22 +18,22 @@ dao = Dao()
 
 
 class Service:
-  def __init__(self,cache_user_info,cache_user_ratings):
-    self.cache_user_info=cache_user_info
-    self.cache_user_ratings=cache_user_ratings
+  def __init__(self, cache_user_info, cache_user_ratings):
+    self.cache_user_info = cache_user_info
+    self.cache_user_ratings = cache_user_ratings
 
   def get_user_ratings(self, handle):
     try:
       # 缓存中有数据，直接返回
       if not self.cache_user_ratings.get(handle) is None:
-        return self.cache_user_ratings.get(handle)
+        return self.cache_user_ratings.get(handle), 200
 
       # 查询数据库中是否有数据,返回一个结果列表
       res = dao.query_ratings(handle)
       if len(res) != 0:
         # 返回结果不为空，存入缓存
-        self.cache_user_ratings.set(handle, res, timeout=30-res[len(res)-1])
-        return res[0:len(res)-1]
+        self.cache_user_ratings.set(handle, res, timeout=30 - res[len(res) - 1])
+        return res[0:len(res) - 1], 200
 
       # 缓存和数据库中均中没有数据，30s已过。再次爬取数据并保存在数据库与缓存中
       request_results = crawler.crawl("https://codeforces.com/api/user.rating?handle={}".format(handle))
@@ -55,8 +52,6 @@ class Service:
       # 4.剩下的就是200，取出result。并定义一个搜集结果的列表
       result = request_results['result']
       response_data = []
-      #删除数据库中原有的该成员的比赛信息
-      dao.delete_user_info(handle)
 
       # 循环每场比赛信息
       for item in result:
@@ -64,28 +59,28 @@ class Service:
         rating = {}
         # handle可以查询到
         if "handle" in item.keys():
-          rating["handle"]=item["handle"]
+          rating["handle"] = item["handle"]
         if "contestId" in item.keys():
-          rating["contestId"]=item['contestId']
+          rating["contestId"] = item['contestId']
         if "contestName" in item.keys():
-          rating["contestName"]=item["contestName"]
+          rating["contestName"] = item["contestName"]
         if "rank" in item.keys():
-          rating["rank"]=item["rank"]
+          rating["rank"] = item["rank"]
         if "ratingUpdateTimeSeconds" in item.keys():
           # 指定了时区
           dt_object = datetime.datetime.fromtimestamp(item["ratingUpdateTimeSeconds"], pytz.timezone('Asia/Shanghai'))
           iso_datetime_str = dt_object.isoformat()
-          rating["ratingUpdatedAt"]=iso_datetime_str
+          rating["ratingUpdatedAt"] = iso_datetime_str
         if "oldRating" in item.keys():
-          rating["oldRating"]=int(item["oldRating"])
+          rating["oldRating"] = int(item["oldRating"])
         if "newRating" in item.keys():
-          rating["newRating"]=int(item["newRating"])
+          rating["newRating"] = int(item["newRating"])
         response_data.append(rating)
       # 循环结束后将结果列表存入缓存和数据库
       self.cache_user_ratings.set(handle, response_data, timeout=30)
-      dao.save_ratings(response_data,round(time.time()))
-      #返回数据
-      return response_data,200
+      dao.save_ratings(response_data, round(time.time()))
+      # 返回数据
+      return response_data, 200
     except Exception as e:
       # HTTP请求为未收到有效 HTTP 响应
       if isinstance(e, requests.exceptions.ConnectionError):
@@ -93,9 +88,12 @@ class Service:
         return error_message, 502
       # 剩下的就是服务器程序运行异常,交给全局异常处理器处理
       else:
-        raise
+        error_message = {
+          "message": "Internal Server Error"
+        }
+        return error_message, 500
 
-  def batch_get_user_info(self,handles):
+  def batch_get_user_info(self, handles):
     response_data = []
     for handle in handles:
       try:
@@ -109,7 +107,7 @@ class Service:
         res = dao.query_user_info(handle)
         if len(res) != 0:
           # 返回结果不为空，存入缓存，返回结果
-          request_results={
+          request_results = {
             "success": True,
             "result": {
               "handle": res[0],
@@ -120,7 +118,6 @@ class Service:
           self.cache_user_info.set(handle, request_results, timeout=30 - res[len(res) - 1])
           response_data.append(request_results)
           continue
-
 
         # 数据库和缓存均没有数据。发起请求,并准备一个空的字典
         request_info = crawler.crawl('https://codeforces.com/api/user.info?handles={}'.format(handle))
@@ -167,33 +164,22 @@ class Service:
           }
 
         # 缓存中只存返回码为200的情况
-        response_data.append(request_results)
         self.cache_user_info.set(handle, request_results, timeout=30)
         # 存入数据库
-        dao.save_user_info(handle,request_results,round(time.time()))
+        dao.save_user_info(handle, request_results, round(time.time()))
+        response_data.append(request_results)
       except Exception as e:
-        request_results={}
+        request_results = {}
         if isinstance(e, requests.exceptions.ConnectionError):
           request_results['success'] = False
           request_results['type'] = 3
           request_results['message'] = 'The HTTP interface is not responding'
 
         else:
-          # 剩下的其他异常认为是服务器异常
-          request_results['success'] = False
-          request_results['type'] = 4
-          request_results['message'] = 'Internal Server Error'
-          response_data.append(request_results)
+          raise
+          # request_results['success'] = False
+        # request_results['type'] = 4
+        # request_results['message'] = 'Internal Server Error'
+        # response_data.append(request_results)
 
     return response_data
-
-
-
-
-
-
-
-
-
-
-
