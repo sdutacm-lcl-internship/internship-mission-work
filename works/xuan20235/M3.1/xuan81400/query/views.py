@@ -253,7 +253,7 @@ def get_rating_from_file(handle):
         fp.write(str(res[0]))
         fp.close()
         cnt2 = cnt2 + 1
-        if cnt2 < 10:
+        if cnt2 < 1000:
             return get_rating_from_file(handle)
         else:
             return JsonResponse({"message": "无法创建文件"}, safe=False, status=500)
