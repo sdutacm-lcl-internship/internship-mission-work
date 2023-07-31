@@ -258,7 +258,7 @@ def get_rating_from_file(handle):
         else:
             return JsonResponse({"message": "无法创建文件"}, safe=False, status=500)
     try:
-
+        cnt2=0
         fp = open(file_path, 'r', encoding='utf-8')
         page_text = fp.readline()
         fp.close()
@@ -299,7 +299,7 @@ def get_rating_from_file(handle):
         JsonResponse(res[0]['res'], safe=False, status=res[1])
 
     except Exception as e:
-        cnt1=cnt1+1
+        cnt2=cnt2+1
         if cnt2<1000:
             return  get_rating_from_file(handle)
 
