@@ -1,3 +1,4 @@
+from cmath import exp
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.http import HttpResponse
@@ -149,22 +150,23 @@ def ask_mul_file(request):
 cnt = 0  #防卡死
 cnt1 = 0
 cnt2 = 0
-
+cnt3=0
 
 def get_info_from_file(handles):
     file_path = 'data-user-info.txt'
     ans = []
     if os.path.exists(file_path) == 0:
-        res = solve1(["yuanshen"])
-        fp = open(file_path, 'w', encoding='utf-8')
-        fp.write(str(res[0]))
-        fp.close()
-        cnt = cnt + 1
-        if cnt1 < 10:
-            return get_info_from_file(handles)
-        else:
-            return JsonResponse({"message": "文件无法创建"}, safe=False, status=500)
+        try :
+              res = solve1(["yuanshen"])
+              fp = open(file_path, 'w', encoding='utf-8')
+              fp.write(str(res[0]))
+              fp.close()
+              cnt = cnt + 1
+        except: get_info_from_file(handles)
+  
+        #return JsonResponse({"message": "文件无法创建"}, safe=False, status=403)
     try:
+        cnt=0
         for handle in handles:
             fp = open(file_path, 'r', encoding='utf-8')
             page_text = fp.read()
@@ -206,12 +208,13 @@ def get_info_from_file(handles):
                 fp.write(";" + str(res[0]))
                 fp.close()
                 ans.append(res[0]['res'])
+                ans.append(res[0]['res'])
 
     except Exception as e:
-        cnt = cnt + 1
-        if cnt < 10:
+        cnt=cnt+1
+        if cnt<1000:
             return get_info_from_file(handles)  #这里经常报错 我就多试几次来解决了
-        return JsonResponse({"message": "程序怎么又异常了"}, safe=False, status=500)
+        return JsonResponse({"message": "程序怎么又异常了"}, safe=False, status=403)
 
     return JsonResponse(ans, safe=False, status=200)
 
@@ -238,7 +241,7 @@ def solve(handle):
     except BaseException as e:
         dir = {"message": "异常"}
         ans = {"handle": handle, "now": current_time, "res": dir}
-        return ans, 500
+        return ans, 403
 
 
 def get_rating_from_file(handle):
@@ -296,9 +299,14 @@ def get_rating_from_file(handle):
         JsonResponse(res[0]['res'], safe=False, status=res[1])
 
     except Exception as e:
-        return JsonResponse({"message": "Internal Server Error"},
+        cnt1=cnt1+1
+        if cnt2<1000:
+            return  get_rating_from_file(handle)
+
+        else :
+            return JsonResponse({"message": "Internal Server Error"},
                             safe=False,
-                            status=500)
+                            status=403)
 
 
 def tet(request):  #这是测试后面4.1的不用的

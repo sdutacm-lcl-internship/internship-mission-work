@@ -17,7 +17,7 @@ def page_not_found(request, exception, template_name='error/404.html'):
 
 
 def page_not_found_500(request, template_name='error/500.html'):
-    ans = {"message": "服务器error"}
+    ans = {"message": "服务器!error"}
     return JsonResponse(ans, safe=False, status=500)
 
 
