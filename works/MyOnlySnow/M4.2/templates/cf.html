@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我是图图小淘气</title>
+    <style>
+        h1 {
+            color: darkred;
+            font-style: italic;
+            font-family: Georgia;
+            text-align: center
+        }
+
+        #cf:hover {
+            background-color: khaki;
+        }
+
+        #search {
+            transition-duration: 0.4s;
+        }
+
+        #search:hover {
+            background-color: pink;
+            color: yellow;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <h1><a id="cf" href="https://codeforces.com">Codeforces</a> Handles</h1>
+        <form @submit.prevent="searchInfo">
+            <label for="handleInput">Enter Handle:</label>
+            <input v-model="handle" type="text" id="handleInput" required>
+            <button id="search" type="submit">Search</button>
+        </form>
+        <div v-if="playerData && playerData.success">
+            <h2>Player Info:</h2>
+            <p><b>Handle:</b> [[ playerData.handle ]]</p>
+            <p><b>Rating:</b> [[ playerData.rating || 'N/A' ]]</p>
+            <p><b>Rank:</b> [[ playerData.rank || 'N/A' ]]</p>
+        </div>
+        <div v-if="ratingsData.length">
+            <h2>Rating Records:</h2>
+            <table>
+                <caption>Rating Records:</caption>
+                <tr>
+                    <th>Contest ID</th>
+                    <th>Contest Name</th>
+                    <th>Rank</th>
+                    <th>Old Rating</th>
+                    <th>New Rating</th>
+                    <th>Last Updated</th>
+                </tr>
+                <tr v-for="rating in ratingsData" :key="rating.contestId">
+                    <td>[[ rating.contestId ]]</td>
+                    <td>[[ rating.contestName ]]</td>
+                    <td>[[ rating.rank ]]</td>
+                    <td>[[ rating.oldRating ]]</td>
+                    <td>[[ rating.newRating ]]</td>
+                    <td>[[ rating.ratingUpdatedAt ]]</td>
+                </tr>
+            </table>
+        </div>
+        <div v-if="searched && !playerData.success">
+            <p><b>Error:</b> [[ playerData.message ]]</p>
+        </div>
+        <div v-if="searched && !ratingsData.length &&playerData.success">
+            <h2>Rating Records:</h2>
+            <p>This handle does not have a competition record.</p>
+        </div>
+    </div>
+    <img src="{{ url_for('static',filename='tutu.png') }}" alt="">
+    <script>
+         alert('面对世界很好奇')
+        new Vue({
+    el: '#app',
+    delimiters: ['[[', ']]'],  
+    data: {
+        handle: '',
+        playerData: null,
+        ratingsData: [],
+        searched :false,
+    },
+    methods: {
+        searchInfo() {
+            this.searched = true;
+            axios.get('/batchGetUserInfo?handles=' + this.handle)
+                .then(response => {
+                    this.playerData = response.data[0];
+                    if (this.playerData.success) {
+                        this.searchRatings();
+                    }
+                });
+        },
+        searchRatings() {
+            axios.get('/getUserRatings?handle=' + this.handle)
+                .then(response => {
+                    this.ratingsData = response.data;
+                });
+        }
+    }
+});
+
+    </script>
+</body>
+</html>
