@@ -13,10 +13,10 @@ cache_user_ratings = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 service=Service(cache_user_info,cache_user_ratings)
 
-@app.errorhandler(Exception)
-def server_error(e):
-  error_message = {"message": 'Internal Server Error'}
-  return jsonify(error_message), 500
+# @app.errorhandler(Exception)
+# def server_error(e):
+#   error_message = {"message": 'Internal Server Error'}
+#   return jsonify(error_message), 500
 @app.route('/getUserRatings')
 def get_user_ratings():
   handle = request.args.get('handle')
