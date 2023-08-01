@@ -29,7 +29,6 @@ class Dao:
     conn = sqlite3.connect('cf.db')
     # 获取游标对象
     cursor = conn.cursor()
-    print("zxw")
     print(user_info)
     rating = user_info["result"].get("rating", 0)
     rank = user_info["result"].get("rank", "")
