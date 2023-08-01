@@ -1,4 +1,8 @@
+from asyncio import Handle
 from cmath import exp
+from operator import truediv
+from pickle import TRUE
+from wsgiref import handlers
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.http import HttpResponse
@@ -60,7 +64,7 @@ def func1(handle):
         if response.status_code != 200 and response.status_code != 400:
             ans = {
                 "success": 'false',
-                "type": 2,
+                "type": '2',
                 "message": f"HTTP response with code {status_code_value}",
                 "details": {
                     "status": status_code_value
@@ -114,6 +118,7 @@ def func1(handle):
         return ans
 
 
+
 def solve1(handle):
     from datetime import datetime
     current_time = datetime.now()
@@ -153,12 +158,16 @@ cnt2 = 0
 cnt3=0
 
 def get_info_from_file(handles):
+   # return HttpResponse(handles)
     file_path = 'data-user-info.txt'
     ans = []
     if os.path.exists(file_path) == 0:
+       # return HttpResponse(handles)
         try :
-              res = solve1(["yuanshen"])
+              lis=["yuanshen"]
+              res = solve1(lis)
               fp = open(file_path, 'w', encoding='utf-8')
+              #a='}'
               fp.write(str(res[0]))
               fp.close()
               cnt = cnt + 1
@@ -166,6 +175,7 @@ def get_info_from_file(handles):
   
         #return JsonResponse({"message": "文件无法创建"}, safe=False, status=403)
     try:
+       # return HttpResponse(handles)
         cnt=0
         for handle in handles:
             fp = open(file_path, 'r', encoding='utf-8')
@@ -175,13 +185,18 @@ def get_info_from_file(handles):
             list = page_text
             flag = 0
             for index, i in enumerate(list):
+               # return HttpResponse(i)
                 i = i.replace("'", "\"")
                 dirc = json.loads(i)
                 time = dirc['now']
+               # return HttpResponse(i)
                 from datetime import datetime
                 time_date = datetime.strptime(time, "%Y-%m-%d %H:%M:%S")
                 current_time = datetime.now()
+                #return HttpResponse(handles)
+                #return HttpResponse(i)
                 if dirc['handle'] == handle:
+
                     if time_difference(time_date, current_time):
                         res = solve1(handle)
                         if res[1] != 200 and res[1] != 400:
@@ -192,30 +207,47 @@ def get_info_from_file(handles):
                         current_time = current_time.strftime(
                             "%Y-%m-%d %H:%M:%S")
                         res[0]["now"] = current_time
+ 
                         page_text[index] = str(res[0])
                         fp = open(file_path, 'w', encoding='utf-8')
                         fp.write(str(';'.join(map(str, page_text))))
                         fp.close()
-                        ans.append(res['res'])
+                        #return HttpResponse(res)
+                        if res[0]['res']['success']=='True':
+                          res[0]['res']['success']=True
+                        else :
+                          res[0]['res']['success']=False
+                        ans.append(res[0]['res'])
                         flag = 1
                         break
                     else:
+
+                        if dirc['res']['success']=='True':
+                          dirc['res']['success']=True
+                        else :
+                          dirc['res']['success']=False
                         ans.append(dirc['res'])
                         flag = 1
+           # return HttpResponse(222222)
             if flag == 0:
                 res = solve1(handle)
                 fp = open(file_path, 'a', encoding='utf-8')
                 fp.write(";" + str(res[0]))
                 fp.close()
+                if res[0]['success']=='True':
+                        res[0]['success']=True
+                else :
+                      res[0]['success']=False
                 ans.append(res[0]['res'])
                 ans.append(res[0]['res'])
 
     except Exception as e:
+       # return HttpResponse(e)
         cnt=cnt+1
         if cnt<1000:
             return get_info_from_file(handles)  #这里经常报错 我就多试几次来解决了
         return JsonResponse({"message": "程序怎么又异常了"}, safe=False, status=403)
-
+    #ans[]
     return JsonResponse(ans, safe=False, status=200)
 
 
