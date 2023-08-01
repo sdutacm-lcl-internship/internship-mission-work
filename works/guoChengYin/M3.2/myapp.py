@@ -1,17 +1,17 @@
 import json
 import pickle
 
-
 from flask import Flask, request, jsonify
 from flask_caching import Cache
 from service.service import Service
-app = Flask(__name__)
 
+app = Flask(__name__)
 
 cache_user_info = Cache(app, config={'CACHE_TYPE': 'simple'})
 cache_user_ratings = Cache(app, config={'CACHE_TYPE': 'simple'})
 
-service=Service(cache_user_info,cache_user_ratings)
+service = Service(cache_user_info, cache_user_ratings)
+
 
 # @app.errorhandler(Exception)
 # def server_error(e):
@@ -21,19 +21,16 @@ service=Service(cache_user_info,cache_user_ratings)
 def get_user_ratings():
   handle = request.args.get('handle')
   handle = handle.replace('{', '').replace('}', '')
-  res=service.get_user_ratings(handle)
-  return jsonify(res[0]),res[1]
-
+  res = service.get_user_ratings(handle)
+  return jsonify(res[0]), res[1]
 
 
 @app.route('//batchGetUserInfo')
 def get_user_info():
   handles = request.args.get('handles')
   handles = handles.replace('{', '').replace('}', '').split(',')
-  user_infos=service.batch_get_user_info(handles)
+  user_infos = service.batch_get_user_info(handles)
   return jsonify(user_infos)
-
-
 
 
 if __name__ == '__main__':

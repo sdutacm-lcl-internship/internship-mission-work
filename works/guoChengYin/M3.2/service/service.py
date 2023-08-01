@@ -9,10 +9,7 @@ from flask_caching import Cache
 from utils import Crawler, Utils
 from user_dao import Dao
 
-
-
 # 两个缓存器 1放
-
 
 
 crawler = Crawler()
@@ -21,9 +18,9 @@ dao = Dao()
 
 
 class Service:
-  def __init__(self,cache_user_info,cache_user_ratings):
-    self.cache_user_info=cache_user_info
-    self.cache_user_ratings=cache_user_ratings
+  def __init__(self, cache_user_info, cache_user_ratings):
+    self.cache_user_info = cache_user_info
+    self.cache_user_ratings = cache_user_ratings
 
   def get_user_ratings(self, handle):
     try:
@@ -31,16 +28,16 @@ class Service:
       if not self.cache_user_ratings.get(handle) is None:
         print("数据从缓存中取出")
         print(self.cache_user_ratings.get(handle))
-        return self.cache_user_ratings.get(handle),200
+        return self.cache_user_ratings.get(handle), 200
 
       # 查询数据库中是否有数据,返回一个结果列表
       res = dao.query_ratings(handle)
       if len(res) != 0:
         # 返回结果不为空，存入缓存
-        self.cache_user_ratings.set(handle, res[0:-1], timeout=30-res[-1])
+        self.cache_user_ratings.set(handle, res[0:-1], timeout=30 - res[-1])
         print("数据从数据库中取出")
         res = res[0:-1]
-        return res,200
+        return res, 200
 
       # 缓存和数据库中均中没有数据，30s已过。再次爬取数据并保存在数据库与缓存中
       request_results = crawler.crawl("https://codeforces.com/api/user.rating?handle={}".format(handle))
@@ -66,30 +63,30 @@ class Service:
         rating = {}
         # handle可以查询到
         if "handle" in item.keys():
-          rating["handle"]=item["handle"]
+          rating["handle"] = item["handle"]
         if "contestId" in item.keys():
-          rating["contestId"]=item['contestId']
+          rating["contestId"] = item['contestId']
         if "contestName" in item.keys():
-          rating["contestName"]=item["contestName"]
+          rating["contestName"] = item["contestName"]
         if "rank" in item.keys():
-          rating["rank"]=item["rank"]
+          rating["rank"] = item["rank"]
         if "ratingUpdateTimeSeconds" in item.keys():
           # 指定了时区
           dt_object = datetime.datetime.fromtimestamp(item["ratingUpdateTimeSeconds"], pytz.timezone('Asia/Shanghai'))
           iso_datetime_str = dt_object.isoformat()
-          rating["ratingUpdatedAt"]=iso_datetime_str
+          rating["ratingUpdatedAt"] = iso_datetime_str
         if "oldRating" in item.keys():
-          rating["oldRating"]=int(item["oldRating"])
+          rating["oldRating"] = int(item["oldRating"])
         if "newRating" in item.keys():
-          rating["newRating"]=int(item["newRating"])
+          rating["newRating"] = int(item["newRating"])
         response_data.append(rating)
       # 循环结束后将结果列表存入缓存和数据库
       self.cache_user_ratings.set(handle, response_data, timeout=30)
       print("数据存入缓存")
       print(self.cache_user_ratings.get(handle))
-      dao.save_ratings(handle,response_data,round(time.time()))
-      #返回数据
-      return response_data,200
+      dao.save_ratings(handle, response_data, round(time.time()))
+      # 返回数据
+      return response_data, 200
     except Exception as e:
       # HTTP请求为未收到有效 HTTP 响应
       if isinstance(e, requests.exceptions.ConnectionError):
@@ -99,7 +96,7 @@ class Service:
       else:
         raise
 
-  def batch_get_user_info(self,handles):
+  def batch_get_user_info(self, handles):
     response_data = []
     for handle in handles:
       try:
@@ -112,7 +109,7 @@ class Service:
         # 若缓存中没有数据，查询数据库中有没有
         res = dao.query_user_info(handle)
         if len(res) != 0:
-          if res[1]==0:
+          if res[1] == 0:
             request_results = {
               "success": True,
               "result": {
@@ -132,7 +129,6 @@ class Service:
           self.cache_user_info.set(handle, request_results, timeout=30 - res[len(res) - 1])
           response_data.append(request_results)
           continue
-
 
         # 数据库和缓存均没有数据。发起请求,并准备一个空的字典
         request_info = crawler.crawl('https://codeforces.com/api/user.info?handles={}'.format(handle))
@@ -181,7 +177,7 @@ class Service:
         # 缓存中只存返回码为200的情况
         self.cache_user_info.set(handle, request_results, timeout=30)
         # 存入数据库
-        dao.save_user_info(handle,request_results,round(time.time()))
+        dao.save_user_info(handle, request_results, round(time.time()))
         response_data.append(request_results)
       except Exception as e:
         if isinstance(e, requests.exceptions.ConnectionError):
@@ -198,14 +194,3 @@ class Service:
           # response_data.append(request_results)
 
     return response_data
-
-
-
-
-
-
-
-
-
-
-
