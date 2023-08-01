@@ -5,34 +5,17 @@ from fake_useragent import UserAgent
 from datetime import timedelta, datetime
 import pytz
 
-
 app = Flask(__name__)
 app.config['DEBUG'] = True
-cache_Info = {}
-cache_Ratings={}
-
+file_Info = {}
+file_Ratings = {}
+valid_data = {}
 
 def search_handles(handle):
-    if handle in cache_Info and cache_Info[handle]:
-        if cache_Info[handle]['out'] > datetime.now():
-            return cache_Info[handle]['data']
-
-    file_data = load_file('data_info.js')
-    now = datetime.now()
-    valid_data = {data['handle']: data for data in file_data if 'handle' in data and data.get('out', now) > now}
-
-
-    data = valid_data.get(handle, None)
-    if data:
-        cache_Info[handle] = {
-            'data': data['data'],
-            'out': data['out']
-        }
-        return data['data']
-
     url = f"https://codeforces.com/api/user.info?handles={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
+    global valid_data
     try:
         response = requests.get(url=url,headers=headers)
         response.raise_for_status()
@@ -48,15 +31,11 @@ def search_handles(handle):
                 'success': True,
                 'handle': handle
             }
-            cache_Info[handle] = {
-                'data': data,
-                'out': datetime.now() + timedelta(seconds=15)
-            }
             valid_data[handle] = {
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=30)
             }
-            save_file(list(valid_data.values()), 'data_info.js')
+            save_Info(list(valid_data.values()), 'data_info.js')
         else:
             data = {
                 'success': True,
@@ -64,15 +43,11 @@ def search_handles(handle):
                 'rating': rating,
                 'rank': rank
             }
-            cache_Info[handle] = {
-                'data': data,
-                'out': datetime.now() + timedelta(seconds=15)
-            }
             valid_data[handle] = {
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=30)
             }
-            save_file(list(valid_data.values()), 'data_info.js')
+            save_Info(list(valid_data.values()), 'data_info.js')
         return data
 
     except requests.exceptions.HTTPError as error:
@@ -82,15 +57,11 @@ def search_handles(handle):
                 'type': 1,
                 'message': 'no such handle'
             }
-            cache_Info[handle] = {
-                'data': data,
-                'out': datetime.now() + timedelta(seconds=15)
-            }
             valid_data[handle] = {
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=30)
             }
-            save_file(list(valid_data.values()), 'data_info.js')
+            save_Info(list(valid_data.values()), 'data_info.js')
         else:
             data = {
                 'success': False,
@@ -114,32 +85,7 @@ def search_handles(handle):
         }
     return data
 
-
 def search_ratings(handle):
-    if handle in cache_Ratings and cache_Ratings[handle]:
-        if cache_Ratings[handle]['out'] > datetime.now():
-            return cache_Ratings[handle]['data']
-
-    file_data = load_file('data_ratings.js')
-    now = datetime.now()
-    file_data_dict = {}
-    for data in file_data:
-        if isinstance(data, dict) and 'handle' in data:
-            file_data_dict[data['handle']] = data
-
-    valid_data = file_data_dict.get(handle, None) if file_data_dict.get(handle, None) and file_data_dict[handle].get(
-        'out', now) > now else None
-    if valid_data is None:
-        valid_data = {}
-
-    if valid_data:
-        data = valid_data['data']
-        cache_Ratings[handle] = {
-            'data': data,
-            'out': valid_data['out']
-        }
-        return data
-
     url = f"https://codeforces.com/api/user.rating?handle={handle}"
     ua = UserAgent().random
     headers = {'User-Agent': ua}
@@ -174,17 +120,12 @@ def search_ratings(handle):
                 'handle': handle,
                 'message': 'This handle does not have a competition record'
             }
-        cache_Ratings[handle] = {
-            'data': result,
-            'out': datetime.now() + timedelta(seconds=15)
-        }
         valid_data[handle] = {
             'data': result,
             'out': datetime.now() + timedelta(seconds=30)
         }
-        save_file(list(valid_data.values()), 'data_ratings.js')
+        save_ratings(list(valid_data.values()), 'data_ratings.js')
         return result
-
 
     except requests.exceptions.HTTPError as error:
         if error.response.status_code == 400:
@@ -192,15 +133,11 @@ def search_ratings(handle):
                 'message': 'no such handle',
                 'code': 404
             }
-            cache_Ratings[handle] = {
-                'data': data,
-                'out': datetime.now() + timedelta(seconds=15)
-            }
             valid_data[handle] = {
                 'data': data,
                 'out': datetime.now() + timedelta(seconds=30)
             }
-            save_file(list(valid_data.values()), 'data_ratings.js')
+            save_ratings(list(valid_data.values()), 'data_ratings.js')
             return data
         else:
             return {
@@ -218,16 +155,32 @@ def search_ratings(handle):
             'code': 500
         }
 
-def save_file(data, filename):
-    existing_data = load_file(filename)
+
+def save_ratings(data, filename):
+    existing_data = load_ratings(filename)
+    for new_item in data:
+        if "data" in new_item:
+            new_data = new_item["data"]
+            if isinstance(new_data, list):
+                new_handles = [nd.get('handle') for nd in new_data]
+            else:
+                new_handles = [new_data.get('handle')]
+
+            existing_data = [item for item in existing_data if "data" in item and
+                             (isinstance(item["data"], list) and not any(
+                                 d.get('handle') in new_handles for d in item["data"]) or
+                              isinstance(item["data"], dict) and not item["data"].get('handle') in new_handles)]
+
     existing_data.extend(data)
     def json_serial(obj):
         if isinstance(obj, datetime):
             return obj.isoformat()
+
     with open(filename, 'w') as f:
         json.dump(existing_data, f, default=json_serial)
 
-def load_file(filename):
+
+def load_ratings(filename):
     def json_deserial(obj):
         if 'out' in obj:
             obj['out'] = datetime.fromisoformat(obj['out'])
@@ -240,19 +193,57 @@ def load_file(filename):
     except (FileNotFoundError, json.JSONDecodeError):
         return []
 
+def save_Info(data, filename):
+    existing_data = load_Info(filename)
+    for new_data in data:
+        handle = new_data.get('data', {}).get('handle', '')
+        found = False
+        for i, existing_item in enumerate(existing_data):
+            if isinstance(existing_item, dict) and existing_item.get('data', {}).get('handle', '') == handle:
+                existing_data[i] = new_data
+                found = True
+                break
+
+        if not found:
+            existing_data.append(new_data)
+    def json_serial(obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+    with open(filename, 'w') as f:
+        json.dump(existing_data, f, default=json_serial)
+
+def load_Info(filename):
+    def json_deserial(obj):
+        if 'out' in obj:
+            obj['out'] = datetime.fromisoformat(obj['out'])
+        if 'data' in obj:
+            data_obj = obj['data']
+            if 'out' in data_obj:
+                data_obj['out'] = datetime.fromisoformat(data_obj['out'])
+        return obj
+
+    try:
+        with open(filename, 'r') as f:
+            data_list = json.load(f, object_hook=json_deserial)
+            return data_list
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
 
 @app.route('/batchGetUserInfo')
 def URL_handles():
+    file_Info = load_Info('data_info.js')
     handles = request.args.get('handles', '').split(',')
     results = []
     for handle in handles:
-        result = search_handles(handle)
-        results.append(result)
-    # 会换行但是按照字典序
-    # response = jsonify(results)
-    # response.headers['Content-Type'] = 'application/json'
-    # return response,200
-    # 不换行但是顺序正确
+        now = datetime.now()
+        valid_data = {data['data']['handle']: data for data in file_Info if 'handle' in data['data'] and data.get('out', now) > now}
+        data = valid_data.get(handle, None)
+        if data:
+            results.append(data['data'])
+        else:
+            result = search_handles(handle)
+            results.append(result)
     return Response(json.dumps(results), mimetype='application/json')
 
 
@@ -260,6 +251,22 @@ def URL_handles():
 def URL_ratings():
     handle = request.args.get('handle', '')
     results = []
+    file_Ratings = load_ratings('data_ratings.js')
+    now = datetime.now()
+
+    for rating in file_Ratings:
+        if 'data' in rating:
+            if isinstance(rating['data'], list):
+                for r in rating['data']:
+                    if 'handle' in r and r['handle'] == handle and rating['out'] > now:
+                        rating['out'] = rating['out'].isoformat()
+                        del rating['out']
+                        return make_response(json.dumps(rating['data']), 200)
+            elif isinstance(rating['data'], dict) and 'handle' in rating['data'] and rating['data'][
+                'handle'] == handle and rating['out'] > now:
+                del rating['out']
+                rating['out'] = rating['out'].isoformat()
+                return make_response(json.dumps(rating['data']), 200)
     results = search_ratings(handle)
     if 'message' in results and 'code' in results:
         result = {
@@ -273,69 +280,6 @@ def URL_ratings():
         response.headers['Content-Type'] = 'application/json'
         return response
 
-
-@app.route('/clearCache', methods=['POST'])
-def clear_cache():
-    try:
-        if request.content_type == 'application/json':
-            data = request.get_json()
-            handles = data.get('handles', [])
-            if isinstance(handles, str):
-                return jsonify({'message': 'Invalid request'}), 400
-            for h in handles:
-                if not isinstance(h, str) or len(h) <= 1:
-                    return jsonify({'message': 'Invalid request'}), 400
-
-        elif request.content_type == 'application/x-www-form-urlencoded':
-            data = {}
-            for key, values in request.form.lists():
-                if key == 'cacheType':
-                    data[key] = values[0]
-                elif key.startswith('handles'):
-                    field_name = key.split('[')[0]
-                    if field_name not in data:
-                        data[field_name] = []
-                    for value in values:
-                        if not isinstance(value, str) or len(value) <= 1:
-                            return jsonify({'message': 'invalid request'}), 400
-                        elif value == 'TRUE' or value == 'FALSE' or value == 'false' or value == 'true' or value == 'True' or value == 'False':
-                            return jsonify({'message': 'invalid request'}), 400
-                        data[field_name].append(value)
-        else:
-            return jsonify({'message': 'invalid request'}), 400
-
-        cache_type = data.get('cacheType')
-        print(cache_type)
-        handles = data.get('handles', [])
-        print(handles)
-
-        if cache_type not in ('userInfo', 'userRatings'):
-            return jsonify({'message': 'invalid request'}),400
-        elif cache_type=='userInfo':
-            if not handles:
-                 cache_Info.clear()
-            else:
-                for handle in handles:
-                    print(handle)
-                    cache_entry = cache_Info.get(handle, {})
-                    if cache_entry:
-                        del cache_Info[handle]
-                    print(cache_Info)
-            return jsonify({'message': 'ok'}), 200
-        else:
-            if not handles:
-                cache_Ratings.clear()
-            else:
-                for handle in handles:
-                    print(handle)
-                    cache_entry = cache_Ratings.get(handle, {})
-                    if cache_entry:
-                        del cache_Ratings[handle]
-                    print(cache_Ratings)
-            return jsonify({'message': 'ok'}), 200
-
-    except Exception:
-        return jsonify({'message': 'invalid request'}), 400
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=2333, debug=True)
