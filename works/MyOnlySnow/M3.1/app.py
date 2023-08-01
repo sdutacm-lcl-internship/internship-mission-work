@@ -261,12 +261,16 @@ def URL_ratings():
                     if 'handle' in r and r['handle'] == handle and rating['out'] > now:
                         rating['out'] = rating['out'].isoformat()
                         del rating['out']
-                        return make_response(json.dumps(rating['data']), 200)
+                        response = make_response(json.dumps(rating['data']), 200)
+                        response.headers['Content-Type'] = 'application/json'
+                        return response
             elif isinstance(rating['data'], dict) and 'handle' in rating['data'] and rating['data'][
                 'handle'] == handle and rating['out'] > now:
                 del rating['out']
                 rating['out'] = rating['out'].isoformat()
-                return make_response(json.dumps(rating['data']), 200)
+                response = make_response(json.dumps(rating['data']), 200)
+                response.headers['Content-Type'] = 'application/json'
+                return response
     results = search_ratings(handle)
     if 'message' in results and 'code' in results:
         result = {
