@@ -194,6 +194,7 @@ def get_user_rating(handle):
             for rat in user_ratings:
                 rat.rank = res[cnt]['rank']
                 rat.updated_at = current_time
+                rat.rating_updated_at=res[cnt]['ratingUpdatedAt']
                 rat.old_rating = res[cnt]['oldRating']
                 rat.new_rating = res[cnt]['newRating']  #我记得其他的应该都不会变
                 cnt = cnt + 1
