@@ -16,7 +16,7 @@ def update_user_info(handle,rating,rank):
         cursor.execute("PRAGMA foreign_keys = ON")
         now = datetime.now(pytz.timezone('Asia/Shanghai')).isoformat()
         cursor.execute('''
-        INSERT OR REPLACE INTO user_info(handle,rating,rank,updatedTime)
+        INSERT OR REPLACE INTO user_info(handle,rating,rank,updated_at)
         VALUES(?,?,?,?)
         ''',(handle,rating,rank,now)
         )
@@ -33,7 +33,7 @@ def update_user_rating(handle,contest_id,contest_name,rank,old_rating,new_rating
             search_handles(handle)
         cursor.execute(
             '''
-                    INSERT OR REPLACE INTO user_ratings(handle,contest_id,contest_name,rank,old_rating,new_rating,ratingUpdatedAt,updatedTime)
+                    INSERT OR REPLACE INTO user_ratings(handle,contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at,updated_at)
                     VALUES(?,?,?,?,?,?,?,?)
             ''',(handle,contest_id,contest_name,rank,old_rating,new_rating,ratingUpdatedAt,now)
         )
@@ -44,7 +44,7 @@ def search_handles(handle):
         cursor = conn.cursor()
         cursor.execute('''
         SELECT rating,rank FROM user_info
-        WHERE handle = ? AND updatedTime > ?
+        WHERE handle = ? AND updated_at > ?
         ''',(handle,(datetime.now(pytz.timezone('Asia/Shanghai'))-timedelta(seconds=30)).isoformat()))
         row = cursor.fetchone()
         if row:
@@ -143,20 +143,20 @@ def search_ratings(handle):
     with sqlite3.connect('cf.db') as conn:
         cursor = conn.cursor()
         cursor.execute('''
-        SELECT contest_id,contest_name,rank,old_rating,new_rating,ratingUpdatedAt FROM user_ratings
-        WHERE handle = ? AND updatedTime > ?
+        SELECT contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at FROM user_ratings
+        WHERE handle = ? AND updated_at > ?
         ''',(handle,(datetime.now(pytz.timezone('Asia/Shanghai'))-timedelta(seconds=30)).isoformat()))
         rows = cursor.fetchall()
         if rows:
             data = []
             for row in rows:
-                contest_id, contest_name, rank, old_rating, new_rating, ratingUpdatedAt = row
+                contest_id, contest_name, rank, old_rating, new_rating, rating_updated_at = row
                 data.append({
                     'handle': handle,
                     'contest_id': contest_id,
                     'contest_name': contest_name,
                     'rank': rank,
-                    'ratingUpdatedAt': ratingUpdatedAt,
+                    'ratingUpdatedAt': rating_updated_at,
                     'old_rating': old_rating,
                     'new_rating': new_rating
                 })
@@ -273,7 +273,7 @@ def creat_file():
                  handle VARCHAR PRIMARY KEY NOT NULL,
                 rating INT,
                 rank VARCHAR,
-                updatedTime DATETIME NOT NULL
+                updated_at DATETIME NOT NULL
             )
         ''')
         cursor.execute('''
@@ -285,8 +285,8 @@ def creat_file():
                         rank INT NOT NULL,
                         old_rating INT NOT NULL,
                         new_rating INT NOT NULL,
-                        ratingUpdatedAt DATETIME NOT NULL,
-                        updatedTime DATETIME NOT NULL,
+                        rating_updated_at DATETIME NOT NULL,
+                        updated_at DATETIME NOT NULL,
                         FOREIGN KEY (handle) REFERENCES user_info (handle),
                         UNIQUE(handle, contest_id) ON CONFLICT REPLACE
                     );
