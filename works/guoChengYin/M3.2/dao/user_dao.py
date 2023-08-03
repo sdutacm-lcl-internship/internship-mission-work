@@ -50,8 +50,7 @@ class Dao:
       updated_at = rating["ratingUpdatedAt"]
       try:
         cursor.execute(
-          "insert or replace into user_rating (handle,contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at,updated_at) VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".
-          format(handle, contest_id, contest_name, rank, old_rating, new_rating, updated_at, update_time_at))
+          "insert or replace into user_rating (handle,contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at,updated_at) VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(handle, contest_id, contest_name, rank, old_rating, new_rating, updated_at, update_time_at))
         conn.commit()
       except Exception as e:
         logging.debug(e)

@@ -2,10 +2,6 @@ import sqlite3
 from dbutils.persistent_db import PersistentDB
 
 class DbPools:
-
-  config = {
-    'database': 'D:\workspace\internship-mission-work\works\guoChengYin\M3.2\cf.db'  # 数据库文件路径
-  }
   __pool=None
   def __init__(self):
     db_file = 'cf.db'
