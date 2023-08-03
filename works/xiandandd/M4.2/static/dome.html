@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://fastly.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://gcore.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        #htmlContainer {
+            text-align: center;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        td, th {
+            border: 1px solid black;
+            padding: 5px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 500px;
+            margin: 0 auto;
+        }
+
+        .container input,
+        .container button {
+            padding: 10px;
+            font-size: 16px;
+            height: 40px;
+            box-sizing: border-box;
+        }
+
+        .container > input {
+            width: 150px;
+            /* 调整宽度为较小的值 */
+            flex-grow: 1;
+        }
+
+        .container button {
+            margin-left: 10px;
+        }
+
+        #handle {
+            color: black;
+            font-size: 25px
+        }
+
+        #rating {
+            font-size: 25px;
+            display: inline;
+            white-space: nowrap;
+            color: black;
+        }
+    </style>
+</head>
+
+<body>
+<div id="app">
+    <h1>查询选手</h1>
+    <div class='container'>
+        <input v-model="name" type="text" id='name' placeholder="请输入handle" style="border-radius: 0px;">
+        <button style="border-radius: 0%;" @click="add">查询</button>
+    </div>
+
+    <div id="htmlContainer">
+        <div>
+            <div align="center"id="yyy" style="display: none">
+                <h2>查询结果</h2>
+                <div align="center">
+                    <p id="handle">{{ handle }}</p>
+                    <span style="font-size: 25px">rating:</span>
+                    <p id="rating">{{ rating }}</p>
+                </div>
+            </div>
+            <div id="xxx" align="center" style="margin-top:50px;display: none;">
+                <p style="align-content: center;color: darkgrey">rating history</p>
+                <table style="border: 1px solid black">
+
+                    <tr>
+                        <th>时间</th>
+                        <th>比赛</th>
+                        <th>rank</th>
+                        <th>△</th>
+                    </tr>
+                    <tr v-for="content in contents">
+                        <td>{{ content['ratingUpdatedAt'] }}</td>
+                        <td>{{ content['contestName'] }}</td>
+                        <td>{{ content['rank'] }}</td>
+                        <td>{{ content['oldRating'] }}->{{ content['newRating']}}</td>
+                    </tr>
+
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    let data1, data2;
+    new Vue({
+        el: '#app',
+        data: {
+            name: '',
+            handle: '',
+            contents: [],
+            rating:0,
+        },
+        methods: {
+            add() {
+                var my=document.getElementById("yyy");
+                var ms=document.getElementById("xxx");
+                my.style.display="none";
+                ms.style.display="none";
+                this.contents=[];
+                if(this.name===""){
+                    alert("输入不能为空");
+                    return;
+                }
+                let dataToSend1 = {
+                    handle: this.name
+                };
+                let dataToSend2 = {
+                    handles: this.name
+                };
+
+                let url2 = 'http://127.0.0.1:2333/getUserRatings?' + "handle=" + this.name;
+                let url1 = 'http://127.0.0.1:2333/batchGetUserInfo?' + "handles=" + this.name;
+                let num1, num2;
+                axios.get(url1)
+                    .then(response => {
+                            num1 = response.status;
+                            return response.data;
+                        }
+                    )
+                    .then(data => {
+                        data1 = data;
+                        return axios.get(url2)
+                    })
+                    .then(response => {
+                        num2 = response.status;
+                        return response.data;
+                    })
+                    .then(data => {
+                        data2 = data;
+                        //处理数据
+                        for(var i=0;i<data2.length;i++){
+                            this.contents.push({
+                            'ratingUpdatedAt': data2[i]["ratingUpdatedAt"],
+                            'contestName': data2[i]["contestName"],
+                            'rank': data2[i]["rank"],
+                            'oldRating': data2[i]["oldRating"],
+                            'newRating': data2[i]["newRating"],
+                        });
+                        }
+                        if(data2.length===0){
+                            this.handle=data1[0]["result"]["handle"];
+                            this.rating=0;
+                            my.style.display="block";
+                        }
+                        else{
+                            this.handle=data1[0]["result"]["handle"]+"("+data1[0]["result"]["rank"]+')';
+                            this.rating=data1[0]["result"]["rating"];
+                            my.style.display="block";
+                            ms.style.display="block";
+                        }
+                        return;
+                    })
+                    .catch(error => {
+                        // console.log(error.response.status===404);
+                        if(error.response.status===404){
+                            alert("查无此人");
+                        }
+                        else{
+                            alert("出错了！" + error);
+                        }
+
+                    });
+            }
+        }
+    });
+</script>
+</body>
+
+
+<!--<script src="../static/vue1.js"></script>-->

@@ -520,10 +520,10 @@ def isinfo(username):
                 return False
     return False
 
-
+app.jinja_env.enabled = False
 @app.route('/', methods=['GET'])
 def ooo():
-    return render_template('dome.html')
+    return render_template('p.html')
 if __name__ == '__main__':
     init_db()
     app.run(host='127.0.0.1', port=2333)
