@@ -88,7 +88,7 @@ def insertratig(id,handle,contest_id,name,rank,old_rating,new_rating,time,update
         db.commit()
         global flag,han
         flag=1
-        han=handle
+        han.append(handle)
         query_handles();
         cursor.execute(
             "INSERT INTO user_rating(user_rating_id, handle, contest_id, contest_name, rank, old_rating, new_rating, rating_updated_at, updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
