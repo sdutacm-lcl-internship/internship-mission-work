@@ -1,5 +1,5 @@
 import flask
-from flask import Flask, request, jsonify, Response, make_response,template_rendered,render_template
+from flask import Flask, request, jsonify, Response, make_response, template_rendered, render_template
 import requests
 import json
 from fake_useragent import UserAgent
@@ -7,10 +7,11 @@ from datetime import timedelta, datetime
 import sqlite3
 import pytz
 
-app = Flask(__name__,template_folder='templates', static_folder='static')
+app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['DEBUG'] = True
 
-def update_user_info(handle,rating,rank):
+
+def update_user_info(handle, rating, rank):
     with sqlite3.connect('cf.db') as conn:
         cursor = conn.cursor()
         cursor.execute("PRAGMA foreign_keys = ON")
@@ -18,37 +19,42 @@ def update_user_info(handle,rating,rank):
         cursor.execute('''
         INSERT OR REPLACE INTO user_info(handle,rating,rank,updated_at)
         VALUES(?,?,?,?)
-        ''',(handle,rating,rank,now)
-        )
+        ''', (handle, rating, rank, now)
+                       )
         conn.commit()
 
-def update_user_rating(handle,contest_id,contest_name,rank,old_rating,new_rating,ratingUpdatedAt):
+
+def update_user_rating(handle, contest_id, contest_name, rank, old_rating, new_rating, ratingUpdatedAt):
     with sqlite3.connect('cf.db') as conn:
         cursor = conn.cursor()
         cursor.execute("PRAGMA foreign_keys = ON")
         now = datetime.now(pytz.timezone('Asia/Shanghai')).isoformat()
+        # 存储rating前先检查是否存在该handle的info
         cursor.execute("SELECT handle FROM user_info WHERE handle = ?", (handle,))
         data = cursor.fetchone()
+        # 不存在info进行info的查询与存储
         if data is None:
             search_handles(handle)
         cursor.execute(
             '''
                     INSERT OR REPLACE INTO user_ratings(handle,contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at,updated_at)
                     VALUES(?,?,?,?,?,?,?,?)
-            ''',(handle,contest_id,contest_name,rank,old_rating,new_rating,ratingUpdatedAt,now)
+            ''', (handle, contest_id, contest_name, rank, old_rating, new_rating, ratingUpdatedAt, now)
         )
         conn.commit()
 
+
 def search_handles(handle):
+    # 查询数据库中是否存在未过期数据
     with sqlite3.connect('cf.db') as conn:
         cursor = conn.cursor()
         cursor.execute('''
         SELECT rating,rank FROM user_info
         WHERE handle = ? AND updated_at > ?
-        ''',(handle,(datetime.now(pytz.timezone('Asia/Shanghai'))-timedelta(seconds=30)).isoformat()))
+        ''', (handle, (datetime.now(pytz.timezone('Asia/Shanghai')) - timedelta(seconds=30)).isoformat()))
         row = cursor.fetchone()
         if row:
-            data =[]
+            data = []
             result = {}
             rating, rank = row
             if rating and rank:
@@ -58,9 +64,9 @@ def search_handles(handle):
                     'rank': rank
                 }
                 data = {
-                    'success':True,
-                    'result':result
-                    }
+                    'success': True,
+                    'result': result
+                }
             else:
                 result = {
                     'handle': handle
@@ -70,7 +76,6 @@ def search_handles(handle):
                     'result': result
                 }
             return data
-
 
     url = f"https://codeforces.com/api/user.info?handles={handle}"
     ua = UserAgent().random
@@ -85,7 +90,8 @@ def search_handles(handle):
         rating = info.get('rating', 0)
         rank = info.get('rank', '')
         max = info.get('maxRating', '')
-        update_user_info(handle,rating,rank)
+        update_user_info(handle, rating, rank)
+        # 关闭数据库
         conn.close()
         if not rating or max == []:
             result = {
@@ -140,12 +146,13 @@ def search_handles(handle):
 
 
 def search_ratings(handle):
+    # 查询数据库中是否存在未过期数据
     with sqlite3.connect('cf.db') as conn:
         cursor = conn.cursor()
         cursor.execute('''
         SELECT contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at FROM user_ratings
         WHERE handle = ? AND updated_at > ?
-        ''',(handle,(datetime.now(pytz.timezone('Asia/Shanghai'))-timedelta(seconds=30)).isoformat()))
+        ''', (handle, (datetime.now(pytz.timezone('Asia/Shanghai')) - timedelta(seconds=30)).isoformat()))
         rows = cursor.fetchall()
         if rows:
             data = []
@@ -161,7 +168,6 @@ def search_ratings(handle):
                     'new_rating': new_rating
                 })
             return data
-
 
     url = f"https://codeforces.com/api/user.rating?handle={handle}"
     ua = UserAgent().random
@@ -181,8 +187,9 @@ def search_ratings(handle):
             newRating = info.get('newRating', 0)
             time = datetime.fromtimestamp(ratingUpdateTimeSeconds, pytz.timezone('Asia/Shanghai'))
             ratingUpdatedAt = time.isoformat()
+            # 如果比赛记录存在，则进行数据的存储
             if contestId:
-                update_user_rating(handle,contestId,contestName,rank,oldRating,newRating,ratingUpdatedAt)
+                update_user_rating(handle, contestId, contestName, rank, oldRating, newRating, ratingUpdatedAt)
             result.append(
                 {
                     'handle': handle,
@@ -194,6 +201,7 @@ def search_ratings(handle):
                     'newRating': newRating
                 }
             )
+        # 关闭数据库
         conn.close()
         if result == []:
             result = {
@@ -224,7 +232,7 @@ def search_ratings(handle):
         print(error)
         return {
             'message': "Internal Server Error",
-            'code':500
+            'code': 500
         }
 
 
@@ -232,6 +240,7 @@ def search_ratings(handle):
 def URL_handles():
     handles = request.args.get('handles', '').split(',')
     results = []
+    # 对handle一个个进行处理
     for handle in handles:
         result = search_handles(handle)
         results.append(result)
@@ -248,6 +257,7 @@ def URL_ratings():
     handle = request.args.get('handle', '')
     results = []
     results = search_ratings(handle)
+    # 检查返回数据中是否存在错误信息，若存在则返回错误信息
     if 'message' in results and 'code' in results:
         result = {
             'message': results['message']
@@ -260,9 +270,11 @@ def URL_ratings():
         response.headers['Content-Type'] = 'application/json'
         return response
 
+
 @app.route('/')
 def HTML():
-    return flask.render_template('dog.html')
+    return flask.render_template('cf.html')
+
 
 def creat_file():
     with sqlite3.connect('cf.db') as conn:
@@ -292,6 +304,7 @@ def creat_file():
                     );
                 ''')
     conn.commit()
+
 
 if __name__ == '__main__':
     creat_file()
