@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue Input Example</title>
+  <!-- 引入Vue库 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <input type="text" v-model="inputText">
+    <button @click="handleQuery">查询</button>
+    <br>
+     <p style="font-size: 20px;color: darkblue">Handle :</p>
+      <p>[[handle]]</p>
+    <p style="font-size: 20px;color: darkblue">Rating :</p>
+    <p>[[rating]]</p>
+     <p style="font-size: 20px;color: darkblue">Rating-History :</p>
+     <table align="center" width="80%" class="table xunw_table_form" border="0">
+       <tbody>
+                <tr>
+                  <th>时间</th>
+                  <th>比赛</th>
+                  <th>rank</th>
+                  <th>Δ</th>
+                </tr>
+                <tr v-for="item in  rating_history" >
+                  <td>[[item.ratingUpdatedAt]]</td>
+                  <td>[[item.contestName]]</td>
+                  <td>[[item.rank]]</td>
+                  <td>[[item.oldRating]]->[[item.newRating]]</td>
+                </tr>
+                </tbody>
+     </table>
+  </div>
+  <script>
+        var vm = new Vue({
+        el:"#app",
+          delimiters: ["[[", "]]"],
+        //MODEL:数据
+        data:{
+          inputText:'',
+          rating:'',
+          handle:'',
+          rating_history:[]
+        },
+         methods: {
+        handleQuery() {
+          const url = 'requestUserInfo?handle='+this.inputText;
+          axios.get(url)
+            .then(response => {
+              this.queryResultWithAxiosGet = response.data;
+              this.rating=this.queryResultWithAxiosGet["rating"]
+              this.handle = this.queryResultWithAxiosGet["handle"]
+              this.rating_history =this.queryResultWithAxiosGet["rating_history"]
+            })
+            .catch(error => {
+              // 请求失败，处理错误
+              console.error('请求失败:', error);
+                alert(error.message);
+            });
+        }
+      }
+    });
+//     // 创建Vue实例
+//     const app = {
+// data() {
+//   return{
+//             inputText: '111', // 输入框文本
+//         rating:'2222'
+//   }
+// },
+//
+//        methods: {
+//         handleQuery() {
+//           // 在这里执行查询操作，这里简单地将查询结果赋值给queryResult
+//           const handle= this.inputText;
+//           const url = 'requestUserInfo?handle='+handle;
+//           const vm = app.mount('#app')
+//
+//           axios.get(url)
+//             .then(response => {
+//               this.queryResultWithAxiosGet = response.data;
+//
+//               this.rating=this.queryResultWithAxiosGet["rating"]
+//               const handle = this.queryResultWithAxiosGet["handle"]
+//               const rating_history =this.queryResultWithAxiosGet["rating_history"]
+//               // document.write(handle)
+//               // document.write(this.rating)
+//               // document.write(rating_history)
+//             })
+//             .catch(error => {
+//               // 请求失败，处理错误
+//               console.error('请求失败:', error);
+//             });
+//         }
+//       }
+// }
+
+  </script>
+</body>
+<style>
+  #app{
+    text-align: center;
+  }
+</style>
+</html>
