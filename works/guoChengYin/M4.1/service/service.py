@@ -7,7 +7,6 @@ import requests
 from utils import Crawler, Utils
 from user_dao import Dao
 
-
 # 两个缓存器 1放
 
 
@@ -84,7 +83,7 @@ class Service:
         '''若为外键约束异常，
       则调用查询用户信息的方法将用户信息存入user_info表，
       然后再次调用保存比赛信息到数据库的方法。'''
-        if isinstance(e,sqlite3.IntegrityError):
+        if isinstance(e, sqlite3.IntegrityError):
           self.batch_get_user_info([handle])
           dao.save_ratings(handle, response_data, round(time.time()))
         else:
@@ -97,7 +96,7 @@ class Service:
         error_message = {"message": "The HTTP interface is not responding"}
         return error_message, 502
       # 剩下的就是服务器程序运行异常,交给全局异常处理器处理
-      elif isinstance(e,sqlite3.OperationalError):
+      elif isinstance(e, sqlite3.OperationalError):
         raise
 
   def batch_get_user_info(self, handles):
