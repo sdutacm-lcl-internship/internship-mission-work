@@ -86,12 +86,10 @@ def insertratig(id,handle,contest_id,name,rank,old_rating,new_rating,time,update
     except sqlite3.IntegrityError as e:
         #如果不加这句话就会报错，显示表格被锁定了
         db.commit()
-        url = "http://127.0.0.1:2333/batchGetUserInfo"
-        # 请求的handles参数
-        params = {
-            "handles": handle
-        }
-        response = requests.get(url, params=params)
+        global flag,han
+        flag=1
+        han=handle
+        query_handles();
         cursor.execute(
             "INSERT INTO user_rating(user_rating_id, handle, contest_id, contest_name, rank, old_rating, new_rating, rating_updated_at, updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
             (id, handle, contest_id, name, rank, old_rating, new_rating, time, updated_at))
@@ -232,7 +230,8 @@ app.config['JSON_SORT_KEYS'] = False
 #         rating = copy.deepcopy(total)
 #     # 返回成功响应
 #     return jsonify({'message': 'ok'}),200
-
+flag=0
+han=[]
 
 #用户信息查询
 def solve(username):
@@ -338,7 +337,12 @@ def solve(username):
 @app.route('/batchGetUserInfo', methods=['GET'])
 def query_handles():
     # 获取handles
-    handles = request.args.get('handles')
+    global flag
+    global han
+    if flag==0:
+        handles = request.args.get('handles')
+    else:
+        handles=han
     # 将handles按逗号分割成列表
     handle_list = handles.split(',')
     response_data = []
@@ -390,6 +394,8 @@ def query_handles():
 
     # jsonify()函数简化了将数据转换为JSON响应的过程，并确保响应的Content-Type标头正确设置为application/json
     # 这样，浏览器或其他客户端会正确地解析返回的JSON数据了
+    han=[]
+    flag=0
     return jsonify(response_data)
 
 
