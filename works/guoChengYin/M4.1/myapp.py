@@ -1,24 +1,21 @@
-import json
-import pickle
-
-from flask_cors import CORS
 from flask_cors import cross_origin
 from flask import Flask, request, jsonify, render_template
 from flask_caching import Cache
+from config import Config
 from service.service import Service
 
 app = Flask(__name__, template_folder='templates')
-
+app.config.from_object(Config)
 cache_user_info = Cache(app, config={'CACHE_TYPE': 'simple'})
 cache_user_ratings = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 service = Service(cache_user_info, cache_user_ratings)
 
 
-# @app.errorhandler(Exception)
-# def server_error(e):
-#   error_message = {"message": 'Internal Server Error'}
-#   return jsonify(error_message), 500
+@app.errorhandler(Exception)
+def server_error(e):
+  error_message = {"message": 'Internal Server Error'}
+  return jsonify(error_message), 500
 
 
 @app.route('/getUserRatings')

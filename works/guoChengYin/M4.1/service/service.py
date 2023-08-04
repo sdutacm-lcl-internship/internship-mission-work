@@ -1,13 +1,12 @@
 import datetime
+import sqlite3
 import time
-from linecache import cache
-
 import pytz
 import requests
-from flask import Flask, request, jsonify, current_app
-from flask_caching import Cache
+
 from utils import Crawler, Utils
 from user_dao import Dao
+
 
 # 两个缓存器 1放
 
@@ -32,8 +31,9 @@ class Service:
       res = dao.query_ratings(handle)
       if len(res) != 0:
         # 返回结果不为空，存入缓存
-        self.cache_user_ratings.set(handle, res, timeout=30 - res[len(res) - 1])
-        return res[0:len(res) - 1], 200
+        self.cache_user_ratings.set(handle, res[0:-1], timeout=30 - res[-1])
+        res = res[0:-1]
+        return res, 200
 
       # 缓存和数据库中均中没有数据，30s已过。再次爬取数据并保存在数据库与缓存中
       request_results = crawler.crawl("https://codeforces.com/api/user.rating?handle={}".format(handle))
@@ -78,7 +78,17 @@ class Service:
         response_data.append(rating)
       # 循环结束后将结果列表存入缓存和数据库
       self.cache_user_ratings.set(handle, response_data, timeout=30)
-      dao.save_ratings(response_data, round(time.time()))
+      try:
+        dao.save_ratings(handle, response_data, round(time.time()))
+      except Exception as e:
+        '''若为外键约束异常，
+      则调用查询用户信息的方法将用户信息存入user_info表，
+      然后再次调用保存比赛信息到数据库的方法。'''
+        if isinstance(e,sqlite3.IntegrityError):
+          self.batch_get_user_info([handle])
+          dao.save_ratings(handle, response_data, round(time.time()))
+        else:
+          raise
       # 返回数据
       return response_data, 200
     except Exception as e:
@@ -87,11 +97,8 @@ class Service:
         error_message = {"message": "The HTTP interface is not responding"}
         return error_message, 502
       # 剩下的就是服务器程序运行异常,交给全局异常处理器处理
-      else:
-        error_message = {
-          "message": "Internal Server Error"
-        }
-        return error_message, 500
+      elif isinstance(e,sqlite3.OperationalError):
+        raise
 
   def batch_get_user_info(self, handles):
     response_data = []
@@ -102,19 +109,26 @@ class Service:
           request_results = self.cache_user_info.get(handle)
           response_data.append(request_results)
           continue
-
         # 若缓存中没有数据，查询数据库中有没有
         res = dao.query_user_info(handle)
         if len(res) != 0:
-          # 返回结果不为空，存入缓存，返回结果
-          request_results = {
-            "success": True,
-            "result": {
-              "handle": res[0],
-              "rating": res[1],
-              "rank": res[2]
+          if res[1] == 0:
+            request_results = {
+              "success": True,
+              "result": {
+                "handle": res[0]
+              }
             }
-          }
+          else:
+            # 返回结果不为空，存入缓存，返回结果
+            request_results = {
+              "success": True,
+              "result": {
+                "handle": res[0],
+                "rating": res[1],
+                "rank": res[2]
+              }
+            }
           self.cache_user_info.set(handle, request_results, timeout=30 - res[len(res) - 1])
           response_data.append(request_results)
           continue
@@ -169,17 +183,15 @@ class Service:
         dao.save_user_info(handle, request_results, round(time.time()))
         response_data.append(request_results)
       except Exception as e:
-        request_results = {}
         if isinstance(e, requests.exceptions.ConnectionError):
           request_results['success'] = False
           request_results['type'] = 3
           request_results['message'] = 'The HTTP interface is not responding'
 
         else:
-          raise
-          # request_results['success'] = False
-        # request_results['type'] = 4
-        # request_results['message'] = 'Internal Server Error'
-        # response_data.append(request_results)
+          request_results['success'] = False
+          request_results['type'] = 4
+          request_results['message'] = 'Internal Server Error'
+          response_data.append(request_results)
 
     return response_data
