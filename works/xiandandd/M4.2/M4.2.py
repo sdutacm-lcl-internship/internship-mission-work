@@ -12,7 +12,6 @@ from flask import Flask, request, jsonify,g
 import threading
 from werkzeug.datastructures import MultiDict
 from flask import render_template
-
 # 获取数据库连接
 def get_db():
     db = getattr(g, '_database', None)
@@ -87,12 +86,9 @@ def insertratig(id,handle,contest_id,name,rank,old_rating,new_rating,time,update
     except sqlite3.IntegrityError as e:
         #如果不加这句话就会报错，显示表格被锁定了
         db.commit()
-        url = "http://127.0.0.1:2333/batchGetUserInfo"
-        # 请求的handles参数
-        params = {
-            "handles": handle
-        }
-        response = requests.get(url, params=params)
+        handles=[]
+        handles.append(handle)
+        query_handles(handle)
         cursor.execute(
             "INSERT INTO user_rating(user_rating_id, handle, contest_id, contest_name, rank, old_rating, new_rating, rating_updated_at, updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
             (id, handle, contest_id, name, rank, old_rating, new_rating, time, updated_at))
@@ -234,7 +230,6 @@ app.config['JSON_SORT_KEYS'] = False
 #     # 返回成功响应
 #     return jsonify({'message': 'ok'}),200
 
-
 #用户信息查询
 def solve(username):
     url = "https://codeforces.com/api/user.info"
@@ -337,9 +332,11 @@ def solve(username):
 
 #用户信息查询路由
 @app.route('/batchGetUserInfo', methods=['GET'])
-def query_handles():
-    # 获取handles
+def query():
     handles = request.args.get('handles')
+    return query_handles(handles)
+def query_handles(handles):
+    # 获取handles
     # 将handles按逗号分割成列表
     handle_list = handles.split(',')
     response_data = []
@@ -391,6 +388,7 @@ def query_handles():
 
     # jsonify()函数简化了将数据转换为JSON响应的过程，并确保响应的Content-Type标头正确设置为application/json
     # 这样，浏览器或其他客户端会正确地解析返回的JSON数据了
+
     return jsonify(response_data)
 
 
@@ -520,10 +518,12 @@ def isinfo(username):
                 return False
     return False
 
-app.jinja_env.enabled = False
+
+
 @app.route('/', methods=['GET'])
 def ooo():
     return render_template('p.html')
+
 if __name__ == '__main__':
     init_db()
     app.run(host='127.0.0.1', port=2333)
