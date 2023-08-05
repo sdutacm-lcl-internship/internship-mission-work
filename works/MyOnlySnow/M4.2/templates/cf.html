@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,21 +25,27 @@
             background-color: pink;
             color: yellow;
         }
+
+        #HEAD {
+            color: cornflowerblue;
+            font-family: 'Times New Roman', Times, serif;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
+
 <body>
     <div id="app">
         <h1><a id="cf" href="https://codeforces.com">Codeforces</a> Handles</h1>
         <form @submit.prevent="searchInfo">
-            <label for="handleInput">Enter Handle:</label>
+            <label id="HEAD" for="handleInput">Enter Handle:</label>
             <input v-model="handle" type="text" id="handleInput" required>
             <button id="search" type="submit">Search</button>
         </form>
         <div v-if="playerData && playerData.success">
             <h2>Player Info:</h2>
-            <p><b>Handle:</b> [[ playerData.handle ]]</p>
+            <p><b>Handle:</b> <span v-html="formattedHandle"></span></p>
             <p><b>Rating:</b> [[ playerData.rating || 'N/A' ]]</p>
             <p><b>Rank:</b> [[ playerData.rank || 'N/A' ]]</p>
         </div>
@@ -74,44 +81,75 @@
     </div>
     <img src="{{ url_for('static',filename='tutu.png') }}" alt="">
     <script>
-         alert('面对世界很好奇')
+        alert('面对世界很好奇')
         new Vue({
-    el: '#app',
-    delimiters: ['[[', ']]'],  
-    data: {
-        handle: '',
-        playerData: null,
-        ratingsData: [],
-        searched :false,
-    },
-    methods: {
-        searchInfo() {
-            this.searched = true;
-            axios.get('/batchGetUserInfo?handles=' + this.handle)
-                .then(response => {
-                    this.playerData = response.data[0];
-                    if (this.playerData.success) {
-                        this.searchRatings();
+            el: '#app',
+            delimiters: ['[[', ']]'],
+            data: {
+                handle: '',
+                playerData: null,
+                ratingsData: [],
+                searched: false,
+            },
+            methods: {
+                searchInfo() {
+                    this.searched = true;
+                    axios.get('/batchGetUserInfo?handles=' + this.handle)
+                        .then(response => {
+                            this.playerData = response.data[0];
+                            if (this.playerData.success) {
+                                this.searchRatings();
+                            }
+                        })
+                        .catch(error => {
+                            this.playerData = { success: false, message: 'There was an error with the request.' };
+                        });
+                },
+                searchRatings() {
+                    axios.get('/getUserRatings?handle=' + this.handle)
+                        .then(response => {
+                            this.ratingsData = response.data;
+                        });
+                }
+            },
+            watch: {
+                searched(newValue, oldValue) {
+                    console.log(`searched changed from ${oldValue} to ${newValue}`);
+                }
+            },
+            computed: {
+                formattedHandle() {
+                    if (!this.playerData) return '';
+                    const { handle, rating } = this.playerData;
+                    if (rating >= 3000) {
+                        return handle.charAt(0) + '<span style="color: red;">' + handle.slice(1) + '</span>';
+                    } else if (rating >= 2400) {
+                        return '<span style="color: red;">' + handle + '</span>';
                     }
-                })
-            .catch(error => {
-            this.playerData = { success: false, message: 'There was an error with the request.'};
+                    else if (rating >= 2100) {
+                        return '<span style="color:orange;">' + handle + '</span>';
+                    }
+                    else if (rating >= 1900) {
+                        return '<span style="color:rgb(170,0,170);">' + handle + '</span>';
+                    }
+                    else if (rating >= 1600) {
+                        return '<span style="color:blue;">' + handle + '</span>';
+                    }
+                    else if (rating >= 1400) {
+                        return '<span style="color:#03a89e!important;">' + handle + '</span>';
+                    }
+                    else if (rating >= 1200) {
+                        return '<span style="color:green;">' + handle + '</span>';
+                    }
+                    else {
+                        return '<span style="color:rgb(128,128,128);">' + handle + '</span>';
+                    }
+                    return handle;
+                }
+            },
         });
-        },
-        searchRatings() {
-            axios.get('/getUserRatings?handle=' + this.handle)
-                .then(response => {
-                    this.ratingsData = response.data;
-                });
-        }
-    },
-    watch: {
-        searched(newValue, oldValue) {
-            console.log(`searched changed from ${oldValue} to ${newValue}`);
-        }
-    }
-});
 
     </script>
 </body>
+
 </html>
