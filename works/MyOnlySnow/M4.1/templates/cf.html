@@ -20,16 +20,17 @@
 
         #search {
             transition-duration: 0.4s;
-            font-family:"Lucida Calligraphy", cursive, serif, sans-serif;
+            font-family: "Lucida Calligraphy", cursive, serif, sans-serif;
         }
 
         #search:hover {
             background-color: pink;
             color: yellow;
         }
-        #HEAD{
-            color:cornflowerblue;
-            font-family:'Times New Roman', Times, serif;
+
+        #HEAD {
+            color: cornflowerblue;
+            font-family: 'Times New Roman', Times, serif;
         }
     </style>
 </head>
@@ -58,8 +59,7 @@
             xhr.open("GET", '/batchGetUserInfo?handles=' + handle);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === XMLHttpRequest.DONE) {
-                    if(xhr.status === 200)
-                    {
+                    if (xhr.status === 200) {
                         const response = JSON.parse(xhr.responseText);
                         console.log(response);
                         if (response[0].success === true)
@@ -68,12 +68,11 @@
                             code(response);
                         }
                     }
-                    else
-                    { 
+                    else {
                         const display = document.getElementById("result");
-                        display.innerHTML = "There was an error with the request." ;
+                        display.innerHTML = "There was an error with the request.";
                     }
-                       
+
                 }
             };
             xhr.send();
@@ -84,9 +83,10 @@
             resultDiv.innerHTML = ""; // Clear previous result
             const playerData = data[0];
             const playerInfo = document.createElement("div");
+            const realhandle = formatHandle(playerData.handle,playerData.rating)
             playerInfo.innerHTML = `
                 <h2>Player Info:</h2>
-                <p><b>Handle:</b> ${playerData.handle}</p>
+                <p><b>Handle:</b> ${realhandle}</p>
                 <p><b>Rating:</b> ${playerData.rating || 'N/A'}</p>
                 <p><b>Rank:</b> ${playerData.rank || 'N/A'}</p>
             `;
@@ -102,24 +102,50 @@
                 resultDiv.appendChild(palyerRatings);
             }
         }
+        function formatHandle(handle, rating) {
+            if (rating >= 3000) {
+                return handle.charAt(0) + '<span style="color: red;">' + handle.slice(1) + '</span>';
+            } else if (rating >= 2400) {
+                return '<span style="color: red;">' + handle + '</span>';
+            }
+            else if (rating>=2100){
+                return '<span style="color:orange;">'+handle+'</span>';
+            }
+            else if (rating>=1900){
+                return '<span style="color:rgb(170,0,170);">'+handle+'</span>';
+            }
+            else if (rating>=1600){
+                return '<span style="color:blue;">'+handle+'</span>';
+            }
+            else if (rating>=1400){
+                return '<span style="color:rgb(248,248,248);">'+handle+'</span>';
+            }
+            else if (rating>=1200){
+                return '<span style="color:green;">'+handle+'</span>';
+            }
+            else{
+                return '<span style="color:rgb(128,128,128);">'+handle+'</span>';
+            }
+            return handle;
+        }
 
         function searchRatings(handle) {
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", '/getUserRatings?handle=' + handle);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                const response = JSON.parse(xhr.responseText);
-                console.log(response);
-                displayRatings(response);
-            }
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", '/getUserRatings?handle=' + handle);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    const response = JSON.parse(xhr.responseText);
+                    console.log(response);
+                    displayRatings(response);
+                }
 
-        };
-        xhr.send();
-    }
-    function displayRatings(data) {
-        const resultDiv = document.getElementById("result");
-        const ratingsTable = document.createElement("table");
-        ratingsTable.innerHTML = `
+            };
+            xhr.send();
+        }
+        function displayRatings(data) {
+            const resultDiv = document.getElementById("result");
+            const ratingsTable = document.createElement("table");
+            ratingsTable.innerHTML = `
             <caption>Rating Records:</caption>
             <tr>
                 <th>Contest ID</th>
@@ -130,9 +156,9 @@
                 <th>Last Updated</th>
             </tr>
         `;
-        for (const rating of data) {
-            const row = document.createElement("tr");
-            row.innerHTML = `
+            for (const rating of data) {
+                const row = document.createElement("tr");
+                row.innerHTML = `
                 <td>${rating.contestId}</td>
                 <td>${rating.contestName}</td>
                 <td>${rating.rank}</td>
@@ -140,10 +166,10 @@
                 <td>${rating.newRating}</td>
                 <td>${rating.ratingUpdatedAt}</td>
             `;
-            ratingsTable.appendChild(row);
+                ratingsTable.appendChild(row);
+            }
+            resultDiv.appendChild(ratingsTable);
         }
-        resultDiv.appendChild(ratingsTable);
-    }
 
 
         function code(response) {
