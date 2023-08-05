@@ -3,30 +3,62 @@
 <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
 
 <script>
+  function valueToColor (value) {
+    switch (true) {
+        case (value < 1200):
+            color = "gray";     // 灰色
+            break;
+        case (value < 1400):
+            color = "green";    // 绿色
+            break;
+        case (value < 1600):
+            color = "cyan";     // 青色
+            break;
+        case (value < 1900):
+            color = "blue";     // 蓝色
+            break;
+        case (value < 2100):
+            color = "purple";   // 紫色
+            break;
+        case (value <= 2300):
+            color = "orange";   // 橙色
+            break;
+        default:
+            color = "red";      // 红色
+            break;
+    }
+    return color
+      // 红色
+};
   function requestInfo() {
     let handle = document.getElementsByName('handle')[0].value
-    $.ajax({
-      url: "requestUserInfo?handle=" + handle,
-      type: "get",
-      dataType: "json",
-      success: function (data) {
-        document.getElementById("handle").textContent = data["handle"]
-        document.getElementById("rating").textContent = data["rating"]
-        renderTable(data)
-      },
-      error: function (xhr, textStatus, errorThrown) {
-        console.log(errorThrown)
-        alert(xhr.responseText);
-      }
-    })
-  }
-
-
+    var xhr = new XMLHttpRequest()
+    xhr.open('GET', "requestUserInfo?handle=" + handle, false);
+    xhr.send(null)
+    if(xhr.status!="200"&&xhr.status!="304"){
+      alert(xhr.responseText)
+    }
+    else
+    {
+      responseData = JSON.parse(xhr.response)
+    document.getElementById("handle").textContent = responseData["handle"]
+    document.getElementById("rating").textContent = responseData["rating"]
+      document.getElementById("handle").style.color=valueToColor(responseData["rating"])
+    const tableThead = document.querySelector("#table1 thead");
+    if(responseData["rating"]!="暂无"){
+      tableThead.style.display=""
+    }else {
+      tableThead.style.display="none"
+    }
+    renderTable(responseData)
+    }
+    }
   function renderTable(data) {
     const tableBody = document.querySelector("#table1 tbody");
     tableBody.innerHTML = "";
     rating_hisyory = data["rating_history"]
-    rating_hisyory.forEach(function (v, index, json) {
+
+    rating_hisyory.forEach(function (v) {
         const row = document.createElement("tr");
         const dateCell = document.createElement("td")
         const contestNameCell = document.createElement("td");
@@ -88,16 +120,16 @@
 
 <h4 style="text-align: center;font-size: 5px;font-weight: 1"></h4>
 <div style="text-align: center">
-  <h1 id="handle" style="color: blue"></h1>
+  <h1 id="handle" ></h1>
   <br>
   <p3>rating:</p3>
-  <h1 id="rating" style="color: coral"></h1>
+  <h1 id="rating" ></h1>
 </div>
 <h5 style="text-align: center">raing history</h5>
 <div id="middle">
   <table style="width: 350px;margin:0 auto" id="table1">
-    <thead>
-    <tr style="font-size: 1px">
+    <thead style="display: none">
+    <tr style="font-size: 1px;">
       <th id="time">时间</th>
       <th id="contest">比赛</th>
       <th id="rank">rank</th>

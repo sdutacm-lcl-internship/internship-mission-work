@@ -3,7 +3,6 @@ import sqlite3
 import time
 import pytz
 import requests
-
 from utils import Crawler, Utils
 from user_dao import Dao
 
@@ -87,7 +86,8 @@ class Service:
           self.batch_get_user_info([handle])
           dao.save_ratings(handle, response_data, round(time.time()))
         else:
-          raise
+          print("--------------")
+          print(str(e))
       # 返回数据
       return response_data, 200
     except Exception as e:
@@ -95,10 +95,10 @@ class Service:
       if isinstance(e, requests.exceptions.ConnectionError):
         error_message = {"message": "The HTTP interface is not responding"}
         return error_message, 502
-      # 剩下的就是服务器程序运行异常,交给全局异常处理器处理
+      # 剩下的就是服务器程序运行异常,
       elif isinstance(e, sqlite3.OperationalError):
-        raise
-
+        error_message = {"message": "Internal Server Error"}
+        return error_message, 500
   def batch_get_user_info(self, handles):
     response_data = []
     for handle in handles:
@@ -182,15 +182,14 @@ class Service:
         dao.save_user_info(handle, request_results, round(time.time()))
         response_data.append(request_results)
       except Exception as e:
+        request_results={}
         if isinstance(e, requests.exceptions.ConnectionError):
           request_results['success'] = False
           request_results['type'] = 3
           request_results['message'] = 'The HTTP interface is not responding'
-
         else:
           request_results['success'] = False
           request_results['type'] = 4
           request_results['message'] = 'Internal Server Error'
-          response_data.append(request_results)
-
+        response_data.append(request_results)
     return response_data

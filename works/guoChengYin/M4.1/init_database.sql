@@ -8,16 +8,17 @@ PRAGMA foreign_keys = ON;
 
 -- 建立 user_info 表
 CREATE TABLE IF NOT EXISTS user_info (
-    handle VARCHAR PRIMARY KEY NOT NULL,
+    handle VARCHAR PRIMARY KEY NOT NULL COLLATE NOCASE,
     rating INT,
     rank VARCHAR,
-    updated_at DATETIME NOT NULL
+    updated_at DATETIME NOT NULL,
+   "COLLATE" NOCASE
 );
 
 -- 建立 user_rating 表
 CREATE TABLE IF NOT EXISTS user_rating (
     user_rating_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    handle VARCHAR NOT NULL,
+    handle VARCHAR NOT NULL  COLLATE NOCASE,
     contest_id INT NOT NULL,
     contest_name VARCHAR NOT NULL,
     rank INT NOT NULL,
