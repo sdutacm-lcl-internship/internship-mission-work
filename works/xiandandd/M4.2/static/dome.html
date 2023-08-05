@@ -133,8 +133,8 @@
                     handles: this.name
                 };
 
-                let url2 = 'http://127.0.0.1:2333/getUserRatings?' + "handle=" + this.name;
-                let url1 = 'http://127.0.0.1:2333/batchGetUserInfo?' + "handles=" + this.name;
+                let url2 = '/getUserRatings?' + "handle=" + this.name;
+                let url1 = '/batchGetUserInfo?' + "handles=" + this.name;
                 let num1, num2;
                 axios.get(url1)
                     .then(response => {
