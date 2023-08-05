@@ -75,7 +75,7 @@
 
     <div id="htmlContainer">
         <div>
-            <div align="center"id="yyy" style="display: none">
+            <div align="center"id="yyy" v-show="is1">
                 <h2>查询结果</h2>
                 <div align="center">
                     <p id="handle">{{ handle }}</p>
@@ -83,7 +83,7 @@
                     <p id="rating">{{ rating }}</p>
                 </div>
             </div>
-            <div id="xxx" align="center" style="margin-top:50px;display: none;">
+            <div id="xxx" align="center" style="margin-top:50px;" v-show="is2">
                 <p style="align-content: center;color: darkgrey">rating history</p>
                 <table style="border: 1px solid black">
 
@@ -114,13 +114,13 @@
             handle: '',
             contents: [],
             rating:0,
+            is1:false,
+            is2:false,
         },
         methods: {
             add() {
-                var my=document.getElementById("yyy");
-                var ms=document.getElementById("xxx");
-                my.style.display="none";
-                ms.style.display="none";
+                this.is1=false;
+                this.is2=false;
                 this.contents=[];
                 if(this.name===""){
                     alert("输入不能为空");
@@ -165,13 +165,13 @@
                         if(data2.length===0){
                             this.handle=data1[0]["result"]["handle"];
                             this.rating=0;
-                            my.style.display="block";
+                            this.is1=true;
                         }
                         else{
                             this.handle=data1[0]["result"]["handle"]+"("+data1[0]["result"]["rank"]+')';
                             this.rating=data1[0]["result"]["rating"];
-                            my.style.display="block";
-                            ms.style.display="block";
+                            this.is1=true;
+                            this.is2=true;
                         }
                         return;
                     })
@@ -190,6 +190,3 @@
     });
 </script>
 </body>
-
-
-<!--<script src="../static/vue1.js"></script>-->
