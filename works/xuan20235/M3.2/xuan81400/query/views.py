@@ -180,7 +180,7 @@ def get_user_rating(handle):
         }
         return JsonResponse(answer, safe=False, status=404)
     from datetime import datetime
-    user_ratings = user_rating.objects.filter(handle_id=handle)
+    user_ratings = user_rating.objects.filter(handle=handle)
     current_time = shift_time(datetime.now())
 
     try:
@@ -232,6 +232,7 @@ def get_user_rating(handle):
                 rat.save()
                 add_sql(ans, handle, rat)
         except Exception as e:
+            return HttpResponse(e)
             ans = {"message": '又错了已黑化'}
             return JsonResponse(ans, safe=False, status=403)
     return JsonResponse(ans, safe=False, status=200)

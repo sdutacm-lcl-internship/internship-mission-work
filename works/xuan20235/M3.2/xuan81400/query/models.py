@@ -9,11 +9,12 @@ class user_info(models.Model):
     rating = models.IntegerField(null=True, blank=True)
     rank = models.CharField(null=True, blank=True, max_length=30)
     updated_at = models.DateTimeField()
-
-
+    class Meta:
+        db_table = 'user_info'
+      
 class user_rating(models.Model):
     user_rating_id = models.AutoField(primary_key=True)
-    handle = models.ForeignKey(user_info, on_delete=models.CASCADE)
+    handle = models.ForeignKey(user_info, on_delete=models.CASCADE,db_column='handle')
     contest_id = models.IntegerField()
     contest_name = models.CharField(max_length=255)
     rank = models.IntegerField()
@@ -21,7 +22,10 @@ class user_rating(models.Model):
     new_rating = models.IntegerField()
     rating_updated_at = models.DateTimeField()
     updated_at = models.DateTimeField()
-
+    
+    class Meta:
+        db_table = 'user_rating'
+        
 
 # Create your models here.
 # * ......................我佛慈悲......................

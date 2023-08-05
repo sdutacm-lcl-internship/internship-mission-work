@@ -72,7 +72,7 @@ WSGI_APPLICATION = "xuan81400.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "cf.sqlite3",
+        "NAME": BASE_DIR / "cf.db",
     }
 }
 
