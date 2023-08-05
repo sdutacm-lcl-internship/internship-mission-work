@@ -75,7 +75,7 @@
 
     <div id="htmlContainer">
         <div>
-            <div align="center"id="yyy" v-show="is1">
+            <div align="center" id="yyy" v-show="is1">
                 <h2>查询结果</h2>
                 <div align="center">
                     <p id="handle">{{ handle }}</p>
@@ -113,16 +113,16 @@
             name: '',
             handle: '',
             contents: [],
-            rating:0,
-            is1:false,
-            is2:false,
+            rating: 0,
+            is1: false,
+            is2: false,
         },
         methods: {
             add() {
-                this.is1=false;
-                this.is2=false;
-                this.contents=[];
-                if(this.name===""){
+                this.is1 = false;
+                this.is2 = false;
+                this.contents = [];
+                if (this.name === "") {
                     alert("输入不能为空");
                     return;
                 }
@@ -153,37 +153,37 @@
                     .then(data => {
                         data2 = data;
                         //处理数据
-                        for(var i=0;i<data2.length;i++){
+                        for (var i = 0; i < data2.length; i++) {
                             this.contents.push({
-                            'ratingUpdatedAt': data2[i]["ratingUpdatedAt"],
-                            'contestName': data2[i]["contestName"],
-                            'rank': data2[i]["rank"],
-                            'oldRating': data2[i]["oldRating"],
-                            'newRating': data2[i]["newRating"],
-                        });
+                                'ratingUpdatedAt': data2[i]["ratingUpdatedAt"],
+                                'contestName': data2[i]["contestName"],
+                                'rank': data2[i]["rank"],
+                                'oldRating': data2[i]["oldRating"],
+                                'newRating': data2[i]["newRating"],
+                            });
                         }
-                        if(data2.length===0){
-                            this.handle=data1[0]["result"]["handle"];
-                            this.rating=0;
-                            this.is1=true;
-                        }
-                        else{
-                            this.handle=data1[0]["result"]["handle"]+"("+data1[0]["result"]["rank"]+')';
-                            this.rating=data1[0]["result"]["rating"];
-                            this.is1=true;
-                            this.is2=true;
+                        if (data2.length === 0) {
+                            this.handle = data1[0]["result"]["handle"];
+                            this.rating = 0;
+                            this.is1 = true;
+                        } else {
+                            this.handle = data1[0]["result"]["handle"] + "(" + data1[0]["result"]["rank"] + ')';
+                            this.rating = data1[0]["result"]["rating"];
+                            this.is1 = true;
+                            this.is2 = true;
                         }
                         return;
                     })
                     .catch(error => {
-                        // console.log(error.response.status===404);
-                        if(error.response.status===404){
-                            alert("查无此人");
+                        if (error.response && error.response.status) {
+                            if (error.response.status === 404) {
+                                alert("查无此人");
+                            } else {
+                                alert("出错了！ 状态码: " + error.response.status);
+                            }
+                        } else {
+                            alert("出错了！ ");
                         }
-                        else{
-                            alert("出错了！" + error);
-                        }
-
                     });
             }
         }
