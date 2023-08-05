@@ -8,13 +8,15 @@ new Vue({
         times: [],
         ratings: [],
         names: [],
-        is1:false,
-        is3:false,
     },
     methods: {
         add() {
-            this.is1=false;
-            this.is3=false;
+            var my = document.getElementById("yyy");
+            var ms = document.getElementById("xxx");
+            my.style.display = "none";
+            ms.style.display = "none";
+            var f = document.getElementById('ratingchart');
+            f.style.display = "none";
             this.contents = [];
             this.names = [];
             this.ratings = [];
@@ -65,14 +67,13 @@ new Vue({
                     if (data2.length === 0) {
                         this.handle = data1[0]["result"]["handle"];
                         this.rating = 0;
-                        this.is1=true;
-                        this.is3=false;
-                        console.log(this.is3);
+                        my.style.display = "block";
                     } else {
                         this.handle = data1[0]["result"]["handle"] + "(" + data1[0]["result"]["rank"] + ')';
                         this.rating = data1[0]["result"]["rating"];
-                        this.is1=true;
-                        this.is3=false;
+                        my.style.display = "block";
+                        ms.style.display = "block";
+                        f.style.display = "block";
                         this.addchart()
                     }
                     return;
