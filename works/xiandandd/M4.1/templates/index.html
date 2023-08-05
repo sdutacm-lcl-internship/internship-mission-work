@@ -58,7 +58,7 @@
             font-size: 25px;
             display: inline;
             white-space: nowrap;
-            color: darkturquoise
+            color: black;
         }
     </style>
 </head>
@@ -98,9 +98,9 @@
             return;
         }
         var queryString2 = Object.keys(dataToSend2).map(key => key + '=' + dataToSend2['handles']).join('&');
-        var url1 = 'http://127.0.0.1:2333/batchGetUserInfo?' + queryString2;
+        var url1 = '/batchGetUserInfo?' + queryString2;
         var queryString = Object.keys(dataToSend1).map(key => key + '=' + dataToSend1['handle']).join('&');
-        var url2 = 'http://127.0.0.1:2333/getUserRatings?' + queryString;
+        var url2 = '/getUserRatings?' + queryString;
         var num2;
 
         async function fetchData() {
@@ -130,24 +130,27 @@
                     var rating = data1[0]['result']['rating'];
                     var s = '';
                     if (rating >= 0 && rating < 1200) {
-                        s = '#dcdcdc'; // 灰色背景
+                        s = '#808080'; 
                     } else if (rating >= 1200 && rating < 1400) {
-                        s = '#adebad'; // 绿色背景
+                        s = '#008000'; 
                     } else if (rating >= 1400 && rating < 1600) {
-                        s = '#5cb85c'; // 浅绿色背景
+                        s = '#03a89e';
                     } else if (rating >= 1600 && rating < 1900) {
-                        s = '#5bc0de'; // 蓝色背景
+                        s = '#0000ff'; 
                     } else if (rating >= 1900 && rating < 2100) {
-                        s = '#ff88ff'; // 紫色背景
+                        s = '#a0a'; 
                     } else if (rating >= 2100 && rating < 2300) {
-                        s = '#ffcc88'; // 橙色背景
+                        s = '#ff8c00'; 
                     } else if (rating >= 2300 && rating < 2400) {
-                        s = '#feda57'; // 黄色背景
+                        s = '#ff8c00'; 
                     } else if (rating >= 2400 && rating < 2600) {
-                        s = '#ff7777'; // 红色背景
+                        s = '#ff0000'; 
                     } else if (rating >= 2600 && rating <= 3000) {
-                        s = '#ff3333'; // 深红色背景
-                    } else {
+                        s = '#ff0000';
+                    }else if(rating>3000){
+                        s='#ff0000';
+                    }
+                    else {
                         s = 'rgb(127,0,0)'; //
                     }
 
