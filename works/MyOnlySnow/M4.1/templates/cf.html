@@ -58,14 +58,22 @@
             xhr.open("GET", '/batchGetUserInfo?handles=' + handle);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === XMLHttpRequest.DONE) {
-                    const response = JSON.parse(xhr.responseText);
-                    console.log(response);
-                    if (response[0].success === true)
-                        displayResult(response);
-                    else {
-                        code(response)
+                    if(xhr.status === 200)
+                    {
+                        const response = JSON.parse(xhr.responseText);
+                        console.log(response);
+                        if (response[0].success === true)
+                            displayResult(response);
+                        else {
+                            code(response);
+                        }
                     }
-
+                    else
+                    { 
+                        const display = document.getElementById("result");
+                        display.innerHTML = "There was an error with the request." ;
+                    }
+                       
                 }
             };
             xhr.send();
