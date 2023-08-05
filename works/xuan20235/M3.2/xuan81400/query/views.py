@@ -1,3 +1,4 @@
+from pickle import NONE
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.http import HttpResponse
@@ -168,10 +169,10 @@ def get_user_rating(handle):
     handles = []
     handles.append(handle)
     info = get_user_info(handles, 2)
-    if info.rating == -1:  #这里并不是武断的直接返回而且已经更新了info发现他还是没有rating或者还是没有这个人
+    if info.rating == None:  #这里并不是武断的直接返回而且已经更新了info发现他还是没有rating或者还是没有这个人
         answer = {"message": "no such handle"}
         return JsonResponse(answer, safe=False, status=404)
-    if info.rating == -2:
+    if info.rating == 0:
         answer = {
             "success": True,
             "result": {
@@ -291,7 +292,7 @@ def get_user_info(handles, jd):
                         ans.append(res[0])
 
                 else:
-                    if info.rating == -2:
+                    if info.rating == 0:
                         answer = {
                             "success": True,
                             "result": {
@@ -299,7 +300,7 @@ def get_user_info(handles, jd):
                             },
                         }
                         ans.append(answer)
-                    elif info.rating == -1:
+                    elif info.rating == None:
                         answer = {
                             "success": False,
                             "type": "1",
@@ -328,12 +329,12 @@ def get_user_info(handles, jd):
                                                    updated_at=current_time)
                 else:
                     new = user_info.objects.create(handle=answer['handle'],
-                                                   rating=-2,
+                                                   rating=0,
                                                    updated_at=current_time)
                 ans.append(res[0])
             else:
                 new = user_info.objects.create(handle=handle,
-                                               rating=-1,
+                                               rating=None,
                                                updated_at=current_time)
                 ans.append(res[0])
     if jd == 1:
