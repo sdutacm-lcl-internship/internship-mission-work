@@ -93,13 +93,21 @@
                     if (this.playerData.success) {
                         this.searchRatings();
                     }
-                });
+                })
+            .catch(error => {
+            this.playerData = { success: false, message: 'There was an error with the request.'};
+        });
         },
         searchRatings() {
             axios.get('/getUserRatings?handle=' + this.handle)
                 .then(response => {
                     this.ratingsData = response.data;
                 });
+        }
+    },
+    watch: {
+        searched(newValue, oldValue) {
+            console.log(`searched changed from ${oldValue} to ${newValue}`);
         }
     }
 });

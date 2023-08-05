@@ -1,12 +1,10 @@
 import flask
 from flask import Flask, request, jsonify, Response, make_response,template_rendered
-import urllib.error
 import requests
 import json
 from fake_useragent import UserAgent
 from datetime import timedelta, datetime
 import sqlite3
-import time
 import pytz
 
 app = Flask(__name__,template_folder='templates', static_folder='static')
@@ -234,13 +232,21 @@ def URL_ratings():
         result = {
             'message': results['message']
         }
-        return jsonify(result), results['code']
+        response = make_response(json.dumps(result), results['code'])
+        response.headers['Content-Type'] = 'application/json'
+        return response
     else:
-        return json.dumps(results)
+        response = make_response(json.dumps(results), 200)
+        response.headers['Content-Type'] = 'application/json'
+        return response
 
 @app.route('/')
 def HTML():
     return flask.render_template('cf.html')
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return '请检查您的网址是否正确', 404
 
 def creat_file():
     with sqlite3.connect('cf.db') as conn:
