@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #htmlContainer {
+            text-align: center;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        td, th {
+            border: 1px solid black;
+            padding: 5px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 500px;
+            margin: 0 auto;
+        }
+
+        .container input,
+        .container button {
+            padding: 10px;
+            font-size: 16px;
+            height: 40px;
+            box-sizing: border-box;
+        }
+
+        .container > input {
+            width: 150px;
+            /* 调整宽度为较小的值 */
+            flex-grow: 1;
+        }
+
+        .container button {
+            margin-left: 10px;
+        }
+
+        #handle {
+            /*color: darkturquoise;*/
+            font-size: 25px
+        }
+
+        #rating {
+            font-size: 25px;
+            display: inline;
+            white-space: nowrap;
+            color: black;
+        }
+    </style>
+</head>
+
+<body>
+<div>
+    <h1>查询选手</h1>
+    <div class='container'>
+        <input type="text" id='name' placeholder="请输入handle" style="border-radius: 0px;">
+        <button style="border-radius: 0%;" onclick="add()">查询</button>
+    </div>
+
+</div>
+<div id="htmlContainer"></div>
+
+</body>
+
+
+<script>
+    // 保存最初的 HTML 代码
+    var originalHtml = document.body.innerHTML;
+
+    function add() {
+        // 重置 HTML 为最初的代码
+        var name = document.getElementById('name').value
+        document.body.innerHTML = originalHtml;
+
+
+        var dataToSend1 = {
+            handle: name
+        };
+        var dataToSend2 = {
+            handles: name
+        };
+        if (dataToSend1['handle'] === "") {
+            alert("输入不能为空！");
+            return;
+        }
+        var queryString2 = Object.keys(dataToSend2).map(key => key + '=' + dataToSend2['handles']).join('&');
+        var url1 = '/batchGetUserInfo?' + queryString2;
+        var queryString = Object.keys(dataToSend1).map(key => key + '=' + dataToSend1['handle']).join('&');
+        var url2 = '/getUserRatings?' + queryString;
+        var num2;
+
+        async function fetchData() {
+            try {
+                const response1 = await fetch(url1);
+                const data1 = await response1.json();
+                const response2 = await fetch(url2);
+                const data2 = await response2.json();
+                num2 = response2.status;
+                if ((response1.status >= 200 && response1.status < 400) && (response2.status >= 200 && response2.status < 400)) {
+                    if (data1[0]["success"] === false) {
+                        alert("查无此人");
+                        return;
+                    }
+                    var newElement = document.createElement('div');
+                    newElement.innerHTML = '<div align="center">\n' +
+                        '    <h2>查询结果</h2>\n' +
+                        '    <div align="center">\n' +
+                        '        <p id="handle"></p>\n' +
+                        '        <span style="font-size: 25px">rating:</span>\n' +
+                        '        <p id="rating"></p>\n' +
+                        '    </div>\n' +
+                        '</div>\n';
+                    document.getElementById('htmlContainer').appendChild(newElement);
+
+                    // 设置handle显示的颜色
+                    var rating = data1[0]['result']['rating'];
+                    var s = '';
+                    if (rating >= 0 && rating < 1200) {
+                        s = '#808080'; // 灰色背景
+                    } else if (rating >= 1200 && rating < 1400) {
+                        s = '#008000'; // 绿色背景
+                    } else if (rating >= 1400 && rating < 1600) {
+                        s = '#03a89e'; // 浅绿色背景
+                    } else if (rating >= 1600 && rating < 1900) {
+                        s = '#0000ff'; // 蓝色背景
+                    } else if (rating >= 1900 && rating < 2100) {
+                        s = '#a0a'; // 紫色背景
+                    } else if (rating >= 2100 && rating < 2300) {
+                        s = '#ff8c00'; // 橙色背景
+                    } else if (rating >= 2300 && rating < 2400) {
+                        s = '#ff8c00'; // 黄色背景
+                    } else if (rating >= 2400 && rating < 2600) {
+                        s = '#ff0000'; // 红色背景
+                    } else if (rating >= 2600 && rating <= 3000) {
+                        s = '#ff0000'; // 深红色背景
+                    }else if(rating>3000){
+                        s='#ff0000';
+                    }
+                    else {
+                        s = 'rgb(127,0,0)'; //
+                    }
+
+                    var pElement1 = document.getElementById('rating');
+                    var pElement = document.getElementById('handle');
+                    if (data1[0]["result"]["rank"] === undefined) {
+                        pElement.innerHTML = data1[0]['result']['handle'];
+                        pElement1.innerHTML = "0";
+                        return;
+                    } else {
+                        pElement.innerHTML = data1[0]['result']['handle'] + '(' + data1[0]['result']['rank'] + ')';
+                        pElement1.innerHTML = data1[0]['result']['rating'];
+                    }
+                    var element = document.getElementById("handle");
+                    if(rating>3000){
+                        var textContent = element.textContent;
+                        var newHTML = "<span style='color: black'>" + textContent.charAt(0) + "</span>";
+                        newHTML += "<span style='color: #ff0000'>" + textContent.slice(1) + "</span>";
+                        element.innerHTML = newHTML;
+                    }
+                    else{
+                        element.style.color = s;
+                    }
+                    var newElements = document.createElement('div');
+                    newElements.innerHTML =
+                        '<div align="center" style="margin-top:50px">\n' +
+                        '    <p style="align-content: center;color: darkgrey">rating history</p>\n' +
+                        '    <table style="border: 1px solid black">\n' +
+                        '        <thead>\n' +
+                        '        <tr>\n' +
+                        '            <th>时间</th>\n' +
+                        '            <th>比赛</th>\n' +
+                        '            <th>rank</th>\n' +
+                        '            <th>△</th>\n' +
+                        '        </tr>\n' +
+                        '        </thead>\n' +
+                        '        <tbody id="td">\n' +
+                        '        </tbody>\n' +
+                        '    </table>\n' +
+                        '</div>';
+                    document.getElementById('htmlContainer').appendChild(newElements);
+                    for (var i = 0; i < data2.length; i++) {
+                        var newElementt = document.createElement('tr');
+                        newElementt.innerHTML =
+                            '<td>' + data2[i]['ratingUpdatedAt'] + '</td>' +
+                            '<td>' + data2[i]['contestName'] + '</td>' +
+                            '<td>' + data2[i]['rank'] + '</td>' +
+                            '<td>' + data2[i]['oldRating'] + '->' + data2[i]['newRating'] + '</td>';
+                        // 将新行添加到目标元素中
+                        document.getElementById('td').appendChild(newElementt);
+                    }
+                } else {
+                    throw new Error("出错了");
+                }
+            } catch (error) {
+                if (num2 === 404) {
+                    alert("查无此人");
+                    return;
+                } else {
+                    alert("出错了");
+                }
+
+            }
+        }
+
+        fetchData();
+
+
+    }
+</script>
