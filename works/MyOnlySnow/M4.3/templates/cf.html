@@ -26,6 +26,11 @@
             background-color: pink;
             color: yellow;
         }
+
+        #HEAD {
+            color: cornflowerblue;
+            font-family: 'Times New Roman', Times, serif;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
@@ -38,7 +43,7 @@
 <body>
     <h1><a id="cf" href="https://codeforces.com">Codeforces</a> Handles</h1>
     <form id="searchForm">
-        <label for="handleInput">Enter Handle:</label>
+        <label id="HEAD" for="handleInput">Enter Handle:</label>
         <input type="text" id="handleInput" required>
         <button id="search" type="submit">Search</button>
     </form>
@@ -77,9 +82,10 @@
             resultDiv.innerHTML = ""; // Clear previous result
             const playerData = data[0].result;
             const playerInfo = document.createElement("div");
+            const realhandle = formatHandle(playerData.handle, playerData.rating);
             playerInfo.innerHTML = `
                 <h2>Player Info:</h2>
-                <p><b>Handle:</b> ${playerData.handle}</p>
+                <p><b>Handle:</b> ${realhandle}</p>
                 <p><b>Rating:</b> ${playerData.rating || 'N/A'}</p>
                 <p><b>Rank:</b> ${playerData.rank || 'N/A'}</p>
             `;
@@ -97,6 +103,33 @@
             }
         }
 
+        function formatHandle(handle, rating) {
+            if (rating >= 3000) {
+                return handle.charAt(0) + '<span style="color: red;">' + handle.slice(1) + '</span>';
+            } else if (rating >= 2400) {
+                return '<span style="color: red;">' + handle + '</span>';
+            }
+            else if (rating >= 2100) {
+                return '<span style="color:orange;">' + handle + '</span>';
+            }
+            else if (rating >= 1900) {
+                return '<span style="color:rgb(170,0,170);">' + handle + '</span>';
+            }
+            else if (rating >= 1600) {
+                return '<span style="color:blue;">' + handle + '</span>';
+            }
+            else if (rating >= 1400) {
+                return '<span style="color:rgb(248,248,248);">' + handle + '</span>';
+            }
+            else if (rating >= 1200) {
+                return '<span style="color:green;">' + handle + '</span>';
+            }
+            else {
+                return '<span style="color:rgb(128,128,128);">' + handle + '</span>';
+            }
+            return handle;
+        }
+
         function searchRatings(handle) {
             const xhr = new XMLHttpRequest();
             xhr.open("GET", '/getUserRatings?handle=' + handle);
@@ -104,7 +137,7 @@
                 if (xhr.readyState === XMLHttpRequest.DONE) {
                     const response = JSON.parse(xhr.responseText);
                     console.log(response);
-                    displayRatings(response,handle);
+                    displayRatings(response, handle);
                 }
 
             };
@@ -119,7 +152,7 @@
 
         let chart = null;
 
-        function displayRatings(data,handle) {
+        function displayRatings(data, handle) {
             if (chart !== null) {
                 chart.destroy();
             }
@@ -127,10 +160,10 @@
             const dates = data.map(rating => moment(rating.ratingUpdatedAt).format('YYYY/MM/DD'));
             const ratings = data.map(rating => rating.newRating);
             const contests = data.map(rating => rating.contestName);
-            const ratingChanges = data.map(rating => rating.newRating-rating.oldRating);
+            const ratingChanges = data.map(rating => rating.newRating - rating.oldRating);
             const Rank = data.map(rating => rating.rank)
             const datasets = [{
-                label:handle,
+                label: handle,
                 data: ratings,
                 fill: false,
                 borderColor: 'rgb(241, 158, 194)',

@@ -264,6 +264,10 @@ def URL_ratings():
 def HTML():
     return flask.render_template('cf.html')
 
+@app.errorhandler(404)
+def page_not_found(error):
+    return '请检查您的网址是否正确', 404
+
 def creat_file():
     with sqlite3.connect('cf.db') as conn:
         cursor = conn.cursor()
