@@ -86,9 +86,8 @@ class Service:
           self.batch_get_user_info([handle])
           dao.save_ratings(handle, response_data, round(time.time()))
         else:
-          print("--------------")
-          print(str(e))
-      # 返回数据
+          raise
+          # 返回数据
       return response_data, 200
     except Exception as e:
       # HTTP请求为未收到有效 HTTP 响应
@@ -99,6 +98,7 @@ class Service:
       elif isinstance(e, sqlite3.OperationalError):
         error_message = {"message": "Internal Server Error"}
         return error_message, 500
+
   def batch_get_user_info(self, handles):
     response_data = []
     for handle in handles:
@@ -182,7 +182,7 @@ class Service:
         dao.save_user_info(handle, request_results, round(time.time()))
         response_data.append(request_results)
       except Exception as e:
-        request_results={}
+        request_results = {}
         if isinstance(e, requests.exceptions.ConnectionError):
           request_results['success'] = False
           request_results['type'] = 3
