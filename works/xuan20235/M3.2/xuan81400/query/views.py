@@ -233,7 +233,7 @@ def get_user_rating(handle):
                 rat.save()
                 add_sql(ans, handle, rat)
         except Exception as e:
-            return HttpResponse(e)
+            #return HttpResponse(e)
             ans = {"message": '又错了已黑化'}
             return JsonResponse(ans, safe=False, status=403)
     return JsonResponse(ans, safe=False, status=200)
