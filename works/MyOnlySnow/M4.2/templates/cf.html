@@ -31,10 +31,16 @@
             font-family: 'Times New Roman', Times, serif;
         }
 
-        .handle-first::first-letter{
-                    color: rgb(0, 0, 0);
-                }
-                
+        .handle-first::first-letter {
+            color: rgb(0, 0, 0);
+            display: inline-block;
+        }
+
+        .handle-first{
+            color: red;
+            display: inline-block;
+        }
+
         .handle-orange {
             color: orange;
         }
@@ -71,13 +77,7 @@
             <input v-model="handle" type="text" id="handleInput" required>
             <button id="search" type="submit">Search</button>
         </form>
-        <div v-if="playerData && playerData.success && playerData.rating >=3000">
-            <h2>Player Info:</h2>
-            <p><b>Handle:</b> <span style="color: black;display: inline-block;"> [[ playerData.handle.charAt(0)]] </span><span style="color: red;display: inline-block;"> [[playerData.handle.slice(1)]] </span></p>
-            <p><b>Rating:</b> [[ playerData.rating || 'N/A' ]]</p>
-            <p><b>Rank:</b> [[ playerData.rank || 'N/A' ]]</p>
-        </div>
-        <div v-else-if="playerData && playerData.success">
+        <div v-if="playerData && playerData.success">
             <h2>Player Info:</h2>
             <p><b>Handle:</b> <span :class="handleClass"> [[playerData.handle]] </span></p>
             <p><b>Rating:</b> [[ playerData.rating || 'N/A' ]]</p>
@@ -156,7 +156,9 @@
                     if (!this.playerData) return '';
 
                     const { handle, rating } = this.playerData;
-                    if (rating<3000&&rating >= 2400) {
+                    if(rating>=3000)
+                        return 'handle-first';
+                    else if (rating >= 2400) {
                         return 'handle-red';
                     } else if (rating >= 2100) {
                         return 'handle-orange';
