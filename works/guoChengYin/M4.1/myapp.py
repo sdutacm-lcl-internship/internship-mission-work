@@ -5,7 +5,7 @@ from config import Config
 
 app = Flask(__name__, template_folder='templates')
 app.config.from_object(Config)
-
+app.json.ensure_ascii = False
 from service.service import Service
 
 cache_user_info = Cache(app, config={'CACHE_TYPE': 'simple'})
@@ -57,11 +57,8 @@ def request_use_info():
   if "result" in info_res.keys():
     response_data["rating"] = info_res["result"].get("rating", "暂无")
   info_res = service.get_user_ratings(handle)
-  print("----------------")
-  print(info_res)
   if info_res[1] != 200:
     return jsonify(info_res[0]["message"]), info_res[1]
-
   info_res = info_res[0]
   rating_history = []
   for item in info_res:

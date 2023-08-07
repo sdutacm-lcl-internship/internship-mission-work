@@ -92,7 +92,7 @@ class Service:
     except Exception as e:
       # HTTP请求为未收到有效 HTTP 响应
       if isinstance(e, requests.exceptions.ConnectionError):
-        error_message = {"message": "The HTTP interface is not responding"}
+        error_message = {"message": "HTTP interface not responding·"}
         return error_message, 502
       # 剩下的就是服务器程序运行异常,
       elif isinstance(e, sqlite3.OperationalError):
@@ -141,7 +141,7 @@ class Service:
         if request_info['status'] == 400:
           request_results['success'] = False
           request_results['type'] = 1
-          request_results['message'] = 'no such handle'
+          request_results['message'] = '未找到该用户信息'
           response_data.append(request_results)
           continue
 
@@ -186,10 +186,10 @@ class Service:
         if isinstance(e, requests.exceptions.ConnectionError):
           request_results['success'] = False
           request_results['type'] = 3
-          request_results['message'] = 'The HTTP interface is not responding'
+          request_results['message'] = 'HTTP interface not responding·'
         else:
           request_results['success'] = False
           request_results['type'] = 4
-          request_results['message'] = 'Internal Server Error'
+          request_results['message'] = '服务器异常'
         response_data.append(request_results)
     return response_data

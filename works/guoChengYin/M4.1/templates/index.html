@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+<meta charset="UTF-8">
 <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
 
 <script>
@@ -20,11 +21,14 @@
       case (value < 2100):
         color = "purple";   // 紫色
         break;
-      case (value <= 2300):
+      case (value < 2300):
         color = "orange";   // 橙色
         break;
+      case (value < 3000)://红色
+        color = "red";
+        break;
       default:
-        color = "red";      // 红色
+        color = "#070102"//新增黑色
         break;
     }
     return color
@@ -35,10 +39,13 @@
     let handle = document.getElementsByName('handle')[0].value
     var xhr = new XMLHttpRequest()
     xhr.open('GET', "requestUserInfo?handle=" + handle, false);
-    xhr.send(null)
-    if (xhr.status != "200" && xhr.status != "304") {
-      alert(xhr.responseText)
-    } else {
+    try {
+      xhr.send()
+    } catch (e) {
+      console.log(e)
+    }
+    console.log(xhr.readyState)
+    if (xhr.status == "200" || xhr.status == "304") {
       responseData = JSON.parse(xhr.response)
       document.getElementById("handle").textContent = responseData["handle"]
       document.getElementById("rating").textContent = responseData["rating"]
@@ -50,6 +57,11 @@
         tableThead.style.display = "none"
       }
       renderTable(responseData)
+      //客户端未连接网络等情况
+    } else if (xhr.status == 0) {
+      alert("建立网络连接失败")
+    } else {
+      alert(xhr.responseText)
     }
   }
 
@@ -57,7 +69,6 @@
     const tableBody = document.querySelector("#table1 tbody");
     tableBody.innerHTML = "";
     rating_hisyory = data["rating_history"]
-
     rating_hisyory.forEach(function (v) {
         const row = document.createElement("tr");
         const dateCell = document.createElement("td")
@@ -143,6 +154,5 @@
 </div>
 
 </body>
-
 
 </html>
