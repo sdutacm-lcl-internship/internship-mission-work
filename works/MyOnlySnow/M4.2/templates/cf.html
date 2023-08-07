@@ -30,22 +30,56 @@
             color: cornflowerblue;
             font-family: 'Times New Roman', Times, serif;
         }
+
+        .handle-first::first-letter{
+                    color: rgb(0, 0, 0);
+                }
+                
+        .handle-orange {
+            color: orange;
+        }
+
+        .handle-purple {
+            color: rgb(170, 0, 170);
+        }
+
+        .handle-blue {
+            color: blue;
+        }
+
+        .handle-turquoise {
+            color: #03a89e !important;
+        }
+
+        .handle-green {
+            color: green;
+        }
+
+        .handle-gray {
+            color: rgb(128, 128, 128);
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 
 <body>
-    <div id="app">
+    <div id="app" v-cloak>
         <h1><a id="cf" href="https://codeforces.com">Codeforces</a> Handles</h1>
         <form @submit.prevent="searchInfo">
             <label id="HEAD" for="handleInput">Enter Handle:</label>
             <input v-model="handle" type="text" id="handleInput" required>
             <button id="search" type="submit">Search</button>
         </form>
-        <div v-if="playerData && playerData.success">
+        <div v-if="playerData && playerData.success && playerData.rating >=3000">
             <h2>Player Info:</h2>
-            <p><b>Handle:</b> <span v-html="formattedHandle"></span></p>
+            <p><b>Handle:</b> <span style="color: black;display: inline-block;"> [[ playerData.handle.charAt(0)]] </span><span style="color: red;display: inline-block;"> [[playerData.handle.slice(1)]] </span></p>
+            <p><b>Rating:</b> [[ playerData.rating || 'N/A' ]]</p>
+            <p><b>Rank:</b> [[ playerData.rank || 'N/A' ]]</p>
+        </div>
+        <div v-else-if="playerData && playerData.success">
+            <h2>Player Info:</h2>
+            <p><b>Handle:</b> <span :class="handleClass"> [[playerData.handle]] </span></p>
             <p><b>Rating:</b> [[ playerData.rating || 'N/A' ]]</p>
             <p><b>Rank:</b> [[ playerData.rank || 'N/A' ]]</p>
         </div>
@@ -118,34 +152,26 @@
                 }
             },
             computed: {
-                formattedHandle() {
+                handleClass() {
                     if (!this.playerData) return '';
+
                     const { handle, rating } = this.playerData;
-                    if (rating >= 3000) {
-                        return handle.charAt(0) + '<span style="color: red;">' + handle.slice(1) + '</span>';
-                    } else if (rating >= 2400) {
-                        return '<span style="color: red;">' + handle + '</span>';
+                    if (rating<3000&&rating >= 2400) {
+                        return 'handle-red';
+                    } else if (rating >= 2100) {
+                        return 'handle-orange';
+                    } else if (rating >= 1900) {
+                        return 'handle-purple';
+                    } else if (rating >= 1600) {
+                        return 'handle-blue';
+                    } else if (rating >= 1400) {
+                        return 'handle-turquoise';
+                    } else if (rating >= 1200) {
+                        return 'handle-green';
+                    } else {
+                        return 'handle-gray';
                     }
-                    else if (rating >= 2100) {
-                        return '<span style="color:orange;">' + handle + '</span>';
-                    }
-                    else if (rating >= 1900) {
-                        return '<span style="color:rgb(170,0,170);">' + handle + '</span>';
-                    }
-                    else if (rating >= 1600) {
-                        return '<span style="color:blue;">' + handle + '</span>';
-                    }
-                    else if (rating >= 1400) {
-                        return '<span style="color:#03a89e!important;">' + handle + '</span>';
-                    }
-                    else if (rating >= 1200) {
-                        return '<span style="color:green;">' + handle + '</span>';
-                    }
-                    else {
-                        return '<span style="color:rgb(128,128,128);">' + handle + '</span>';
-                    }
-                    return handle;
-                }
+                },
             },
         });
 
