@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我是图图小淘气</title>
+    <style>
+        h1 {
+            color: darkred;
+            font-style: italic;
+            font-family: Georgia;
+            text-align: center
+        }
+
+        #cf:hover {
+            background-color: khaki;
+        }
+
+        #search {
+            transition-duration: 0.4s;
+        }
+
+        #search:hover {
+            background-color: pink;
+            color: yellow;
+        }
+
+        #HEAD {
+            color: cornflowerblue;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        .handle-first::first-letter {
+            color: rgb(0, 0, 0);
+            display: inline-block;
+        }
+
+        .handle-first{
+            color: red;
+            display: inline-block;
+        }
+
+        .handle-orange {
+            color: orange;
+        }
+
+        .handle-purple {
+            color: rgb(170, 0, 170);
+        }
+
+        .handle-blue {
+            color: blue;
+        }
+
+        .handle-turquoise {
+            color: #03a89e !important;
+        }
+
+        .handle-green {
+            color: green;
+        }
+
+        .handle-gray {
+            color: rgb(128, 128, 128);
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <h1><a id="cf" href="https://codeforces.com">Codeforces</a> Handles</h1>
+        <form @submit.prevent="searchInfo">
+            <label id="HEAD" for="handleInput">Enter Handle:</label>
+            <input v-model="handle" type="text" id="handleInput" required>
+            <button id="search" type="submit">Search</button>
+        </form>
+        <div v-if="playerData && playerData.success">
+            <h2>Player Info:</h2>
+            <p><b>Handle:</b> <span :class="handleClass"> [[playerData.handle]] </span></p>
+            <p><b>Rating:</b> [[ playerData.rating || 'N/A' ]]</p>
+            <p><b>Rank:</b> [[ playerData.rank || 'N/A' ]]</p>
+        </div>
+        <div v-if="ratingsData.length">
+            <h2>Rating Records:</h2>
+            <table>
+                <caption>Rating Records:</caption>
+                <tr>
+                    <th>Contest ID</th>
+                    <th>Contest Name</th>
+                    <th>Rank</th>
+                    <th>Old Rating</th>
+                    <th>New Rating</th>
+                    <th>Last Updated</th>
+                </tr>
+                <tr v-for="rating in ratingsData" :key="rating.contestId">
+                    <td>[[ rating.contestId ]]</td>
+                    <td>[[ rating.contestName ]]</td>
+                    <td>[[ rating.rank ]]</td>
+                    <td>[[ rating.oldRating ]]</td>
+                    <td>[[ rating.newRating ]]</td>
+                    <td>[[ rating.ratingUpdatedAt ]]</td>
+                </tr>
+            </table>
+        </div>
+        <div v-if="searched && !playerData.success">
+            <p><b>Error:</b> [[ playerData.message ]]</p>
+        </div>
+        <div v-if="searched && !ratingsData.length &&playerData.success">
+            <h2>Rating Records:</h2>
+            <p>This handle does not have a competition record.</p>
+        </div>
+    </div>
+    <img src="{{ url_for('static',filename='tutu.png') }}" alt="">
+    <script>
+        alert('面对世界很好奇')
+        new Vue({
+            el: '#app',
+            delimiters: ['[[', ']]'],
+            data: {
+                handle: '',
+                playerData: null,
+                ratingsData: [],
+                searched: false,
+            },
+            methods: {
+                searchInfo() {
+                    this.searched = true;
+                    axios.get('/batchGetUserInfo?handles=' + this.handle)
+                        .then(response => {
+                            this.playerData = response.data[0];
+                            if (this.playerData.success) {
+                                this.searchRatings();
+                            }
+                        })
+                        .catch(error => {
+                            this.playerData = { success: false, message: 'There was an error with the request.' };
+                        });
+                },
+                searchRatings() {
+                    axios.get('/getUserRatings?handle=' + this.handle)
+                        .then(response => {
+                            this.ratingsData = response.data;
+                        });
+                }
+            },
+            watch: {
+                searched(newValue, oldValue) {
+                    console.log(`searched changed from ${oldValue} to ${newValue}`);
+                }
+            },
+            computed: {
+                handleClass() {
+                    if (!this.playerData) return '';
+
+                    const { handle, rating } = this.playerData;
+                    if(rating>=3000)
+                        return 'handle-first';
+                    else if (rating >= 2400) {
+                        return 'handle-red';
+                    } else if (rating >= 2100) {
+                        return 'handle-orange';
+                    } else if (rating >= 1900) {
+                        return 'handle-purple';
+                    } else if (rating >= 1600) {
+                        return 'handle-blue';
+                    } else if (rating >= 1400) {
+                        return 'handle-turquoise';
+                    } else if (rating >= 1200) {
+                        return 'handle-green';
+                    } else {
+                        return 'handle-gray';
+                    }
+                },
+            },
+        });
+
+    </script>
+</body>
+
+</html>
