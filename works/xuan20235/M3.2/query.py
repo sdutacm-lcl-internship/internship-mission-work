@@ -120,6 +120,7 @@ def sovle(handle):
                 return 3
         ans = func(handle)
         jd_flag = ans[0]
+        print(jd_flag)
         if jd_flag == 200:
             return 3
         elif jd_flag == 203:
@@ -127,18 +128,19 @@ def sovle(handle):
         elif jd_flag == 404:
             return 1
         else:
-            return 0
+            return jd_flag
 
 
 def get_user_rating(handle):
+    
     jd_flag = sovle(handle)
     ans = {}
     if jd_flag == 1:
         ans = {"message": "no such handle"}
         answer=[]
         answer.append(ans)
-        return answer
-    elif jd_flag == 0:
+        return ans
+    elif jd_flag == 2:
         ans = {
             "success": True,
             "result": {
@@ -148,7 +150,9 @@ def get_user_rating(handle):
         answer=[]
         answer.append(ans)
         return answer
-    else:
+  
+        
+    elif jd_flag==3:
         with sqlite3.connect('cf.db') as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -172,11 +176,12 @@ def get_user_rating(handle):
                         'new_rating': new_rating
                     })
                 return data
+            print("yaunshen")
             ans = func1(handle)
-            data=[]
-            data.append(ans)
-            return data
-
+            return ans
+    else :
+           ans = {"message": '又错了已黑化',"code":jd_flag}
+           return  ans
 
 def func1(handle):
     ans = {}
@@ -216,6 +221,9 @@ def func1(handle):
                     "handle": handle,
                 }
             }
+            ans=[]
+            ans.append(result)
+            return  ans
         return result
     except requests.exceptions.HTTPError as error:
         if error.response.status_code == 400:

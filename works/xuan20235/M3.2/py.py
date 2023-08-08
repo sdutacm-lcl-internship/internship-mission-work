@@ -65,6 +65,11 @@ def URL_ratings():
         response.headers['Content-Type'] = 'application/json'
         return response
     else:
+        if 'message' in results :
+              response = make_response(json.dumps(results), 404)
+              response.headers['Content-Type'] = 'application/json'
+              return response
+
         response = make_response(json.dumps(results), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
