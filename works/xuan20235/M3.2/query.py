@@ -24,7 +24,7 @@ def get_user_info(handle):
         ''', (handle, (datetime.now(pytz.timezone('Asia/Shanghai')) -
                        timedelta(seconds=30)).isoformat()))
         row = cursor.fetchone()
-        print(row)
+        #print(row)
         if row:
             rating, rank = row
             if rating == None:
@@ -50,7 +50,7 @@ def get_user_info(handle):
     ans = func(handle)
     jd_flag = ans[0]
     ans = ans[1]
-    print(jd_flag)
+    #print(jd_flag)
     if jd_flag == 200:
         data = {
             "handle": handle,
