@@ -168,12 +168,12 @@ def get_user_rating(handle):
                     contest_id, contest_name, rank, old_rating, new_rating, rating_updated_at = row
                     data.append({
                         'handle': handle,
-                        'contest_id': contest_id,
-                        'contest_name': contest_name,
+                        'contestId': contest_id,
+                        'contestName': contest_name,
                         'rank': rank,
                         'ratingUpdatedAt': rating_updated_at,
-                        'old_rating': old_rating,
-                        'new_rating': new_rating
+                        'oldRating': old_rating,
+                        'newRating': new_rating
                     })
                 return data
             print("yaunshen")
