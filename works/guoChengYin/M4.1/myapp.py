@@ -5,7 +5,6 @@ from config import Config
 
 app = Flask(__name__, template_folder='templates')
 app.config.from_object(Config)
-app.json.ensure_ascii = False
 from service.service import Service
 
 cache_user_info = Cache(app, config={'CACHE_TYPE': 'simple'})

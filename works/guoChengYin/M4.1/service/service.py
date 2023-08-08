@@ -141,7 +141,7 @@ class Service:
         if request_info['status'] == 400:
           request_results['success'] = False
           request_results['type'] = 1
-          request_results['message'] = '未找到该用户信息'
+          request_results['message'] = 'no such handle'
           response_data.append(request_results)
           continue
 
@@ -190,6 +190,6 @@ class Service:
         else:
           request_results['success'] = False
           request_results['type'] = 4
-          request_results['message'] = '服务器异常'
+          request_results['message'] = 'Internal Server Error'
         response_data.append(request_results)
     return response_data
