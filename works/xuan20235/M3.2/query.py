@@ -168,7 +168,9 @@ def get_user_rating(handle):
                     })
                 return data
             ans = func1(handle)
-            return ans
+            data=[]
+            data.append(ans)
+            return data
 
 
 def func1(handle):
