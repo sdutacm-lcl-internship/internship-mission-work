@@ -1,3 +1,4 @@
+from multiprocessing.connection import answer_challenge
 import flask
 import sqlite3
 from flask import Flask, request, Response, make_response
@@ -133,15 +134,19 @@ def get_user_rating(handle):
     jd_flag = sovle(handle)
     ans = {}
     if jd_flag == 1:
-        answer = {"message": "no such handle"}
+        ans = {"message": "no such handle"}
+        answer=[]
+        answer.append(ans)
         return answer
     elif jd_flag == 0:
-        answer = {
+        ans = {
             "success": True,
             "result": {
                 "handle": handle,
             }
         }
+        answer=[]
+        answer.append(ans)
         return answer
     else:
         with sqlite3.connect('cf.db') as conn:
