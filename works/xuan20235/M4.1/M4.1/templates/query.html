@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>数据查询页面</title>
+    <style>
+        .box {
+            /*background-color: red;*/
+            margin: 0 auto;
+            width: 300px;
+            height: 300px;
+            text-align: center;
+        }
+
+        .h1 {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <h1>查询选手</h1>
+        <form id="queryForm">
+            <label for="handle">请输入选手姓名：</label>
+            <input type="text" id="handle" name="handle" required placeholder="输入要查询的用户">
+            <button type="submit">查询</button>
+        </form>
+
+        <div id="result" style="margin-top: 20px;">
+
+        </div>
+    </div>
+    <script>
+        document.getElementById("queryForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            var handle = document.getElementById("handle").value;
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "http://127.0.0.1:2333/ask?handle=" + handle);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        updateResult(response);
+                    } else {
+                        if (xhr.status === 404) {
+                            alert("用户不存在");
+                        }
+                        else {
+                            alert("网络或者cf官网异常，请稍后检查网络及cf官网！");
+                        }
+                    }
+                }
+            };
+            xhr.send();
+
+        });
+        function updateResult(data) {
+            var answer = data[0]
+            var data = data.slice(1,);
+            //return answer;
+            var result = document.getElementById('result');
+            result.innerHTML = '';
+            try {
+                var name = document.getElementById('yuanshen')
+                document.body.removeChild(name);
+            }
+            catch {
+
+            }
+            if (answer['success'] === false) {
+            } else {
+                if (answer["result"]["rating"] != undefined) {
+                    var s = '';
+                    tmp = answer["result"]["rating"]
+                    switch (tmp % 100) {
+                        case 0:
+                            s = '#808080';
+                            break;
+                        case 12:
+                            s = '#008000'
+                            break;
+                        case 14:
+                            s = '#03a89e'
+                            break;
+                        case 16:
+                            s = '#0000ff'
+                            break;
+                        case 19:
+                            s = '#a0a'
+                            break;
+                        case 21:
+                            s = '#ff8c00'
+                            break;
+                        case 24:
+                            s = '#ff0000';
+                            break;
+                    }
+                    var h1 = document.createElement("h1")
+                    h1.innerHTML = "查询结果"
+                    result.appendChild(h1)
+                    var br = document.createElement("br")
+                    result.appendChild(br)
+                    var span = document.createElement("span")
+                    span.innerHTML = data[0]['handle'] + '(' + answer['result']['rank'] + ')';
+                    //span.className = 'blue''
+                    span.style.color = s
+                    result.appendChild(span)
+                    var br = document.createElement("br")
+                    result.appendChild(br)
+                    var span = document.createElement("span")
+                    span.innerHTML = "rating:";
+                    result.appendChild(span)
+                    var span = document.createElement("span")
+                    span.innerHTML = answer['result']['rating'];
+                    span.style.color = s
+                    result.appendChild(span)
+                    var br = document.createElement("br")
+                    result.appendChild(br)
+                    var table = document.createElement("table");
+                    table.id = "yuanshen"
+                    table.border = "1";
+                    table.style.margin = "auto";
+                    table.width = "500px";
+                    document.body.appendChild(table);
+                    table.createCaption().innerHTML = "rating history";
+                    // 表头
+
+                    var thead = document.createElement("thead");
+                    var headerRow = document.createElement("tr");
+                    var headers = ["时间", "比赛", "Rank", "∆"];
+                    for (var i = 0; i < 4; i++) {
+                        var th = document.createElement("th");
+                        headerRow.appendChild(th);
+                        th.innerHTML = headers[i];
+                    }
+                    thead.appendChild(headerRow);
+                    table.appendChild(thead);
+
+                    // 表格内容
+                    var tbody = document.createElement("tbody");
+                    table.appendChild(tbody);
+                    for (var i = 0; i < data.length; i++)  //外面的for循环 是 行tr
+                    {
+                        var tmp = data.length - i - 1;
+                        var tr = document.createElement("tr");
+                        tbody.appendChild(tr);
+                        //
+                        var td = document.createElement("td");
+                        tr.appendChild(td);
+                        td.innerHTML = data[tmp]["ratingUpdatedAt"];
+                        var td = document.createElement("td");
+                        tr.appendChild(td);
+                        td.innerHTML = data[tmp]["contestName"];
+
+                        var td = document.createElement("td");
+                        tr.appendChild(td);
+                        td.innerHTML = data[tmp]["rank"];
+
+                        var td = document.createElement("td");
+                        tr.appendChild(td);
+                        td.innerHTML = data[tmp]["oldRating"] + '→' + data[tmp]["newRating"];;
+                    }
+                    table.appendChild(tbody);
+                }
+                else {
+                    var h1 = document.createElement("h1")
+                    h1.innerHTML = "查询结果"
+                    result.appendChild(h1)
+                    console.log("wdadwada")
+                    var br = document.createElement("br")
+                    result.appendChild(br)
+                    var span = document.createElement("span")
+                    span.innerHTML = answer["result"]['handle'];
+                    result.appendChild(span)
+                    var span = document.createElement("span")
+                    span.innerHTML = "没有打过rank"
+                    result.appendChild(span)
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
