@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我是图图小淘气</title>
+    <style>
+        h1 {
+            color: darkred;
+            font-style: italic;
+            font-family: Georgia;
+            text-align: center
+        }
+
+        #cf:hover {
+            background-color: khaki;
+
+        }
+
+        #search {
+            transition-duration: 0.4s;
+        }
+
+        #search:hover {
+            background-color: pink;
+            color: yellow;
+        }
+
+        #HEAD {
+            color: cornflowerblue;
+            font-family: 'Times New Roman', Times, serif;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@0.1.1"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/2.0.1/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.1"></script>
+
+</head>
+
+<body>
+    <h1><a id="cf" href="https://codeforces.com">Codeforces</a> Handles</h1>
+    <form id="searchForm">
+        <label id="HEAD" for="handleInput">Enter Handle:</label>
+        <input type="text" id="handleInput" required>
+        <button id="search" type="submit">Search</button>
+    </form>
+    <div id="result"></div>
+    <canvas id="ratingChart"></canvas>
+    <img src="{{ url_for('static',filename='tutu.png') }}" alt="">
+    <script>
+        alert('面对世界很好奇')
+        document.getElementById("searchForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            const handle = document.getElementById("handleInput").value;
+            console.log(handle);
+            searchInfo(handle);
+        });
+
+        function searchInfo(handle) {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", '/batchGetUserInfo?handles=' + handle);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    const response = JSON.parse(xhr.responseText);
+                    console.log(response);
+                    if (response[0].success === true)
+                        displayResult(response);
+                    else {
+                        code(response)
+                    }
+
+                }
+            };
+            xhr.send();
+        }
+
+        function displayResult(data) {
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = ""; // Clear previous result
+            const playerData = data[0].result;
+            const playerInfo = document.createElement("div");
+            const realhandle = formatHandle(playerData.handle, playerData.rating);
+            playerInfo.innerHTML = `
+                <h2>Player Info:</h2>
+                <p><b>Handle:</b> ${realhandle}</p>
+                <p><b>Rating:</b> ${playerData.rating || 'N/A'}</p>
+                <p><b>Rank:</b> ${playerData.rank || 'N/A'}</p>
+            `;
+            resultDiv.appendChild(playerInfo);
+            if (playerData.rating)
+                searchRatings(playerData.handle);
+            else {
+                chart.destroy();
+                const palyerRatings = document.createElement("div");
+                palyerRatings.innerHTML = `
+                <h2>Player Ratings:</h2>
+                <p><b>This handle does not have a competition record</b></p>
+                `;
+                resultDiv.appendChild(palyerRatings);
+            }
+        }
+
+        function formatHandle(handle, rating) {
+            if (rating >= 3000) {
+                return handle.charAt(0) + '<span style="color: red;">' + handle.slice(1) + '</span>';
+            } else if (rating >= 2400) {
+                return '<span style="color: red;">' + handle + '</span>';
+            }
+            else if (rating >= 2100) {
+                return '<span style="color:orange;">' + handle + '</span>';
+            }
+            else if (rating >= 1900) {
+                return '<span style="color:rgb(170,0,170);">' + handle + '</span>';
+            }
+            else if (rating >= 1600) {
+                return '<span style="color:blue;">' + handle + '</span>';
+            }
+            else if (rating >= 1400) {
+                return '<span style="color:#03a89e!important;">' + handle + '</span>';
+            }
+            else if (rating >= 1200) {
+                return '<span style="color:green;">' + handle + '</span>';
+            }
+            else {
+                return '<span style="color:rgb(128,128,128);">' + handle + '</span>';
+            }
+            return handle;
+        }
+
+        function searchRatings(handle) {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", '/getUserRatings?handle=' + handle);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    const response = JSON.parse(xhr.responseText);
+                    console.log(response);
+                    displayRatings(response, handle);
+                }
+
+            };
+            xhr.send();
+        }
+        function code(response) {
+            const display = document.getElementById("result");
+            display.innerHTML = "";
+            display.innerHTML = response[0].message;
+
+        }
+
+        let chart = null;
+
+        function displayRatings(data, handle) {
+            if (chart !== null) {
+                chart.destroy();
+            }
+            const resultDiv = document.getElementById("result");
+            const dates = data.map(rating => moment(rating.ratingUpdatedAt).format('YYYY/MM/DD'));
+            const startDate = moment(data[0].ratingUpdatedAt);
+            const endDate = moment(data[data.length - 1].ratingUpdatedAt);
+            const dateObjects = dates.map(date => moment(date));
+            const gap = moment.duration(endDate.diff(startDate)).asYears();
+            let x = 'month';
+            if (gap > 5) {
+                x = 'year';
+            }
+            const ratings = data.map(rating => rating.newRating);
+            const contests = data.map(rating => rating.contestName);
+            const ratingChanges = data.map(rating => rating.newRating - rating.oldRating);
+            const Rank = data.map(rating => rating.rank)
+            const datasets = [{
+                label: handle,
+                data: ratings,
+                fill: false,
+                borderColor: 'rgb(0, 0, 0)',
+                tension: 0.1,
+                pointHoverBackgroundColor: "rgb(255,255,0)",
+                pointHoverBorderColor: 'rgb(255,255,255)',
+                pointHoverBorderWidth: 5,
+                pointHoverRadius: 5,
+            }];
+
+            chart = new Chart(document.getElementById("ratingChart"), {
+                type: 'line',
+                data: {
+                    labels: dateObjects,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: "time",
+                            time: {
+                                parser: 'YYYY/MM/DD', 
+                                unit: x,
+                                displayFormats: {
+                                    month: 'MMM YYYY',
+                                    year: 'YYYY'
+                                }
+                            },
+                        },
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const index = context.dataIndex;
+                                    const contest = contests[index];
+                                    const ratingChange = ratingChanges[index];
+                                    const displayRatingChange = ratingChange > 0 ? `+${ratingChange}` : ratingChange;
+                                    const Rating = ratings[index];
+                                    const rank = Rank[index];
+                                    return `Contest: ${contest}    Rating=${Rating}(${displayRatingChange})     Rank:${rank}`;
+                                }
+                            }
+                        },
+                        annotation: {
+                            annotations: [
+                                {
+                                    type: "box",
+                                    yMin: 0,
+                                    yMax: 1200,
+                                    backgroundColor: "rgba(169,169,169,0.7)",
+                                },
+                                {
+                                    type: "box",
+                                    yMin: 1200,
+                                    yMax: 1400,
+                                    backgroundColor: "rgba(0,255,0,0.7)",
+                                },
+                                {
+                                    type: "box",
+                                    yMin: 1400,
+                                    yMax: 1600,
+                                    backgroundColor: "rgba(119,221,187,0.7)",
+                                },
+                                {
+                                    type: "box",
+                                    yMin: 1600,
+                                    yMax: 1900,
+                                    backgroundColor: "rgba(170,170,255,0.7)",
+                                },
+                                {
+                                    type: "box",
+                                    yMin: 1900,
+                                    yMax: 2100,
+                                    backgroundColor: "rgba(255,136,255,0.7)",
+                                },
+                                {
+                                    type: "box",
+                                    yMin: 2100,
+                                    yMax: 2300,
+                                    backgroundColor: "rgba(255,204,136,0.7)",
+                                },
+                                {
+                                    type: "box",
+                                    yMin: 2300,
+                                    yMax: 2400,
+                                    backgroundColor: "rgba(255,187,85,0.7)",
+                                },
+                                {
+                                    type: "box",
+                                    yMin: 2400,
+                                    yMax: 2600,
+                                    backgroundColor: "rgba(255,119,119,0.7)",
+                                },
+                                {
+                                    type: "box",
+                                    yMin: 2600,
+                                    yMax: 3000,
+                                    backgroundColor: "rgba(255,0,0,0.7)",
+                                },
+                                {
+                                    type: "box",
+                                    yMin: 3000,
+                                    backgroundColor: "rgba(170,0,0,0.7)",
+                                },
+                            ]
+                        }
+                    }
+                }
+            });
+
+        }
+    </script>
+</body>
+
+</html>
