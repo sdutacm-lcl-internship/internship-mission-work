@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link href="./static/index.css" rel="stylesheet" type="text/css"/>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <script src="../static/echarts.js"></script>
+  <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+  <script src="../static/index-load.js"></script>
+
+</head>
+
+<body>
+
+<div id="top" style="text-align: center">
+  <h3>查询选手</h3>
+
+  <input name="handle" type="text">
+  <input type="button" value="提交" onclick="requestInfo()">
+
+</div>
+<h3 style="text-align: center;margin-top: 60px">查询结果</h3>
+
+<h4 style="text-align: center;font-size: 5px;font-weight: 1"></h4>
+<div style="text-align: center;font-size: 0">
+  <h1 style="font-size: 25px;font-weight: 10;display: inline">handle:</h1>
+  <h1 id="firstLetter" style="display: inline;font-size: 30px"></h1>
+  <h1 id="partLetter" style="display: inline;font-size: 30px"></h1>
+  <br>
+  <h1 style="font-size: 25px;font-weight: 10;display: inline;margin-top: 10px">rating:</h1>
+  <h1 id="rating" style="font-size: 30px;display: inline;margin-top: 10px"></h1>
+</div>
+<div id="lineChart" style="width: 600px;height:400px"></div>
+<h5 style="text-align: center">raing history</h5>
+<div id="middle">
+  <table style="width: 350px;margin:0 auto" id="table1">
+    <thead style="display: none">
+    <tr style="font-size: 1px;">
+      <th id="time">时间</th>
+      <th id="contest">比赛</th>
+      <th id="rank">rank</th>
+      <th id="increment">Δ</th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+</div>
+<script type="text/javascript" src="../static/index-chart.js"></script>
+</body>
+</html>
