@@ -28,7 +28,7 @@
         color = "red";
         break;
       default:
-        color = "#070102"//新增黑色
+        color = "#cc0033"//暗红色
         break;
     }
     return color
@@ -47,9 +47,14 @@
     console.log(xhr.readyState)
     if (xhr.status == "200" || xhr.status == "304") {
       responseData = JSON.parse(xhr.response)
-      document.getElementById("handle").textContent = responseData["handle"]
+      document.getElementById("firstLetter").textContent = responseData["handle"].substring(0,1)
+      document.getElementById("partLetter").textContent = responseData["handle"].substring(1)
       document.getElementById("rating").textContent = responseData["rating"]
-      document.getElementById("handle").style.color = valueToColor(responseData["rating"])
+      document.getElementById("firstLetter").style.color = valueToColor(responseData["rating"])
+      document.getElementById("partLetter").style.color = valueToColor(responseData["rating"])
+      if(responseData["rating"]>3000){
+        document.getElementById("firstLetter").style.color="black"
+      }
       const tableThead = document.querySelector("#table1 thead");
       if (responseData["rating"] != "暂无") {
         tableThead.style.display = ""
@@ -116,6 +121,13 @@
       white-space: nowrap;
     }
 
+     .change ::first-letter {
+       color: black;
+     }
+
+
+
+
   </style>
 </head>
 <body>
@@ -130,8 +142,9 @@
 <h3 style="text-align: center;margin-top: 60px">查询结果</h3>
 
 <h4 style="text-align: center;font-size: 5px;font-weight: 1"></h4>
-<div style="text-align: center">
-  <h1 id="handle"></h1>
+<div style="text-align: center;font-size: 0;">
+  <p id="firstLetter" style="display: inline-block;font-size: 24px"></p>
+  <p id="partLetter"  style="display: inline-block;font-size: 24px"></p>
   <br>
   <p3>rating:</p3>
   <h1 id="rating"></h1>
