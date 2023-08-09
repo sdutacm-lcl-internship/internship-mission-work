@@ -1,0 +1,7 @@
+{
+  "name": "internship-mission-work",
+  "version": "1.0.0",
+  "dependencies": {
+    "echarts": "^5.4.3"
+  }
+}
