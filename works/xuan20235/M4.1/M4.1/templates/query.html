@@ -15,6 +15,16 @@
         .h1 {
             text-align: center;
         }
+
+        .black::first-letter {
+            color: black;
+            /* 设置你想要的颜色 */
+
+        }
+
+        .black {
+            color: '#ff0000';
+        }
     </style>
 </head>
 
@@ -74,39 +84,52 @@
                 if (answer["result"]["rating"] != undefined) {
                     var s = '';
                     tmp = answer["result"]["rating"]
-                    switch (tmp % 100) {
-                        case 0:
+                    tmp = Math.floor(tmp / 100)
+                    switch (true) {
+                        case tmp >= 0 && tmp < 12:
                             s = '#808080';
                             break;
-                        case 12:
+                        case tmp >= 12 && tmp < 14:
                             s = '#008000'
                             break;
-                        case 14:
+                        case tmp >= 14 && tmp < 16:
                             s = '#03a89e'
                             break;
-                        case 16:
+                        case tmp >= 16 && tmp < 19:
                             s = '#0000ff'
                             break;
-                        case 19:
+                        case tmp >= 19 && tmp < 21:
                             s = '#a0a'
                             break;
-                        case 21:
+                        case tmp >= 21 && tmp < 24:
                             s = '#ff8c00'
                             break;
-                        case 24:
+                        case tmp >= 24:
                             s = '#ff0000';
-                            break;
+
                     }
+                    console.log(s)
+                    console.log(tmp)
                     var h1 = document.createElement("h1")
                     h1.innerHTML = "查询结果"
                     result.appendChild(h1)
                     var br = document.createElement("br")
                     result.appendChild(br)
-                    var span = document.createElement("span")
-                    span.innerHTML = data[0]['handle'] + '(' + answer['result']['rank'] + ')';
-                    //span.className = 'blue''
-                    span.style.color = s
-                    result.appendChild(span)
+                    if (tmp >= 30) {
+                        var span = document.createElement("span")
+                        span.innerHTML = data[0]['handle'].substr(0, 1);
+                        span.style.color = "black"
+                        result.appendChild(span)
+                        var span = document.createElement("span")
+                        span.innerHTML = data[0]['handle'].substr(1) + '(' + answer['result']['rank'] + ')';
+                        span.style.color = s
+                        result.appendChild(span)
+                    } else {
+                        var span = document.createElement("span")
+                        span.innerHTML = data[0]['handle'] + '(' + answer['result']['rank'] + ')';
+                        span.style.color = s
+                        result.appendChild(span)
+                    }
                     var br = document.createElement("br")
                     result.appendChild(br)
                     var span = document.createElement("span")
