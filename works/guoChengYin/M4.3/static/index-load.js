@@ -100,3 +100,4 @@ function renderTable(data) {
   UpdatedAts.length = 0
   ratings.length = 0
 }
+
