@@ -64,8 +64,17 @@ def get_user_info(handle):
     elif jd_flag == 404:
         ans = {"success": False, "type": "1", "message": "no such handle"}
         return ans
-    else:
-        ans = {"message": '又错了已黑化'}
+    elif jd_flag == 501:
+        ans = {
+            "success": False,
+            "type": '4',
+            "message": "Internal Server Error"
+        }
+        return ans
+    elif jd_flag == 503:
+        ans = {"success": False, "type": '3', "message": "网络异常"}
+        return ans
+    elif jd_flag == 500:
         return ans
     ans = {"success": True, "result": data}
     return ans
@@ -90,14 +99,25 @@ def func(handle):
             return 203, ans
         else:
             return 200, ans
+    except requests.exceptions.ConnectionError:
+        return 503, ans
     except requests.exceptions.HTTPError as error:
         if error.response.status_code == 400:
             py.update_info(handle, None, None)
             return 404, ans
         else:
-            return 500, ans
+            data = {
+                'success': False,
+                'type': 2,
+                'message':
+                f'HTTP response with code {error.response.status_code}',
+                'details': {
+                    'status': error.response.status_code
+                }
+            }
+            return 500, data
     except Exception:
-        return 500, ans
+        return 501, ans
 
 
 def sovle(handle):
@@ -132,27 +152,19 @@ def sovle(handle):
 
 
 def get_user_rating(handle):
-    
+
     jd_flag = sovle(handle)
     ans = {}
     if jd_flag == 1:
         ans = {"message": "no such handle"}
-        answer=[]
+        answer = []
         answer.append(ans)
         return ans
     elif jd_flag == 2:
-        ans = {
-            "success": True,
-            "result": {
-                "handle": handle,
-            }
-        }
-        answer=[]
-        answer.append(ans)
+        answer = []
         return answer
-  
-        
-    elif jd_flag==3:
+
+    elif jd_flag == 3:
         with sqlite3.connect('cf.db') as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -179,9 +191,10 @@ def get_user_rating(handle):
             print("yaunshen")
             ans = func1(handle)
             return ans
-    else :
-           ans = {"message": '又错了已黑化',"code":jd_flag}
-           return  ans
+    else:
+        ans = {"message": '又错了已黑化', "code": jd_flag}
+        return ans
+
 
 def func1(handle):
     ans = {}
@@ -221,9 +234,9 @@ def func1(handle):
                     "handle": handle,
                 }
             }
-            ans=[]
+            ans = []
             ans.append(result)
-            return  ans
+            return ans
         return result
     except requests.exceptions.HTTPError as error:
         if error.response.status_code == 400:
