@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>查询选手</title>
+    <style>
+        #app {
+            margin: 0 auto;
+
+            height: 300px;
+            text-align: center;
+        }
+
+        #echarts_1 {
+            width: 100vw;
+            height: 400px;
+        }
+
+        p {
+            margin: 0px;
+        }
+
+        a {
+            color: #3a8ee6;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="box">
+            <h1>查询选手</h1>
+
+            <label for="handle">请输入选手姓名：</label>
+            <input v-model="handle" type="text" id="handle" name="handle" required placeholder="输入要查询的用户">
+            <button type="submit" @click="submitQuery">查询</button>
+
+
+        </div>
+        <div id="xxx" align="center" style="margin-top:50px;">
+            <div id="wowan" v-if="show_info">
+                <h1>查询结果</h1>
+                <br>
+                <div v-if="show_black==1">
+                    <span style="color: black">{{ id.substr(0, 1) }}</span><span :style="{ color: s }">{{
+                        result.handle.substr(1)+'(' + result.rank + ')'
+                        }}</span>
+                </div>
+                <div v-if="show_black==0">
+                    <span :style="{ color: s }">{{ result.handle + '(' + result.rank + ')'
+                        }}</span>
+                </div>
+                <span>rating:</span>
+                <span :style="{ color: s }">{{result.rating}}</span>
+                <br>
+                <br>
+            </div>
+        </div>
+        <div v-if="no_rating">
+            <h1>查询结果</h1>
+            <span>{{id}}没有打过rank哦!</span>
+        </div>
+        <div id="echarts_1"></div>
+    </div>
+
+
+    <script src="https://lib.baomitu.com/echarts/5.4.3/echarts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+        var myChart
+        new Vue({
+            el: "#app",
+            data: {
+                handle: '', // 选手姓名
+                result: {}, // 查询结果
+                answer: {},
+                ans: [],
+                show_info: false,
+                show_black: 0,
+                s: '#808080',
+                no_rating: false,
+                id: '',
+            },
+            methods: {
+                sovle_id: function (tmp) {
+                    var now_id
+                    switch (true) {
+                        case tmp < 1200:
+                            now_id = "newbie"
+                            break
+                        case tmp >= 1200 && tmp < 1350:
+                            now_id = "Pupil"
+                            break
+                        case tmp >= 1350 && tmp < 1500:
+                            now_id = "Specialist"
+                            break
+                        case tmp >= 1500 && tmp < 1700:
+                            now_id = "Expert"
+                            break
+                        case tmp >= 1700 && tmp < 1900:
+                            now_id = "Candidate Master"
+                            break
+                        case tmp >= 1900 && tmp < 2050:
+                            now_id = "Master"
+                            break
+                        case tmp >= 2050 && tmp < 2200:
+                            now_id = "International Master"
+                            break
+                        case tmp >= 2200 && tmp < 2600:
+                            now_id = "Grandmaster"
+                            break
+                        case tmp >= 2600:
+                            now_id = "International Grandmaster"
+                            break
+
+                    }
+                    return now_id
+                },
+                initEcharts() {
+                    let arr = this.ans
+                    var jd_flag
+                    let maxIndex = arr.map(it => it.newRating).indexOf(Math.max(...arr.map(it => it?.newRating)));
+                    console.log(maxIndex)
+                    if (maxIndex == -1) {
+                        jd_flag = 1600
+                    }
+                    else {
+                        jd_flag = arr[maxIndex].newRating + 400
+                    }
+                    // let minIndex = arr.map(it => it.newRating).indexOf(Math.min(...arr.map(it => it?.newRating)));
+                    var markings = [
+                        { color: '#a00', lineWidth: 1, yaxis: { from: 3000 } },
+                        { color: '#f33', lineWidth: 1, yaxis: { from: 2600, to: 2999 } },
+                        { color: '#f77', lineWidth: 1, yaxis: { from: 2400, to: 2599 } },
+                        { color: '#ffbb55', lineWidth: 1, yaxis: { from: 2300, to: 2399 } },
+                        { color: '#ffcc88', lineWidth: 1, yaxis: { from: 2100, to: 2299 } },
+                        { color: '#f8f', lineWidth: 1, yaxis: { from: 1900, to: 2099 } },
+                        { color: '#aaf', lineWidth: 1, yaxis: { from: 1600, to: 1899 } },
+                        { color: '#77ddbb', lineWidth: 1, yaxis: { from: 1400, to: 1599 } },
+                        { color: '#7f7', lineWidth: 1, yaxis: { from: 1200, to: 1399 } },
+                        { color: '#ccc', lineWidth: 1, yaxis: { from: 0, to: 1199 } },
+                    ];
+                    var ccc = document.getElementById('echarts_1')
+                    if (myChart != null) {
+                        myChart.dispose();
+                    }
+                    myChart = echarts.init(document.getElementById('echarts_1'));
+
+                    let option = {
+                        legend: {
+                            data: ['rating'],
+                            right: 100,
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            formatter: (params) => {
+                                //console.table(params)
+                                let ind_ = params[0].dataIndex - 1;
+                                let before = ind_ >= 0 ? arr[ind_].newRating : 1500;
+                                let Diff = params[0].data - before;
+                                if (Diff > 0) {
+                                    Diff = '+' + Diff;
+                                }
+                                let now_id = this.sovle_id(arr[params[0].dataIndex].newRating)
+                                return ` <div style="text-align: left">
+                                   <p>=  ${arr[params[0].dataIndex].newRating}(${Diff})${now_id}</p>
+                                   <p>rank:${arr[params[0].dataIndex].rank}</p>
+                                    <p><a>${arr[params[0].dataIndex].contestName}</a> </p>
+                                    <p><a>${arr[params[0].dataIndex].ratingUpdatedAt}</a> </p>
+                                </div>    `
+                            }
+                        },
+                        xAxis: {
+                            type: 'category',
+                            data: arr.map(it => new Date(it.ratingUpdatedAt).toLocaleDateString()),
+                            splitLine: {
+                                show: true,
+                                lineStyle: {
+                                    color: 'rgba(65,63,63,0.3)'
+                                }
+                            }
+                        },
+                        yAxis: [
+                            {
+                                position: 'left',
+                                type: 'value',
+                                show: true,
+                                min: 0,
+                                max: jd_flag + 400 > 2000 ? jd_flag + 400 : 2000,
+                                splitArea: {
+                                    show: true,
+                                    areaStyle: {
+                                        color: markings.map(it => it.color)
+                                    }
+                                },
+                                axisLabel: {
+                                    formatter: (value, index) => {
+                                        return ''
+                                    }
+                                }
+
+                            }
+                        ]
+                        ,
+                        series: [
+                            {
+                                name: 'rating',
+                                lineStyle: {
+                                    color: 'yellow'
+                                },
+                                itemStyle: {
+                                    color: (params) => params.dataIndex === (maxIndex ?? 0) ? 'red' : 'yellow'
+                                },
+                                data: arr.map(it => it.newRating),
+                                markArea: {
+                                    data: [
+                                        [{ yAxis: 3000 }, { yAxis: 9999, itemStyle: { color: '#a00' } }],
+                                        [{ yAxis: 2600 }, { yAxis: 2999, itemStyle: { color: '#f33' } }],
+                                        [{ yAxis: 2400 }, { yAxis: 2599, itemStyle: { color: '#f77' } }],
+                                        [{ yAxis: 2300 }, { yAxis: 2399, itemStyle: { color: '#ffbb55' } }],
+                                        [{ yAxis: 2100 }, { yAxis: 2299, itemStyle: { color: '#ffcc88' } }],
+                                        [{ yAxis: 1900 }, { yAxis: 2099, itemStyle: { color: '#f8f' } }],
+                                        [{ yAxis: 1600 }, { yAxis: 1899, itemStyle: { color: '#aaf' } }],
+                                        [{ yAxis: 1400 }, { yAxis: 1599, itemStyle: { color: '#77ddbb' } }],
+                                        [{ yAxis: 1200 }, { yAxis: 1399, itemStyle: { color: '#7f7' } }],
+                                        [{ yAxis: 0 }, { yAxis: 1199, itemStyle: { color: '#ccc' } }]
+                                    ]
+                                },
+                                markLine: {
+                                    label: {
+                                        position: "start",
+                                    },
+                                    lineStyle: {
+                                        cap: 'round'
+                                    },
+                                    silent: false,
+                                    animation: false,
+                                    symbolSize: [0, 0],
+                                    data: [
+                                        { yAxis: 3000, lineStyle: { color: '#a00' } },
+                                        { yAxis: 2600, lineStyle: { color: '#f33' } },
+                                        { yAxis: 2400, lineStyle: { color: '#f77' } },
+                                        { yAxis: 2300, lineStyle: { color: '#ffbb55' } },
+                                        { yAxis: 2100, lineStyle: { color: '#ffcc88' } },
+                                        { yAxis: 1900, lineStyle: { color: '#f8f' } },
+                                        { yAxis: 1600, lineStyle: { color: '#aaf' } },
+                                        { yAxis: 1400, lineStyle: { color: '#77ddbb' } },
+                                        { yAxis: 1200, lineStyle: { color: '#7f7' } },
+                                        { yAxis: 0, lineStyle: { color: '#ccc' } }
+                                    ]
+                                },
+                                type: 'line',
+                                smooth: false,
+
+                            }
+                        ]
+                    };
+                    myChart.setOption(option)
+                },
+                sovle_color: function (tmp) {
+                    tmp = Math.floor(tmp / 100)
+                    switch (true) {
+                        case tmp >= 0 && tmp < 12:
+                            this.s = '#808080';
+                            break;
+                        case tmp >= 12 && tmp < 14:
+                            this.s = '#008000'
+                            break;
+                        case tmp >= 14 && tmp < 16:
+                            this.s = '#03a89e'
+                            break;
+                        case tmp >= 16 && tmp < 19:
+                            this.s = '#0000ff'
+                            break;
+                        case tmp >= 19 && tmp < 21:
+                            this.s = '#a0a'
+                            break;
+                        case tmp >= 21 && tmp < 24:
+                            this.s = '#ff8c00'
+                            break;
+                        case tmp >= 24:
+                            this.s = '#ff0000';
+
+                    }
+                },
+                update: function (data) {
+                    this.showResult = true;
+                    this.answer = data[0]
+                    this.id = this.handle
+                    this.ans = data.slice(1);
+                    this.show_info = false
+                    if (this.answer.result.rating > 0) {
+                        this.result = this.answer.result
+                        this.show_info = true
+                        if (this.answer.result.rating >= 3000) {
+                            this.show_black = 1
+                        }
+                        else {
+                            this.show_black = 0
+                        }
+                        this.sovle_color(this.answer.result.rating)
+                        this.no_rating = false
+                    }
+                    else {
+                        this.no_rating = true
+                        this.show_info = false
+                    }
+
+                    this.initEcharts()
+                    console.log(14444)
+                },
+                submitQuery() {
+                    const handle = this.handle;
+                    let that = this
+                    // 发送网络请求
+                    axios
+                        .get(`http://127.0.0.1:2333/ask?handle=${handle}`)
+                        .then(response => {
+                            const contentType = response.headers['content-type'];
+
+                            if (contentType && contentType.startsWith('application/json')) {
+
+                                that.update(response.data)
+                                console.log(1111, that)
+                            }
+
+                        })
+                        .catch(error => {
+                            if (error.response && error.response.status === 404) {
+                                alert("用户不存在");
+                            } else {
+                                alert("网络或者cf官网异常，请稍后检查网络及cf官网！");
+                            }
+                        });
+                },
+            },
+            mounted() {
+
+            }
+
+        });
+    </script>
+</body>
+
+</html>
