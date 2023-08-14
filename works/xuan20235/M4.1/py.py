@@ -10,6 +10,9 @@ import query
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['DEBUG'] = True
 
+app.jinja_env.variable_start_string = '<<'  # 解决与vue 标签的冲突
+app.jinja_env.variable_end_string = '>>'
+
 
 def update_info(handle, rating, rank):
     with sqlite3.connect('cf.db') as conn:
@@ -119,6 +122,14 @@ def query_handle():
         #print(ans1)
         if "result" in ans0:
             ans1 = query.get_user_rating(handle)
+            if len(ans1) == 0:
+                x = {
+                    "success": True,
+                    "result": {
+                        "handle": handle,
+                    }
+                }
+                ans1.append(x)
             ans.append(ans0)
             ans.extend(ans1)
             print(len(ans))
