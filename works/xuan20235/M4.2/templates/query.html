@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>查询选手</title>
+    <style>
+        #app {
+            margin: 0 auto;
+
+            height: 300px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="box">
+            <h1>查询选手</h1>
+            <form @submit.prevent="submitQuery">
+                <label for="handle">请输入选手姓名：</label>
+                <input v-model="handle" type="text" id="handle" name="handle" required placeholder="输入要查询的用户">
+                <button type="submit">查询</button>
+            </form>
+
+        </div>
+        <div id="xxx" align="center" style="margin-top:50px;">
+            <div id="wowan" v-if="show_info">
+                <h1>查询结果</h1>
+                <br>
+                <div v-if="show_black==1">
+                    <span style="color: black">{{ id.substr(0, 1) }}</span><span :style="{ color: s }">{{
+                        result.handle.substr(1)+'(' + result.rank + ')'
+                        }}</span>
+                </div>
+                <div v-if="show_black==0">
+                    <span :style="{ color: s }">{{ result.handle + '(' + result.rank + ')'
+                        }}</span>
+                </div>
+                <span>rating:</span>
+                <span :style="{ color: s }">{{result.rating}}</span>
+                <br>
+                <br>
+            </div>
+            <div v-if="show_info">
+                <caption>rating history</caption>
+                <table id="yuan" border="1" style="margin: auto; width: 500px;">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>比赛</th>
+                            <th>Rank</th>
+                            <th>∆</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in ans">
+                            <td>{{ item.ratingUpdatedAt }}</td>
+                            <td>{{ item.contestName }}</td>
+                            <td>{{ item.rank }}</td>
+                            <td>{{ item.oldRating + '→' + item.newRating }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div v-if="no_rating">
+                <h1>查询结果</h1>
+                <span>{{id}}没有打过rank哦!</span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.bootcss.com/Chart.js/2.8.0-rc.1/Chart.bundle.min.js"></script>
+    <script>
+        //alert("wyaoww d")
+        var query=new Vue({
+            el: "#app",
+             data: {
+                handle: '', // 选手姓名
+                result: {}, // 查询结果
+                answer: {},
+                ans: [],
+                show_info: false,
+                show_black: 0,
+                s: '#808080',
+                no_rating: false,
+                id: '',
+            },
+            methods: {
+                sovle_color: function (tmp) {
+                    tmp = Math.floor(tmp / 100)
+                    switch (true) {
+                        case tmp >= 0 && tmp < 12:
+                            this.s = '#808080';
+                            break;
+                        case tmp >= 12 && tmp < 14:
+                            this.s = '#008000'
+                            break;
+                        case tmp >= 14 && tmp < 16:
+                            this.s = '#03a89e'
+                            break;
+                        case tmp >= 16 && tmp < 19:
+                            this.s = '#0000ff'
+                            break;
+                        case tmp >= 19 && tmp < 21:
+                            this.s = '#a0a'
+                            break;
+                        case tmp >= 21 && tmp < 24:
+                            this.s = '#ff8c00'
+                            break;
+                        case tmp >= 24:
+                            this.s = '#ff0000';
+
+                    }
+                },
+                update: function (data) {
+                    this.showResult = true;
+                    this.answer = data[0]
+                    this.id = this.handle
+                    this.ans = data.slice(1,);
+                    //console.log(this.tmp)
+                    console.log(this.answer.result.rating)
+                    //console.log(15511)
+                    this.show_info = false
+                    if (this.answer.result.rating > 0) {
+                        this.result = this.answer.result
+                        this.show_info = true
+                        if (this.answer.result.rating >= 3000) {
+                            this.show_black = 1
+                        }
+                        else {
+                            this.show_black = 0
+                        }
+                        this.sovle_color(this.answer.result.rating)
+                        this.no_rating = false
+                    }
+                    else {
+                        this.no_rating = true
+                        this.show_info = false
+                    }
+
+
+                },
+                submitQuery() {
+                    const handle = this.handle;
+                    // 发送网络请求
+                    axios
+                        .get(`http://127.0.0.1:2333/ask?handle=${handle}`)
+                        .then(response => {
+                            const contentType = response.headers['content-type'];
+
+                            if (contentType && contentType.startsWith('application/json')) {
+
+
+                                this.update(response.data)
+                            }
+
+                        })
+                        .catch(error => {
+                            if (error.response && error.response.status === 404) {
+                                alert("用户不存在");
+                            } else {
+                                alert("网络或者cf官网异常，请稍后检查网络及cf官网！");
+                            }
+                        });
+                },
+            },
+
+        });
+        
+    </script>
+</body>
+
+</html>
