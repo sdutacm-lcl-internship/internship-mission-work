@@ -79,9 +79,10 @@
     <script src="https://cdn.bootcss.com/Chart.js/2.8.0-rc.1/Chart.bundle.min.js"></script>
     <script>
         //alert("wyaoww d")
-        var query=new Vue({
+        //import axios from 'axios';
+        var query = new Vue({
             el: "#app",
-             data: {
+            data: {
                 handle: '', // 选手姓名
                 result: {}, // 查询结果
                 answer: {},
@@ -119,15 +120,8 @@
 
                     }
                 },
-                update: function (data) {
-                    this.showResult = true;
+                update_2: function (data) {
                     this.answer = data[0]
-                    this.id = this.handle
-                    this.ans = data.slice(1,);
-                    //console.log(this.tmp)
-                    console.log(this.answer.result.rating)
-                    //console.log(15511)
-                    this.show_info = false
                     if (this.answer.result.rating > 0) {
                         this.result = this.answer.result
                         this.show_info = true
@@ -144,24 +138,30 @@
                         this.no_rating = true
                         this.show_info = false
                     }
-
+                },
+                update: function (data) {
+                    this.showResult = true;
+                    this.id = this.handle
+                    this.ans = data
+                    this.show_info = false
 
                 },
                 submitQuery() {
                     const handle = this.handle;
-                    // 发送网络请求
-                    axios
-                        .get(`http://127.0.0.1:2333/ask?handle=${handle}`)
-                        .then(response => {
-                            const contentType = response.headers['content-type'];
-
-                            if (contentType && contentType.startsWith('application/json')) {
-
-
-                                this.update(response.data)
-                            }
-
-                        })
+                    url = 'http://127.0.0.1:2333/getUserRatings?handle=' + handle
+                    url2 = 'http://127.0.0.1:2333/batchGetUserInfo?handles=' + handle
+                    const request1 = axios.get(url);
+                    const request2 = axios.get(url2);
+                    // 发送并发请求
+                    axios.all([request1, request2])
+                        .then(axios.spread((response1, response2) => {
+                            // 处理第一个请求的响应
+                            this.update(response1.data)
+                            console.log('响应1:', response1.data);
+                            this.update_2(response2.data)
+                            // 处理第二个请求的响应
+                            console.log('响应2:', response2.data);
+                        }))
                         .catch(error => {
                             if (error.response && error.response.status === 404) {
                                 alert("用户不存在");
@@ -173,7 +173,7 @@
             },
 
         });
-        
+
     </script>
 </body>
 

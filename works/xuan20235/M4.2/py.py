@@ -112,42 +112,6 @@ def yuanshenzenmonile():
     return render_template('query.html')
 
 
-@app.route('/ask', methods=['GET'])
-def query_handle():
-    ans = []
-    data = []
-    try:
-        handle = request.args.get('handle', '')
-        ans0 = query.get_user_info(handle)
-        #print(ans1)
-        if "result" in ans0:
-            ans1 = query.get_user_rating(handle)
-            if len(ans1) == 0:
-                x = {
-                    "success": True,
-                    "result": {
-                        "handle": handle,
-                    }
-                }
-                ans1.append(x)
-            ans.append(ans0)
-            ans.extend(ans1)
-            print(len(ans))
-            response = make_response(json.dumps(ans), 200)
-            response.headers['Content-Type'] = 'application/json'
-            return response
-        elif "message" in ans0 and "success" not in ans0:
-            response = make_response(json.dumps(data), 500)
-            response.headers['Content-Type'] = 'application/json'
-            return response
-        else:
-            response = make_response(json.dumps(ans), 404)
-            response.headers['Content-Type'] = 'application/json'
-            return response
-    except requests.exceptions.HTTPError as error:
-        print(1)
-
-
 if __name__ == '__main__':
     creat_db()
     app.run(host='127.0.0.1', port=2333, debug=True)
