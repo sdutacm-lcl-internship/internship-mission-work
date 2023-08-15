@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>数据查询页面</title>
+    <style>
+        .box {
+            /*background-color: red;*/
+            margin: 0 auto;
+            width: 300px;
+            height: 300px;
+            text-align: center;
+        }
+
+        .h1 {
+            text-align: center;
+        }
+
+        .black::first-letter {
+            color: black;
+            /* 设置你想要的颜色 */
+
+        }
+
+        .black {
+            color: '#ff0000';
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <h1>查询选手</h1>
+        <form id="queryForm">
+            <label for="handle">请输入选手姓名：</label>
+            <input type="text" id="handle" name="handle" required placeholder="输入要查询的用户">
+            <button type="submit">查询</button>
+        </form>
+
+        <div id="result" style="margin-top: 20px;">
+
+        </div>
+    </div>
+    <script>
+        document.getElementById("queryForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+
+            var handle = document.getElementById("handle").value;
+            var xh = new XMLHttpRequest();
+            xh.open("GET", "http://127.0.0.1:2333/getUserRatings?handle=" + handle);
+            xh.send();
+            xh.onreadystatechange = function () {
+                if (xh.readyState === XMLHttpRequest.DONE) {
+                    if (xh.status === 200) {
+                        var response = JSON.parse(xh.responseText);
+                        updateResult(response);
+                        console.log(response)
+                        var handle = document.getElementById("handle").value;
+                        var xhr = new XMLHttpRequest();
+                        xhr.open("GET", "http://127.0.0.1:2333/batchGetUserInfo?handles=" + handle);
+                        xhr.send();
+                        xhr.onreadystatechange = function () {
+                            if (xhr.readyState === XMLHttpRequest.DONE) {
+                                if (xhr.status === 200) {
+                                    var response1 = JSON.parse(xhr.responseText);
+                                    update_r(response1);
+                                    console.log(response1)
+
+                                }
+                            }
+                        };
+                    } else {
+                        if (xh.status === 404) {
+                            alert("用户不存在");
+                        }
+                        else {
+                            alert("网络或者cf官网异常，请稍后检查网络及cf官网！");
+                        }
+                    }
+                }
+            };
+        });
+        function update_r(data) {
+            var result = document.getElementById('result');
+            result.innerHTML = '';
+            var answer = data[0]
+            if (answer["result"]["rating"] != undefined) {
+                var s = '';
+                tmp = answer["result"]["rating"]
+                tmp = Math.floor(tmp / 100)
+                switch (true) {
+                    case tmp >= 0 && tmp < 12:
+                        s = '#808080';
+                        break;
+                    case tmp >= 12 && tmp < 14:
+                        s = '#008000'
+                        break;
+                    case tmp >= 14 && tmp < 16:
+                        s = '#03a89e'
+                        break;
+                    case tmp >= 16 && tmp < 19:
+                        s = '#0000ff'
+                        break;
+                    case tmp >= 19 && tmp < 21:
+                        s = '#a0a'
+                        break;
+                    case tmp >= 21 && tmp < 24:
+                        s = '#ff8c00'
+                        break;
+                    case tmp >= 24:
+                        s = '#ff0000';
+
+                }
+                // console.log(s)
+                // console.log(tmp)
+                var h1 = document.createElement("h1")
+                h1.innerHTML = "查询结果"
+                result.appendChild(h1)
+                var br = document.createElement("br")
+                result.appendChild(br)
+                if (tmp >= 30) {
+                    var span = document.createElement("span")
+                    span.innerHTML = answer["result"]['handle'].substr(0, 1);
+                    span.style.color = "black"
+                    result.appendChild(span)
+                    var span = document.createElement("span")
+                    span.innerHTML = answer["result"]['handle'].substr(1) + '(' + answer['result']['rank'] + ')';
+                    span.style.color = s
+                    result.appendChild(span)
+                } else {
+                    var span = document.createElement("span")
+                    span.innerHTML = answer["result"]['handle'] + '(' + answer['result']['rank'] + ')';
+                    span.style.color = s
+                    result.appendChild(span)
+                }
+                var br = document.createElement("br")
+                result.appendChild(br)
+                var span = document.createElement("span")
+                span.innerHTML = "rating:";
+                result.appendChild(span)
+                var span = document.createElement("span")
+                span.innerHTML = answer['result']['rating'];
+                span.style.color = s
+                result.appendChild(span)
+                var br = document.createElement("br")
+                result.appendChild(br)
+            }
+            else {
+                var h1 = document.createElement("h1")
+                h1.innerHTML = "查询结果"
+                result.appendChild(h1)
+                console.log("wdadwada")
+                var br = document.createElement("br")
+                result.appendChild(br)
+                var span = document.createElement("span")
+                span.innerHTML = answer["result"]['handle'];
+                result.appendChild(span)
+                var span = document.createElement("span")
+                span.innerHTML = "没有打过rank"
+                result.appendChild(span)
+            }
+        };
+
+        function updateResult(data) {
+            //data = data[0]
+            // console.log(data[0])
+            try {
+                var name = document.getElementById('yuanshen')
+                document.body.removeChild(name);
+            }
+            catch {
+
+            }
+            if (data.length == 0) {
+                return
+            }
+            var table = document.createElement("table");
+            table.id = "yuanshen"
+            table.border = "1";
+            table.style.margin = "auto";
+            table.width = "500px";
+            document.body.appendChild(table);
+            table.createCaption().innerHTML = "rating history";
+            // 表头
+
+            var thead = document.createElement("thead");
+            var headerRow = document.createElement("tr");
+            var headers = ["时间", "比赛", "Rank", "∆"];
+            for (var i = 0; i < 4; i++) {
+                var th = document.createElement("th");
+                headerRow.appendChild(th);
+                th.innerHTML = headers[i];
+            }
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // 表格内容
+            var tbody = document.createElement("tbody");
+            table.appendChild(tbody);
+            //
+            for (var i = 0; i < data.length; i++)  //外面的for循环 是 行tr
+            {
+                var tmp = data.length - i - 1;
+                var tr = document.createElement("tr");
+                tbody.appendChild(tr);
+                //
+                var td = document.createElement("td");
+                tr.appendChild(td);
+                td.innerHTML = data[tmp]["ratingUpdatedAt"];
+                var td = document.createElement("td");
+                tr.appendChild(td);
+                td.innerHTML = data[tmp]["contestName"];
+
+                var td = document.createElement("td");
+                tr.appendChild(td);
+                td.innerHTML = data[tmp]["rank"];
+
+                var td = document.createElement("td");
+                tr.appendChild(td);
+                td.innerHTML = data[tmp]["oldRating"] + '→' + data[tmp]["newRating"];;
+            }
+            table.appendChild(tbody);
+
+
+        }
+    </script>
+</body>
+
+</html>
