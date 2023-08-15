@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vue Input Example</title>
+  <!-- 引入Vue库 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <input type="text" v-model="inputText">
+    <button @click="handleQuery">查询</button>
+    <br>
+     <h1>Handle :</h1>
+
+    <h1 :style="dynamicStyle">
+      <span v-if="rating>3000" style="color: black;">[[firstLetter]]</span><span v-else :style="dynamicStyle">[[firstLetter]]</span>[[partLetter]]
+    </h1>
+
+    <p style="font-size: 20px;color: darkblue">Rating :</p>
+    <p>[[rating]]</p>
+     <p style="font-size: 20px;color: darkblue">Rating-History :</p>
+     <table align="center" width="80%" class="table xunw_table_form" border="0">
+       <tbody>
+                <tr>
+                  <th>时间</th>
+                  <th>比赛</th>
+                  <th>rank</th>
+                  <th>Δ</th>
+                </tr>
+                <tr v-for="item in  rating_history" >
+                  <td>[[item.ratingUpdatedAt]]</td>
+                  <td>[[item.contestName]]</td>
+                  <td>[[item.rank]]</td>
+                  <td>[[item.oldRating]]->[[item.newRating]]</td>
+                </tr>
+                </tbody>
+     </table>
+  </div>
+  <script>
+        new Vue({
+        el:"#app",
+          delimiters: ["[[", "]]"],
+        data:{
+          inputText:'',
+          rating:'',
+          firstLetter:'',
+          partLetter:'',
+          rating_history:[]
+        },
+         methods: {
+        handleQuery() {
+          const url = 'requestUserInfo?handle='+this.inputText;
+          axios.get(url)
+            .then(response => {
+              this.queryResultWithAxiosGet = response.data;
+              this.rating=this.queryResultWithAxiosGet["rating"]
+              this.firstLetter = this.queryResultWithAxiosGet["handle"].substring(0,1)
+              this.partLetter=this.queryResultWithAxiosGet["handle"].substring(1)
+              this.rating_history =this.queryResultWithAxiosGet["rating_history"]
+            })
+            .catch(error => {
+              // 请求失败，处理错误
+              console.error('请求失败:', error);
+              if(error.request.status==0){
+                alert("网络连接建立失败，请检查网络")
+              }else
+              {
+                alert(error.response.data);
+              }
+
+            });
+        }
+      },
+          computed: {
+    dynamicStyle() {
+      let handleColor;
+      if(this.rating<1200){
+        handleColor='rgb(204,204,204)'
+      }else if(this.rating<1400){
+        handleColor='rgb(119,255,119)'
+      }else if(this.rating<1600)
+      {
+        handleColor='rgb(119,221,187)'
+      }else if(this.rating<1900){
+        handleColor='rgb(170,170,255)'
+      }else if(this.rating<2100){
+        handleColor='rgb(255,136,255)'
+      }else if(this.rating<2300)
+      {
+        handleColor='rgb(255,204,136)'
+      }else if(this.rating<2400){
+        handleColor='rgb(255,187,85)'
+      }else if(this.rating<2600){
+        handleColor='rgb(255,119,119)'
+      }else if(this.rating<3000)
+      {
+        handleColor='rgb(255,51,51)'
+      }else {
+        handleColor='rgb(170,0,0)'
+      }
+      return {
+        color: handleColor,
+        fontSize:  '20px',
+      };
+    }
+  }
+    });
+  </script>
+</body>
+<style>
+  #app{
+    text-align: center;
+  }
+
+</style>
+</html>
