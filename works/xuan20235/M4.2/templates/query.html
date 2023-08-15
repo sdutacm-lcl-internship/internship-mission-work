@@ -148,10 +148,11 @@
                 },
                 submitQuery() {
                     const handle = this.handle;
-                    url = 'http://127.0.0.1:2333/getUserRatings?handle=' + handle
-                    url2 = 'http://127.0.0.1:2333/batchGetUserInfo?handles=' + handle
-                    const request1 = axios.get(url);
-                    const request2 = axios.get(url2);
+                    let url = "/getUserRatings";
+                    let url2 = "/batchGetUserInfo"
+                    const request1 = axios.get(url, { params: { handle: handle } });
+                    console.log({ param: { handle: handle } })
+                    const request2 = axios.get(url2, { params: { handles: handle } });
                     // 发送并发请求
                     axios.all([request1, request2])
                         .then(axios.spread((response1, response2) => {
