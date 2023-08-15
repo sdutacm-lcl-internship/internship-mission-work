@@ -1,14 +1,18 @@
 let myChart = echarts.init(document.getElementById('lineChart'));
 yData = [1200, 1400, 1600, 1900, 2100, 2300, 2400, 2600, 3000]
+
 // 指定图表的配置项和数据
-console.log(UpdatedAts)
 option = {
   tooltip: {
     trigger: 'item',
     formatter: function (params) {
       var dataIndex = params.dataIndex;
       var item = rating_hisyory[dataIndex];
-      return item.contestName + '<br>' + 'rank:' + item.rank;
+      delta = item.newRating-item.oldRating
+      if(delta>0){
+        delta='+'+delta
+      }
+      return '='+item.newRating+'('+delta+')'+'<br>'+item.contestName + '<br>' + 'rank:' + item.rank+'<br>'+'<br>'+item.ratingUpdatedAt;
     }
   },
   legend: {},
@@ -25,9 +29,8 @@ option = {
     }
   },
   xAxis: {
-    type: 'category',
-    boundaryGap: true,
-    data: UpdatedAts,
+    type: 'time',
+     boundaryGap:false
   },
   yAxis: {
     show: true,

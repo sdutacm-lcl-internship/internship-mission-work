@@ -66,7 +66,8 @@ function requestInfo() {
   }
 }
 
-const UpdatedAts = []
+let max = -1
+let min = 100000
 const ratings = []
 
 function renderTable(data) {
@@ -89,15 +90,23 @@ function renderTable(data) {
       row.appendChild(rankCell)
       row.appendChild(ratingCell)
       tableBody.appendChild(row)
-      UpdatedAts.push(v["ratingUpdatedAt"].substring(0, 10))
-      ratings.push(v["newRating"])
+    if(v["newRating"]>max){
+      max=v["newRating"]
+    }
+    if(v["newRating"]<min){
+      min = v["newRating"]
+    }
+      ratings.push([v["ratingUpdatedAt"].substring(0, 10),v["newRating"]])
     }
   )
-  console.log(Math.min(...ratings) - Math.min(...ratings) % 100)
-  option.yAxis.min = Math.min(...ratings) - Math.min(...ratings) % 100
-  option.yAxis.max = Math.max(...ratings)
+
+  option.yAxis.min =min- min% 100
+  option.yAxis.max = max
+  console.log(max)
+  option.xAxis.data=ratings
   myChart.setOption(option);
-  UpdatedAts.length = 0
   ratings.length = 0
+  max=-1
+  min=100000
 }
 
