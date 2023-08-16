@@ -1,5 +1,3 @@
-import json
-import pickle
 from config import Config
 from flask import Flask, request, jsonify
 from flask_caching import Cache

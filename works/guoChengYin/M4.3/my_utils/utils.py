@@ -45,9 +45,12 @@ class Crawler:
       result_json = dict()
       # 若成功爬取
       if response.status_code == 200:
-        print(response.text)
-        result_json = json.loads(response.text)
-        result_json["status"] = 200
+        resText = response.text
+        if(resText.startswith("<!DOCTYPE html>")):
+          result_json["status"] = 502
+        else:
+          result_json = json.loads(response.text)
+          result_json["status"] = 200
       else:
         result_json["status"] = response.status_code
       return result_json
