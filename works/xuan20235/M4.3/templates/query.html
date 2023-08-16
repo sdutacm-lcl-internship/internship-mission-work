@@ -163,10 +163,7 @@
                         tooltip: {
                             trigger: 'axis',
                             formatter: (params) => {
-                                //console.table(params)
-                                let ind_ = params[0].dataIndex - 1;
-                                let before = ind_ >= 0 ? arr[ind_].newRating : 1500;
-                                let Diff = params[0].data - before;
+                                let Diff = arr[params[0].dataIndex].newRating - arr[params[0].dataIndex].oldRating
                                 if (Diff > 0) {
                                     Diff = '+' + Diff;
                                 }
