@@ -61,46 +61,59 @@ def grep_user(user):
         if resp_status_code == 200:  # 请求发送正常
             if 'rating' in page['result'][0]:
                 ans = {
-                    "handle": user,
-                    "rating": page['result'][0]['rating'],
-                    "rank": page['result'][0]['rank'],
+                    'sucess': 'true',
+                    'result': {"handle": user,
+                               "rating": page['result'][0]['rating'],
+                               "rank": page['result'][0]['rank'],
+                               },
                     'updated_at': unix_to_datetime(time.time())
                 }
             else:
                 ans = {
-                    "handle": user,
+                    'sucess': 'true',
+                    'result': {
+                        "handle": user
+                    },
                     'updated_at': unix_to_datetime(time.time())
                 }
             return ans, 200
         elif page['status'] == "FAILED":
             ans = {
-                'handle': user,
+                "success": "false",
+                "type": 1,
                 "message": "no such handle"
             }
             return ans, 404
         elif resp_status_code == 401 or resp_status_code == 403 or resp_status_code == 404 or resp_status_code == 500 or resp_status_code == 502 or resp_status_code == 503 or resp_status_code == 504:
             # 请求响应异常
             ans = {
-                'handle': user,
+                "success": 'false',
+                "type": '2',
                 "message": "HTTP response with code" + str(resp_status_code),
+                "details": {
+                    "status": str(resp_status_code)
+                }
             }
             return ans, resp_status_code
         else:  # 除去响应异常以及程序异常，剩下的为未收到合法响应
             ans = {
-                'handle': user,
+                "success": 'false',
+                "type": '3',
                 "message": "No valid HTTP response was received when querying this item"
             }
             return ans, 400
     except requests.exceptions.RequestException as e:  # 程序抛出异常
         ans = {
-            'handle': user,
+            "success": 'false',
+            "type": '3',
             "message": "Internal Server Error"
         }
         return ans, 500
     except Exception as e:
         ans = {
-            'handle': user,
-            "message": "Internal Server Error"
+            "success": "false",
+            "type": "4",
+            "message": 'Internal Server Error'
         }
         return ans, 500
 
@@ -126,7 +139,7 @@ def grep_rating(handle):
         if resp_status == 200:
             for rating_info in page['result']:
                 temp = {
-                    # "handle": rating_info['handle'],
+                    "handle": rating_info['handle'],
                     "contestId": rating_info['contestId'],
                     "contestName": rating_info['contestName'],
                     "rank": rating_info['rank'],
@@ -204,10 +217,11 @@ def init_database():
 
 def get_userinfo_from_database(handles):
     ans = []
-    for handle in handles:
-        try:
-            conn = sqlite3.connect('cf.db')
-            cursor = conn.cursor()
+    try:
+        conn = sqlite3.connect('cf.db')
+        conn.execute("PRAGMA foreign_keys = ON")
+        cursor = conn.cursor()
+        for handle in handles:
             sql = "SELECT * FROM user_info WHERE handle = ?"
             handle = handle
             cursor.execute(sql, (handle,))
@@ -217,46 +231,53 @@ def get_userinfo_from_database(handles):
                 if res[1] != 200:
                     ans.append(res[0])
                     continue
-                if 'rating' in res[0]:
+                if 'rating' in res[0]['result']:
                     sql = "INSERT INTO user_info (handle, rating, rank, updated_at) VALUES(?, ?, ?, ?)"
-                    cursor.execute(sql, (res[0]['handle'], res[0]['rating'], res[0]['rank'], res[0]['updated_at']))
+                    cursor.execute(sql, (
+                    res[0]['result']['handle'], res[0]['result']['rating'], res[0]['result']['rank'],
+                    res[0]['updated_at']))
                 else:
                     sql = "INSERT INTO user_info (handle, updated_at) VALUES(?, ?)"
-                    cursor.execute(sql, (res[0]['handle'], res[0]['updated_at']))
+                    cursor.execute(sql, (res[0]['result']['handle'], res[0]['updated_at']))
                 conn.commit()
-                conn.close()
                 del res[0]['updated_at']
                 ans.append(res[0])
             elif datetime_to_unix(result[0][3]) + 30 >= time.time():
                 if not result[0][1]:
                     ans.append({
-                        'handle': result[0][0],
+                        'sucess': 'true',
+                        'result': {
+                            'handle': result[0][0]
+                        }
                     })
                 else:
                     ans.append({
-                        'handle': result[0][0],
-                        'rating': result[0][1],
-                        'rank': result[0][2],
+                        'sucess': 'true',
+                        'result': {
+                            'handle': result[0][0],
+                            'rating': result[0][1],
+                            'rank': result[0][2],
+                        }
                     })
             else:
                 res = grep_user(handle)
                 if res[1] != 200:
                     ans.append(res[0])
                     continue
-                if 'rating' in res[0]:
+                if 'rating' in res[0]['result']:
                     sql = "UPDATE user_info SET handle = ?, rating = ?, rank = ?, updated_at = ? WHERE handle = ?"
                     cursor.execute(sql,
-                                   (res[0]['handle'], res[0]['rating'], res[0]['rank'], res[0]['updated_at'], handle))
+                                   (res[0]['result']['handle'], res[0]['result']['rating'], res[0]['result']['rank'],
+                                    res[0]['updated_at'], handle))
                 else:
                     sql = "UPDATE user_info SET handle = ?, updated_at = ? WHERE handle = ?"
-                    cursor.execute(sql, (res[0]['handle'], res[0]['updated_at'], handle))
+                    cursor.execute(sql, (res[0]['result']['handle'], res[0]['updated_at'], handle))
                 conn.commit()
-                conn.close()
                 del res[0]['updated_at']
                 ans.append(res[0])
-
-        except Exception as e:
-            return {"message": "Internal Server Error"}, 500
+        conn.close()
+    except Exception as e:
+        return {"message": "Internal Server Error"}, 501
     return ans, 200
 
 
@@ -264,6 +285,24 @@ def get_ratings_from_database(handle):
     try:
         conn = sqlite3.connect('cf.db')
         cursor = conn.cursor()
+        cursor.execute("SELECT * FROM user_info WHERE handle = ?", (handle,))
+        handles = []
+        handles.append(handle)
+        if len(cursor.fetchall()) == 0:
+            t = get_userinfo_from_database(handles)
+            if t[1] != 200:
+                return t[0], t[1]
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        return {"message": "Internal Server Error"}, 500
+    try:
+        conn = sqlite3.connect('cf.db')
+        conn.execute("PRAGMA foreign_keys = ON")
+        cursor = conn.cursor()
+        # cursor.execute("SELECT * FROM user_info WHERE handle = ?", (handle,))
+        # if len(cursor.fetchall() == 0):
+        #     t = get_userinfo_from_database(handle)
         sql = "SELECT * FROM user_rating WHERE handle = ?"
         cursor.execute(sql, (handle,))
         result = cursor.fetchall()
@@ -276,16 +315,16 @@ def get_ratings_from_database(handle):
                 temp = eval(str(contest))
                 temp['ratingUpdatedAt'] = unix_to_datetime(convert_to_unix(temp['ratingUpdatedAt']))
                 cursor.execute(sql, (
-                handle, temp['contestId'], temp['contestName'], temp['rank'], temp['ratingUpdatedAt'],
-                temp['oldRating'], temp['newRating'], res[0]['updated_at']))
+                    handle, temp['contestId'], temp['contestName'], temp['rank'], temp['ratingUpdatedAt'],
+                    temp['oldRating'], temp['newRating'], res[0]['updated_at']))
                 conn.commit()
-            conn.close()
             del res[0]['updated_at']
-            return res[0], res[1]
+            conn.close()
+            return res[0]['result'], res[1]
         elif datetime_to_unix(result[0][8]) + 30 >= time.time():
-            res = []
+            ans = []
             for contest in result:
-                res.append({
+                ans.append({
                     "handle": contest[1],
                     "contestId": contest[2],
                     "contestName": contest[3],
@@ -294,13 +333,10 @@ def get_ratings_from_database(handle):
                     "oldRating": contest[5],
                     'newRating': contest[6]
                 })
-            ans = {
-                'handle': handle,
-                'result': res
-            }
+            conn.close()
             return ans, 200
         else:
-            res = grep_rating(handle)
+            res = grep_rating([handle])
             if res[1] != 200:
                 return res[0], res[1]
             for contest in res[0]['result']:
@@ -311,18 +347,18 @@ def get_ratings_from_database(handle):
                 if len(cursor.fetchall()) == 0:
                     sql = "INSERT INTO user_rating(handle,contest_id,contest_name,rank,rating_updated_at,old_rating,new_rating,updated_at) VALUES(?,?,?,?,?,?,?,?) "
                     cursor.execute(sql, (
-                    handle, temp['contestId'], temp['contestName'], temp['rank'], temp['ratingUpdatedAt'],
-                    temp['oldRating'], temp['newRating'], res[0]['updated_at']))
+                        handle, temp['contestId'], temp['contestName'], temp['rank'], temp['ratingUpdatedAt'],
+                        temp['oldRating'], temp['newRating'], res[0]['updated_at']))
                     conn.commit()
                 else:
                     sql = "UPDATE user_rating SET updated_at = ? WHERE contest_id = ?"
                     cursor.execute(sql, (res[0]['updated_at'], contest_Id))
                     conn.commit()
-            conn.close()
             del res[0]['updated_at']
-            return res[0], res[1]
+            conn.close()
+            return res[0]['result'], res[1]
     except Exception as e:
-        return {"message": "Internal Server Error"}, 500
+        return {"message": "Internal Server Error"}, 503
 
 
 @app.route('/batchGetUserInfo', methods=['get', 'post'])
@@ -341,9 +377,7 @@ def cin():
 
 @app.route('/getUserRatings', methods=['get', 'post'])
 def rating_query():
-
     handle = request.args.get("handle")
-
     ans = init_database()
     if ans[1] != 200:
         return ans[0], ans[1]
@@ -360,3 +394,5 @@ def grep_rating_html():
 if __name__ == '__main__':
     server = pywsgi.WSGIServer(('127.0.0.1', 2333), app)
     server.serve_forever()
+
+

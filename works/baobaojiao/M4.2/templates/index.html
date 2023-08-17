@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>cf用户rating查询</title>
 
-    <script src="vue.js"></script>
-    <script src="axios.js"></script>
+    <script type="text/javascript" src="vue.js"></script>
+    <script type="text/javascript" src="axios.js"></script>
 
     <style>
         * {
@@ -77,6 +77,9 @@
         #table_result {
             display: none;
         }
+        #result{
+            display: none;
+        }
     </style>
 
 </head>
@@ -87,11 +90,15 @@
             <h3 cass='title'>查询选手</h3>
         </div>
         <div class="w ">
-            <input type="input" class="search" id='handle'>
+            <input type="input" class="search" id='handle' placeholder="请输入handle">
             <input type="button" class="btn" value='查询' @click="handle_find">
         </div>
 
-        <div class="result" id="result"></div>
+        <div class="result" id="result" >
+            <h3>查询结果</h3>
+            <h4>{{handle}}</h4>
+            <h4>rating: {{now_rating}}</h4>
+        </div>
         <div class="rating_table w" id="table_result">
             <h5>rating history</h5>
             <table class="table" border="1" cellspacing="0" cellpadding="8">
@@ -105,7 +112,7 @@
                     <td>{{contest['ratingUpdatedAt']}}</td>
                     <td>{{contest['contestName']}}</td>
                     <td>{{contest['rank']}}</td>
-                    <td>{{contest['oldRating']}} -> {{contest['newRating']}}</td>
+                    <td>{{contest['newRating']}} -> {{contest['newRating']}}</td>
                 </tr>
             </table>
         </div>
@@ -119,6 +126,7 @@
         data() {
             return {
                 handle: 'handle',
+                now_rating: '0',
                 contest_info: []
             }
         },
@@ -127,32 +135,31 @@
                 let _this = this
                 _this.handle = document.getElementById('handle').value
                 document.getElementById('table_result').style.display = 'none'
+                let dataToSend = {
+                    handle: _this.handle
+                }
+                let queryString = Object.keys(dataToSend).map(key => key + '=' + dataToSend['handle']).join('&');
                 axios({
                     methods: 'get',
-                    url: `http://127.0.0.1:2333/getUserRatings?handle=${_this.handle}`
+                    url: 'http://127.0.0.1:2333/getUserRatings?' + queryString
                 }).then(function (response) {
                     if (response.status === 200) {
-                        let contests = response.data.result
+                        let contests = response.data
+                        console.log(contests)
                         let len = contests.length
                         let div_result = document.getElementById('result')
                         let table_result = document.getElementById('table_result')
-                        _this.contest_info = response.data.result
+                        _this.contest_info = response.data
+                        this.handle = _this.handle
 
-                        if (len == 0) {
-                            div_result.innerHTML = `
-                            <h3>查询结果</h3>
-                            <h4>${_this.handle}</h4>
-                            <h4>rating: 0</h4>`
+                        if (len != 0) {
+                            _this.now_rating = contests[len - 1]['newRating']
+                            table_result.style.display = 'block'
                         }
-                        else {
-                            let now_rating = contests[len - 1]['newRating']
-                            div_result.innerHTML = `
-                            <h3>查询结果</h3>
-                            <h4>${_this.handle}</h4>
-                            <h4>rating: ${now_rating}</h4>`
-
+                        else{
+                            _this.now_rating = 0
                         }
-                        table_result.style.display = 'block'
+                        div_result.style.display = 'block'
                     }
                     let search_ = document.getElementById('handle')
                     search_.value = ''
