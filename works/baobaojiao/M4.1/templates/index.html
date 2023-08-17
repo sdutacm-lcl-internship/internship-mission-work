@@ -99,21 +99,21 @@
         let handle = now_handle.value
 
         let xhr = new XMLHttpRequest()
-        let url = 'http://127.0.0.1:2333/getUserRatings?handle=' + handle
+        let dataToSend = {
+            handle: handle
+        }
+        let queryString = Object.keys(dataToSend).map(key => key + '=' + dataToSend['handle']).join('&');
+        let url = '/getUserRatings?' + queryString;
         xhr.open('GET', url, true)
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        // xhr.setRequestHeader("Access-Control-Allow-Methods", "POST, GET")
-        // xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
-        // xhr.setRequestHeader("Access-Control-Allow-Headers", "Content-Type")
 
         xhr.responseText = 'json'
         xhr.onreadystatechange = function () {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 if (xhr.status === 200) {
-
                     let response = JSON.parse(xhr.response)
-                    let user_name = response['handle']
-                    let len = response['result'].length
+                    let user_name = handle
+                    let len = response.length
                     let div_result = document.getElementById('result')
                     let table_result = document.getElementById('table_result')
                     if (len == 0) {
@@ -121,19 +121,10 @@
                     <h3>查询结果</h3>
                     <h4>${user_name}</h4>
                     <h4>rating: 0</h4>`
-
-                        table_result.innerHTML = `<h5>rating history</h5>
-                    <table class="table" border="1" cellspacing="0" cellpadding="8">
-                        <tr>
-                            <th>时间</th>
-                            <th>比赛</th>
-                            <th>rank</th>
-                            <th>Δ</th>
-                        </tr>
-                    </table>`
+                    table_result.innerHTML = ''
                     }
                     else {
-                        let contests = response['result']
+                        let contests = response
                         let now_rating = contests[len - 1]['newRating']
                         div_result.innerHTML = `
                     <h3>查询结果</h3>
