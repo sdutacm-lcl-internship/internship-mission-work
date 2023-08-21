@@ -78,7 +78,7 @@
             display: none;
         }
         #result{
-            display: none;
+
         }
     </style>
 
@@ -90,7 +90,7 @@
             <h3 cass='title'>查询选手</h3>
         </div>
         <div class="w ">
-            <input type="input" class="search" id='handle' placeholder="请输入handle">
+            <input type="input" class="search" id='handle' placeholder="请输入handle" v-model="handle">
             <input type="button" class="btn" value='查询' @click="handle_find">
         </div>
 
@@ -125,7 +125,7 @@
         el: "#app",
         data() {
             return {
-                handle: 'handle',
+                handle: '',
                 now_rating: '0',
                 contest_info: []
             }
@@ -133,7 +133,6 @@
         methods: {
             handle_find() {
                 let _this = this
-                _this.handle = document.getElementById('handle').value
                 document.getElementById('table_result').style.display = 'none'
                 let dataToSend = {
                     handle: _this.handle
@@ -141,11 +140,10 @@
                 let queryString = Object.keys(dataToSend).map(key => key + '=' + dataToSend['handle']).join('&');
                 axios({
                     methods: 'get',
-                    url: '/getUserRatings?' + queryString
+                    url: 'http://127.0.0.1:2333/getUserRatings?' + queryString
                 }).then(function (response) {
                     if (response.status === 200) {
                         let contests = response.data
-                        console.log(contests)
                         let len = contests.length
                         let div_result = document.getElementById('result')
                         let table_result = document.getElementById('table_result')
@@ -161,23 +159,13 @@
                         }
                         div_result.style.display = 'block'
                     }
-                    let search_ = document.getElementById('handle')
-                    search_.value = ''
                 }).catch((err) => {
                     if (err.response.status === 404) {
-                        let div_result = document.getElementById('result')
-                        let table_result = document.getElementById('table_result')
-                        div_result.innerHTML = `
-                        <h3>查询结果</h3>
-                        <h4>请输入正确的用户名！</h4>`
+                        alert('请输入正确的用户名')
                     }
                     else {
-                        let div_result = document.getElementById('body')
-                        div_result.innerHTML = `
-                        <h4>HTTP response with code ${err.response.status}</h4>`
+                        alert(`HTTP response with code ${err.response.status}`)
                     }
-                    let search_ = document.getElementById('handle')
-                    search_.value = ''
                 })
             }
         }
