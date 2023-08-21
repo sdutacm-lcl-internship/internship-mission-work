@@ -161,10 +161,10 @@
                     }
                 }).catch((err) => {
                     if (err.response.status === 404) {
-                        alert('请输入正确的用户名')
+                        alert('用户不存在')
                     }
                     else {
-                        alert(`HTTP response with code ${err.response.status}`)
+                        alert('请求异常，请检查网络连接或稍候操作！')
                     }
                 })
             }
