@@ -154,11 +154,12 @@
                         this.info_set(resp2.data)
                     }))
                     .catch(error => {
-                        if (error.response && error.response.status === 404) {
-                            alert("用户不存在");
-                        } else {
-                            alert(`HTTP response with code ${error.response.status}`);
-                        }
+                    if (err.response.status === 404) {
+                        alert('用户不存在')
+                    }
+                    else {
+                        alert('请求异常，请检查网络连接或稍候操作！')
+                    }
                     });
 
             },
