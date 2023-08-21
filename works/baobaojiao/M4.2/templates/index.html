@@ -140,7 +140,7 @@
                 let queryString = Object.keys(dataToSend).map(key => key + '=' + dataToSend['handle']).join('&');
                 axios({
                     methods: 'get',
-                    url: 'http://127.0.0.1:2333/getUserRatings?' + queryString
+                    url: '/getUserRatings?' + queryString
                 }).then(function (response) {
                     if (response.status === 200) {
                         let contests = response.data
