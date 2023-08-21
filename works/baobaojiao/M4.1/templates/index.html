@@ -163,9 +163,7 @@
                     table_result.innerHTML = ``
                 }
                 else {
-                    let div_result = document.getElementById('body')
-                    div_result.innerHTML = `
-                    <h4>HTTP response with code ${xhr.status}</h4>`
+                    alert(`HTTP response with code ${xhr.status}`)
                 }
             }
             let search_ = document.getElementById('handle')
