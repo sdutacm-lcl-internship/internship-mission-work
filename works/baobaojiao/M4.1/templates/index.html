@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cf用户rating查询</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .w {
+            width: 80%;
+            margin: 50px auto;
+            text-align: center;
+        }
+
+        .title {
+            display: inline-block;
+        }
+
+        .btn {
+            width: 50px;
+            height: 30px;
+        }
+
+        .search {
+            height: 25px;
+            margin-right: 20px;
+        }
+
+        .result {
+            text-align: center;
+        }
+
+        .result h3 {
+            margin-bottom: 20px;
+        }
+
+        .result h4 {
+            font-weight: normal;
+        }
+
+        .table {
+            margin: 30px auto;
+            width: 850px;
+            /* border: 1px solid black; */
+        }
+
+        .table {
+            table-layout: fixed;
+        }
+
+        .table th,
+        td {
+            font-size: 14px;
+            padding: 3px 3px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            /* max-width: 1px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-all;
+            word-wrap: break-word;
+            white-space: nowrap; */
+        }
+
+        .contest_th {
+            width: 300px;
+        }
+
+        .time_th {
+            width: 300px;
+        }
+    </style>
+
+</head>
+
+<body id="body">
+    <div class="w ">
+        <h3 cass='title'>查询选手</h3>
+    </div>
+    <div class="w ">
+        <input type="input" class="search" id='handle'>
+        <input type="button" class="btn" value='查询' onclick='handle_find()'>
+    </div>
+
+    <div class="result" id="result"></div>
+    <div class="rating_table w" id="table_result"></div>
+
+</body>
+<script>
+    function handle_find() {
+        let now_handle = document.getElementById('handle')
+        let handle = now_handle.value
+
+        let xhr = new XMLHttpRequest()
+        let dataToSend = {
+            handle: handle
+        }
+        let queryString = Object.keys(dataToSend).map(key => key + '=' + dataToSend['handle']).join('&');
+        let url = '/getUserRatings?' + queryString;
+        xhr.open('GET', url, true)
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.responseText = 'json'
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    let response = JSON.parse(xhr.response)
+                    let user_name = handle
+                    let len = response.length
+                    let div_result = document.getElementById('result')
+                    let table_result = document.getElementById('table_result')
+                    if (len == 0) {
+                        div_result.innerHTML = `
+                    <h3>查询结果</h3>
+                    <h4>${user_name}</h4>
+                    <h4>rating: 0</h4>`
+                    table_result.innerHTML = ''
+                    }
+                    else {
+                        let contests = response
+                        let now_rating = contests[len - 1]['newRating']
+                        div_result.innerHTML = `
+                    <h3>查询结果</h3>
+                    <h4>${user_name}</h4>
+                    <h4>rating: ${now_rating}</h4>`
+
+                        let create_tr = `<h5>rating history</h5>
+                    <table class="table" border="1" cellspacing="0" cellpadding="8">
+                        <tr>
+                            <th class="time_th">时间</th>
+                            <th class="contest_th">比赛</th>
+                            <th>rank</th>
+                            <th>Δ</th>
+                        </tr>`
+
+                        for (let i = 0; i < len; i++) {
+                            create_tr += `<tr>
+                            <td>${contests[i]['ratingUpdatedAt']}</td>
+                            <td>${contests[i]['contestName']}</td>
+                            <td>${contests[i]['rank']}</td>
+                            <td>${contests[i]['oldRating']} -> ${contests[i]['newRating']}</td>
+                        </tr>`
+                        }
+
+                        create_tr += `</table>`
+                        table_result.innerHTML = create_tr
+                    }
+
+                }
+                else if (xhr.status === 404) {
+                    let div_result = document.getElementById('result')
+                    let table_result = document.getElementById('table_result')
+                    div_result.innerHTML = `
+                    <h3>查询结果</h3>
+                    <h4>请输入正确的用户名！</h4>`
+                    table_result.innerHTML = ``
+                }
+                else {
+                    alert('请求异常，请检查网络连接或稍候操作！')
+                }
+            }
+            let search_ = document.getElementById('handle')
+            search_.value = ''
+        }
+        xhr.send()
+    }
+
+</script>
+
+</html>
