@@ -77,9 +77,9 @@
         #table_result {
             display: none;
         }
-        #result{
+        /* #result{
 
-        }
+        } */
     </style>
 
 </head>
@@ -94,12 +94,12 @@
             <input type="button" class="btn" value='查询' @click="handle_find">
         </div>
 
-        <div class="result" id="result" >
+        <div class="result" id="result" :style="{display: display_result}">
             <h3>查询结果</h3>
             <h4>{{handle}}</h4>
             <h4>rating: {{now_rating}}</h4>
         </div>
-        <div class="rating_table w" id="table_result">
+        <div class="rating_table w" id="table_result" :style="{display: display_table}">
             <h5>rating history</h5>
             <table class="table" border="1" cellspacing="0" cellpadding="8">
                 <tr>
@@ -127,13 +127,15 @@
             return {
                 handle: '',
                 now_rating: '0',
-                contest_info: []
+                contest_info: [],
+                display_result: 'none',
+                display_table: 'none'
             }
         },
         methods: {
             handle_find() {
                 let _this = this
-                document.getElementById('table_result').style.display = 'none'
+                _this.display_table = 'none'
                 let dataToSend = {
                     handle: _this.handle
                 }
@@ -145,19 +147,17 @@
                     if (response.status === 200) {
                         let contests = response.data
                         let len = contests.length
-                        let div_result = document.getElementById('result')
-                        let table_result = document.getElementById('table_result')
                         _this.contest_info = response.data
                         this.handle = _this.handle
 
                         if (len != 0) {
                             _this.now_rating = contests[len - 1]['newRating']
-                            table_result.style.display = 'block'
+                            _this.display_table = 'block'
                         }
                         else{
                             _this.now_rating = 0
                         }
-                        div_result.style.display = 'block'
+                        _this.display_result = 'block'
                     }
                 }).catch((err) => {
                     if (err.response.status === 404) {
