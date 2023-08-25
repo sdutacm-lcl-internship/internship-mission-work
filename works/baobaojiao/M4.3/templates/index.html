@@ -93,7 +93,7 @@
         </div>
         <div class="w ">
             <input type="input" class="search" id='handle' placeholder="请输入handle" v-model="handle">
-            <input type="button" class="btn" value='查询' @click="handle_find">{{handle}}
+            <input type="button" class="btn" value='查询' @click="handle_find">
         </div>
         <div id="xxx" align="center" style="margin-top:50px;">
             <div id="wowan" v-if="show_info == 1">
@@ -113,10 +113,10 @@
                 <br>
                 <br>
             </div>
-            </div>
         </div>
+    </div>
 
-        <div id="mychart" style="width: 90vw; height: 400px;"></div>
+    <div id="mychart" style="width: 90vw; height: 400px;"></div>
     </div>
 
 </body>
@@ -140,8 +140,8 @@
         methods: {
             handle_find() {
                 const handle = this.handle;
-                let url = "/getUserRatings";
-                let url2 = "/batchGetUserInfo"
+                let url = " http://127.0.0.1:2333/getUserRatings";
+                let url2 = " http://127.0.0.1:2333/batchGetUserInfo"
 
                 const request1 = axios.get(url, { params: { handle: handle } });
                 const request2 = axios.get(url2, { params: { handles: handle } });
@@ -154,12 +154,12 @@
                         this.info_set(resp2.data)
                     }))
                     .catch(error => {
-                    if (err.response.status === 404) {
-                        alert('用户不存在')
-                    }
-                    else {
-                        alert('请求异常，请检查网络连接或稍候操作！')
-                    }
+                        if (err.response.status === 404) {
+                            alert('用户不存在')
+                        }
+                        else {
+                            alert('请求异常，请检查网络连接或稍候操作！')
+                        }
                     });
 
             },
