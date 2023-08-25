@@ -140,8 +140,8 @@
         methods: {
             handle_find() {
                 const handle = this.handle;
-                let url = " http://127.0.0.1:2333/getUserRatings";
-                let url2 = " http://127.0.0.1:2333/batchGetUserInfo"
+                let url = "/getUserRatings";
+                let url2 = "/batchGetUserInfo"
 
                 const request1 = axios.get(url, { params: { handle: handle } });
                 const request2 = axios.get(url2, { params: { handles: handle } });
