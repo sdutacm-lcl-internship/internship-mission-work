@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cf用户rating查询</title>
+
+
+    <script src="https://lib.baomitu.com/echarts/5.4.3/echarts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .w {
+            width: 80%;
+            margin: 50px auto;
+            text-align: center;
+        }
+
+        .title {
+            display: inline-block;
+        }
+
+        .btn {
+            width: 50px;
+            height: 30px;
+        }
+
+        .search {
+            height: 25px;
+            margin-right: 20px;
+        }
+
+        .result {
+            text-align: center;
+        }
+
+        .result h3 {
+            margin-bottom: 20px;
+        }
+
+        .result h4 {
+            font-weight: normal;
+        }
+
+        .table {
+            margin: 30px auto;
+            width: 850px;
+            /* border: 1px solid black; */
+        }
+
+        .table {
+            table-layout: fixed;
+        }
+
+        .table th,
+        td {
+            font-size: 14px;
+            padding: 3px 3px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .contest_th {
+            width: 300px;
+        }
+
+        .time_th {
+            width: 300px;
+        }
+
+        #table_result {
+            display: none;
+        }
+
+        #result {
+            display: none;
+        }
+    </style>
+
+</head>
+
+<body id="body">
+    <div id="app">
+        <div class="w ">
+            <h3 cass='title'>查询选手</h3>
+        </div>
+        <div class="w ">
+            <input type="input" class="search" id='handle' placeholder="请输入handle" v-model="handle">
+            <input type="button" class="btn" value='查询' @click="handle_find">
+        </div>
+        <div id="xxx" align="center" style="margin-top:50px;">
+            <div id="wowan" v-if="show_info == 1">
+                <h1>查询结果</h1>
+                <br>
+                <div v-if="show_black==1">
+                    <span style="color: black">{{ id.substr(0, 1) }}</span><span :style="{ color: font_color }">{{
+                        result.handle.substr(1)+'(' + result.rank + ')'
+                        }}</span>
+                </div>
+                <div v-if="show_black==0">
+                    <span :style="{ color: font_color }">{{ result.handle + '(' + result.rank + ')'
+                        }}</span>
+                </div>
+                <span>rating:</span>
+                <span :style="{ color: font_color }">{{result.rating}}</span>
+                <br>
+                <br>
+            </div>
+        </div>
+    </div>
+
+    <div id="mychart" style="width: 90vw; height: 400px;"></div>
+    </div>
+
+</body>
+
+<script>
+    var myChart
+    new Vue({
+        el: "#app",
+        data: {
+            now_rating: '0',
+            handle: '',
+            result: {},
+            answer: {},
+            ans: [],
+            show_info: 0,
+            show_black: 0,
+            font_color: '#808080',
+            rating_judge: false,
+            id: '',
+        },
+        methods: {
+            handle_find() {
+                const handle = this.handle;
+                let url = "/getUserRatings";
+                let url2 = "/batchGetUserInfo"
+
+                const request1 = axios.get(url, { params: { handle: handle } });
+                const request2 = axios.get(url2, { params: { handles: handle } });
+
+                axios.all([request1, request2])
+                    .then(axios.spread((resp1, resp2) => {
+                        if (resp1.data.length != 0)
+                            this.now_rating = resp1.data[resp1.data.length - 1]['newRating']
+                        this.value_set(resp1.data)
+                        this.info_set(resp2.data)
+                    }))
+                    .catch(error => {
+                        if (err.response.status === 404) {
+                            alert('用户不存在')
+                        }
+                        else {
+                            alert('请求异常，请检查网络连接或稍候操作！')
+                        }
+                    });
+
+            },
+            value_set: function (data) {
+                this.showResult = true;
+                this.id = this.handle
+                this.ans = data
+                this.show_info = 1
+
+            },
+            get_rank: function (rating) {
+                if (rating < 1200) return 'Newbie'
+                else if (rating >= 1200 && rating < 1350) return 'Pupil'
+                else if (rating >= 1350 && rating < 1500) return "Specialist"
+                else if (rating >= 1500 && rating < 1700) return "Expert"
+                else if (rating >= 1700 && rating < 1900) return "Candidate Master"
+                else if (rating >= 1900 && rating < 2050) return "Master"
+                else if (rating >= 2050 && rating < 2200) return "International Master"
+                else return "International Grandmaster"
+            },
+            init_echarts() {
+                let arr = this.ans
+                let jd_flag = 0
+                let maxIndex = arr.map(it => it.newRating).indexOf(Math.max(...arr.map(it => it?.newRating)));
+                let MaximumYear = arr.length === 0 ? 0 : new Date(arr[arr.length - 1].ratingUpdatedAt).getFullYear() - new Date(arr[0].ratingUpdatedAt).getFullYear();
+                if (maxIndex == -1) {
+                    jd_flag = 1600
+                }
+                else {
+                    jd_flag = arr[maxIndex].newRating + 200
+                }
+                var markings = [
+                    { color: '#a00', lineWidth: 1, yaxis: { from: 3000 } },
+                    { color: '#f33', lineWidth: 1, yaxis: { from: 2600, to: 2999 } },
+                    { color: '#f77', lineWidth: 1, yaxis: { from: 2400, to: 2599 } },
+                    { color: '#ffbb55', lineWidth: 1, yaxis: { from: 2300, to: 2399 } },
+                    { color: '#ffcc88', lineWidth: 1, yaxis: { from: 2100, to: 2299 } },
+                    { color: '#f8f', lineWidth: 1, yaxis: { from: 1900, to: 2099 } },
+                    { color: '#aaf', lineWidth: 1, yaxis: { from: 1600, to: 1899 } },
+                    { color: '#77ddbb', lineWidth: 1, yaxis: { from: 1400, to: 1599 } },
+                    { color: '#7f7', lineWidth: 1, yaxis: { from: 1200, to: 1399 } },
+                    { color: '#ccc', lineWidth: 1, yaxis: { from: 0, to: 1199 } },
+                ];
+
+                var ccc = document.getElementById('mychart')
+                if (myChart != null) {
+                    myChart.dispose();
+                }
+                myChart = echarts.init(document.getElementById('mychart'));
+
+                let option = {
+                    legend: {
+                        data: ['rating'],
+                        right: 100,
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: (params) => {
+                            let Diff = arr[params[0].dataIndex].newRating - arr[params[0].dataIndex].oldRating
+                            if (Diff > 0) {
+                                Diff = '+' + Diff;
+                            }
+                            let now_id = this.get_rank(arr[params[0].dataIndex].newRating)
+                            return ` <div style="text-align: left">
+                               <p>=  ${arr[params[0].dataIndex].newRating}(${Diff})${now_id}</p>
+                               <p>rank:${arr[params[0].dataIndex].rank}</p>
+                                <p><a>${arr[params[0].dataIndex].contestName}</a> </p>
+                                <p><a>${arr[params[0].dataIndex].ratingUpdatedAt}</a> </p>
+                            </div>    `
+                        }
+                    },
+                    xAxis: {
+                        show: true,
+                        type: 'time',
+                        splitLine: {
+                            show: true,
+                            lineStyle: {
+                                color: 'rgba(65,63,63,0.3)'
+                            }
+                        },
+                        axisLabel: {
+                            formatter: function (value, index) {
+                                let Month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+                                    'Oct', 'Nov', 'Dec'];
+                                let date = new Date(value);
+                                let year = date.getFullYear();
+                                let month = Month[date.getMonth()]
+                                if (MaximumYear >= 8) {
+                                    return `${year}`;
+                                }
+                                return ` ${month} ${year}`;
+                            }
+                        }
+                    },
+                    yAxis: [
+                        {
+                            position: 'left',
+                            type: 'value',
+                            show: true,
+                            min: 0,
+                            max: jd_flag + 200 > 2000 ? jd_flag + 200 : 2000,
+                            splitArea: {
+                                show: true,
+                                areaStyle: {
+                                    color: markings.map(it => it.color)
+                                }
+                            },
+                            axisLabel: {
+                                formatter: (value, index) => {
+                                    return ''
+                                }
+                            }
+
+                        }
+                    ]
+                    ,
+                    series: [
+                        {
+                            name: 'rating',
+                            lineStyle: {
+                                color: 'yellow'
+                            },
+                            itemStyle: {
+                                color: (params) => params.dataIndex === (maxIndex ?? 0) ? 'red' : 'yellow'
+                            },
+                            data: arr.map(it => {
+                                return {
+                                    value: [
+                                        new Date(it.ratingUpdatedAt).toLocaleDateString(),
+                                        it.newRating
+                                    ]
+                                }
+                            }),
+                            markArea: {
+                                data: [
+                                    [{ yAxis: 3000 }, { yAxis: 9999, itemStyle: { color: '#a00' } }],
+                                    [{ yAxis: 2600 }, { yAxis: 2999, itemStyle: { color: '#f33' } }],
+                                    [{ yAxis: 2400 }, { yAxis: 2599, itemStyle: { color: '#f77' } }],
+                                    [{ yAxis: 2300 }, { yAxis: 2399, itemStyle: { color: '#ffbb55' } }],
+                                    [{ yAxis: 2100 }, { yAxis: 2299, itemStyle: { color: '#ffcc88' } }],
+                                    [{ yAxis: 1900 }, { yAxis: 2099, itemStyle: { color: '#f8f' } }],
+                                    [{ yAxis: 1600 }, { yAxis: 1899, itemStyle: { color: '#aaf' } }],
+                                    [{ yAxis: 1400 }, { yAxis: 1599, itemStyle: { color: '#77ddbb' } }],
+                                    [{ yAxis: 1200 }, { yAxis: 1399, itemStyle: { color: '#7f7' } }],
+                                    [{ yAxis: 0 }, { yAxis: 1199, itemStyle: { color: '#cccccc' } }]
+                                ]
+                            },
+                            markLine: {
+                                label: {
+                                    position: "start",
+                                },
+                                lineStyle: {
+                                    cap: 'round'
+                                },
+                                silent: false,
+                                animation: false,
+                                symbolSize: [0, 0],
+                                data: [
+                                    { yAxis: 3000, lineStyle: { color: '#a00' } },
+                                    { yAxis: 2600, lineStyle: { color: '#f33' } },
+                                    { yAxis: 2400, lineStyle: { color: '#f77' } },
+                                    { yAxis: 2300, lineStyle: { color: '#ffbb55' } },
+                                    { yAxis: 2100, lineStyle: { color: '#ffcc88' } },
+                                    { yAxis: 1900, lineStyle: { color: '#f8f' } },
+                                    { yAxis: 1600, lineStyle: { color: '#aaf' } },
+                                    { yAxis: 1400, lineStyle: { color: '#77ddbb' } },
+                                    { yAxis: 1200, lineStyle: { color: '#7f7' } },
+                                    { yAxis: 0, lineStyle: { color: '#ccc' } }
+                                ]
+                            },
+                            type: 'line',
+                            smooth: false,
+
+                        }
+                    ]
+                };
+                myChart.setOption(option)
+            },
+            get_font_color: function (rating) {
+                rating = Math.floor(rating / 100)
+                color_arr = ['#808080', '#008000', '#03a89e', '#0000ff', '#a0a', '#ff8c00', '#ff0000']
+                if (rating >= 0 && rating < 12) this.font_color = color_arr[0]
+                else if (rating >= 12 && rating < 14) this.font_color = color_arr[1]
+                else if (rating >= 14 && rating < 16) this.font_color = color_arr[2]
+                else if (rating >= 16 && rating < 19) this.font_color = color_arr[3]
+                else if (rating >= 19 && rating < 21) this.font_color = color_arr[4]
+                else if (rating >= 21 && rating < 24) this.font_color = color_arr[5]
+                else this.font_color = color_arr[6]
+            },
+            info_set: function (data) {
+                this.answer = data[0]
+                if (this.answer.result.rating > 0) {
+                    this.result = this.answer.result
+                    this.show_info = 1
+                    if (this.answer.result.rating >= 3000) {
+                        this.show_black = 1
+                    }
+                    else {
+                        this.show_black = 0
+                    }
+                    this.get_font_color(this.answer.result.rating)
+                    this.rating_judge = false
+                }
+                else {
+                    this.result = {
+                        'handle': this.handle,
+                        'rank': 'Newbie',
+                        'rating': '0'
+                    }
+                    this.font_color = '#808080'
+                    this.rating_judge = true
+                    this.show_info = 1
+                }
+                this.init_echarts()
+            },
+        }
+    });
+</script>
+
+</html>
