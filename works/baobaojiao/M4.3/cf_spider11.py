@@ -10,7 +10,8 @@ from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 CORS(app)
-
+app.jinja_env.variable_start_string = '<<'  # 解决与vue 标签的冲突
+app.jinja_env.variable_end_string = '>>'
 cache_userinfo = {}
 cache_userrating = {}
 
