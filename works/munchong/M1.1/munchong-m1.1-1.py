@@ -20,7 +20,7 @@ if response.status_code == 200 :
                 "handle" : nickname
             }
 
-            output = json.dumps(people, file=sys.stdout) 
+            output = json.dumps(people) 
             print(output)
             sys.exit(0)
         elif rating and rank :
@@ -29,7 +29,7 @@ if response.status_code == 200 :
                 "handle": nickname ,"rating": rating[0],"rank": rank[0]
             }
 
-            output = json.dumps(people, file=sys.stdout)
+            output = json.dumps(people)
             print(output)
             sys.exit(0)
         else:
