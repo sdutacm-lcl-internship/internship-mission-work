@@ -1,13 +1,12 @@
-# coding=utf-8  
+# coding=utf-8
 import sys
 import json
 import requests
 from lxml import html
 
-def main() :
+
+def solve(nickname) :
     # Á´½Ó
-    print("please input one nickname:")
-    nickname = sys.stdin.readline().strip()
     url = "https://codeforces.com/profile/" + nickname
     response = requests.get(url) 
 
@@ -30,7 +29,7 @@ def main() :
                 print(output, file=sys.stdout)
                 sys.exit(0)
             elif rating and rank :
-                
+
                 rank_t = rank[0] 
                 rank_t = rank_t.rstrip(" ")
 
@@ -49,5 +48,9 @@ def main() :
             print("no such handle", file=sys.stderr)
             sys.exit(1)
 
-
-main() 
+def main():
+    # print("please input one nickname:")
+    nickname = sys.stdin.readline().strip()
+    solve(nickname) 
+if __name__ == "__main__" :
+    main() 
