@@ -23,6 +23,7 @@ def solve(nickname):
         if response.status_code != 200 :
             print("no such handle") 
         else : 
+            # 根据“status"来分类讨论 
             data = json.loads(response.text) 
             if data["status"] == "FAILED": 
                 print("no such handle") 
@@ -41,22 +42,22 @@ def solve(nickname):
                 }
                 print(json.dumps(people) , file= sys.stdout) 
                 sys.exit(0)
-    except IndexError:
+
+    except IndexError: #发生越界的时候捕获
         print("no such handle", file=sys.stderr)
         sys.exit(1)
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred: {e}")
+    except requests.exceptions.RequestException as e: #requests错误的保险 
+        print("An error occurred: {e}" ,file = sys.stderr)
         sys.exit(1)
-    except json.JSONDecodeError as e:
-        print(f"An error occurred while parsing JSON: {e}")
+    except json.JSONDecodeError as e: #json解析的保险 
+        print("An error occurred while parsing JSON: {e}",file = sys.stderr)
         sys.exit(1)
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    except Exception as e: #其他的报错都用了这个捕获 
+        print("An error occurred: {e}",file = sys.stderr)
         sys.exit(1)
     return 0 
 
 def main():
-    print("please input a nickname :")
     nickname = sys.stdin.readline().split() 
     solve(nickname) 
 
