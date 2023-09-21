@@ -7,7 +7,7 @@ import random
 
 
 def solve(nickname):
-    # Ä£Äâ¿Í»§¶Ë·¢ËÍĞÅÏ¢ 
+    # æ¨¡æ‹Ÿå®¢æˆ·ç«¯å‘é€ä¿¡æ¯ 
     try:
         imfo_t = "user.info" 
         ex_url = f"https://codeforces.com/api/{imfo_t}"
@@ -19,11 +19,11 @@ def solve(nickname):
         ex_par = {"handles": nickname} 
         response = requests.get(ex_url, params=ex_par , headers=ex_header)
         
-        # ·ÖÎö½á¹û 
+        # åˆ†æç»“æœ 
         if response.status_code != 200 :
             print("no such handle") 
         else : 
-            # ¸ù¾İ¡°status"À´·ÖÀàÌÖÂÛ 
+            # æ ¹æ®â€œstatus"æ¥åˆ†ç±»è®¨è®º 
             data = json.loads(response.text) 
             if data["status"] == "FAILED": 
                 print("no such handle") 
@@ -43,17 +43,17 @@ def solve(nickname):
                 print(json.dumps(people) , file= sys.stdout) 
                 sys.exit(0)
 
-    except IndexError: #·¢ÉúÔ½½çµÄÊ±ºò²¶»ñ
+    except IndexError: #å‘ç”Ÿè¶Šç•Œçš„æ—¶å€™æ•è·
         print("no such handle", file=sys.stderr)
         sys.exit(1)
-    except requests.exceptions.RequestException as e: #requests´íÎóµÄ±£ÏÕ 
-        print("An error occurred: {e}" ,file = sys.stderr)
+    except requests.exceptions.RequestException as e: #requestsé”™è¯¯çš„ä¿é™© 
+        print("requests é”™è¯¯" ,file = sys.stderr)
         sys.exit(1)
-    except json.JSONDecodeError as e: #json½âÎöµÄ±£ÏÕ 
-        print("An error occurred while parsing JSON: {e}",file = sys.stderr)
+    except json.JSONDecodeError as e: #jsonè§£æçš„ä¿é™© 
+        print("json è§£æé”™è¯¯",file = sys.stderr)
         sys.exit(1)
-    except Exception as e: #ÆäËûµÄ±¨´í¶¼ÓÃÁËÕâ¸ö²¶»ñ 
-        print("An error occurred: {e}",file = sys.stderr)
+    except Exception as e: #å…¶ä»–çš„æŠ¥é”™éƒ½ç”¨äº†è¿™ä¸ªæ•è· 
+        print("å‘ç”Ÿé”™è¯¯",file = sys.stderr)
         sys.exit(1)
     return 0 
 
