@@ -52,5 +52,6 @@ def main():
     # print("please input one nickname:")
     nickname = sys.stdin.readline().strip()
     solve(nickname) 
+    
 if __name__ == "__main__" :
     main() 
