@@ -12,7 +12,7 @@ app = Flask(__name__)
 
 def get_information(nickname):
     try:
-        e_url = f"https://codeforces.com/api/user.info"
+        e_url = f"https://codeforces.com/api/user.info"    
         params = {
             "handles": nickname
         }
