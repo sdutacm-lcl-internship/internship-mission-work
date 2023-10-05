@@ -9,7 +9,7 @@ from flask import Flask, request, Response
 
 app = Flask(__name__)
 # 使用缓存器
-book_one = Cache(app, config={'CACHE_TYPE': 'simple'})
+book_one = Cache(app, config={'CACHE_TYPE': 'simple'})     
 book_two = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 
