@@ -12,23 +12,15 @@ def get_information(nickname):
     try:
         e_url = f"https://codeforces.com/api/user.info"
         # e_user_agent = UserAgent()
-        response = requests.get(e_url, params=nickname)
-
+        params = {"handles": nickname}
+        response = requests.get(e_url, params=params)
         data = json.loads(response.text)
 
         if response.status_code == 200:
-            if data["status"] == "FAILED":
-                # 查无此人
-                ans = {
-                    "success": "False",
-                    "type": 1,
-                    "message": "no such handle"
-                }
-                return ans
-            elif data["result"][0]["contribution"] == 0:
+            if data["result"][0]["contribution"] == 0:
                 # 无rank
                 ans = {
-                    "success": "False",
+                    "success": True,
                     "result": {
                         "handle": nickname
                     }
@@ -37,7 +29,7 @@ def get_information(nickname):
             else:
                 # 正常
                 ans = {
-                    "success": "True",
+                    "success": True,
                     "result": {
                         "handle": nickname,
                         "rating": data["result"][0]["rating"],
@@ -45,12 +37,20 @@ def get_information(nickname):
                     }
                 }
                 return ans
+        elif response.status_code == 400:
+            # 查无此人
+            ans = {
+                "success": False,
+                "type": 1,
+                "message": "no such handle"
+            }
+            return ans
         elif response.status_code == 401 or response.status_code == 402 or response.status_code == 403 or \
             response.status_code == 404 or response.status_code == 405 or response.status_code == 501 or \
             response.status_code == 502 or response.status_code == 503 or response.status_code == 504:
             # 响应错误
             ans = {
-                "success": "False",
+                "success": False,
                 "type": 2,
                 "message": "Http response with code" + str(response.status_code),
                 "details": {
@@ -61,17 +61,17 @@ def get_information(nickname):
         else:
             # 无效响应
             ans = {
-                "success": "False",
+                "success": False,
                 "type": 3,
-                "message": "No legitimate response was received"
+                "message": "Request timeout"
             }
             return ans
     except:
         # 本身程序异常
         ans = {
-            "success": "False",
+            "success": False,
             "type": 4,
-            "message": "Program error"
+            "message": "Internal Server Error"
         }
         return ans
 
@@ -84,6 +84,7 @@ def solve():
 
     answer_message = []
     for it in handles_list:
+        print(it)
         answer_message.append(get_information(it))
     return Response(json.dumps(answer_message), mimetype="application/json")
 
