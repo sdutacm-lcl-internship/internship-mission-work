@@ -1,5 +1,6 @@
 # coding=utf-8
 import json
+import socket
 import requests
 from gevent.pywsgi import WSGIServer
 from fake_useragent import UserAgent
@@ -10,8 +11,19 @@ app = Flask(__name__)
 
 def get_information(nickname):
     try:
+        # 尝试连接到一个已知的IP地址和端口号
+        socket.create_connection(("www.google.com", 80))
+        print("网络连接正常！")
+    except OSError:
+        ans = {
+            "success": False,
+            "type": 6,
+            "message": "network error"
+        }
+        return ans
+
+    try:
         e_url = f"https://codeforces.com/api/user.info"
-        # e_user_agent = UserAgent()
         params = {"handles": nickname}
         response = requests.get(e_url, params=params)
         data = json.loads(response.text)
@@ -58,6 +70,12 @@ def get_information(nickname):
                 }
             }
             return ans
+        elif response.status_code == 301:
+            ans = {
+                "success": False,
+                "type": 5,
+                "message": "The requested resource has been permanently moved to the new URI"
+            }
         else:
             # 无效响应
             ans = {
