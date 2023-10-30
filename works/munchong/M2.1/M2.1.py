@@ -10,15 +10,17 @@ app = Flask(__name__)
 
 
 def get_information(nickname):
+    import subprocess
+
+    #使用 DNS解析 就会快一些
     try:
-        # 尝试连接到一个已知的IP地址和端口号
-        socket.create_connection(("www.google.com", 80))
-        print("网络连接正常！")
-    except OSError:
+        socket.gethostbyname("www.google.com")
+        print("已连接到互联网")
+    except socket.gaierror:
         ans = {
             "success": False,
-            "type": 6,
-            "message": "network error"
+            "type": 3,
+            "message": "Request timeout"
         }
         return ans
 
@@ -70,12 +72,6 @@ def get_information(nickname):
                 }
             }
             return ans
-        elif response.status_code == 301:
-            ans = {
-                "success": False,
-                "type": 5,
-                "message": "The requested resource has been permanently moved to the new URI"
-            }
         else:
             # 无效响应
             ans = {
@@ -109,5 +105,10 @@ def solve():
 
 if __name__ == '__main__':
     WSGIServer(('127.0.0.1', 2333), app).serve_forever()
+
+
+
+
+
 
 
