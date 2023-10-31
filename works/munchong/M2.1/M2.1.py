@@ -11,19 +11,6 @@ app = Flask(__name__)
 
 def get_information(nickname):
     import subprocess
-
-    #使用 DNS解析 就会快一些
-    try:
-        socket.gethostbyname("www.google.com")
-        print("已连接到互联网")
-    except socket.gaierror:
-        ans = {
-            "success": False,
-            "type": 3,
-            "message": "Request timeout"
-        }
-        return ans
-
     try:
         e_url = f"https://codeforces.com/api/user.info"
         params = {"handles": nickname}
@@ -70,6 +57,13 @@ def get_information(nickname):
                 "details": {
                     "status": response.status_code
                 }
+            }
+            return ans
+        elif response.status_code == 414:
+            ans = {
+                "success": False,
+                "type": 3,
+                "message": "Request timeout"
             }
             return ans
         else:
