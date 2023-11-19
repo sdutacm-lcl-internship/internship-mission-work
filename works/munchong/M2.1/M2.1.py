@@ -8,7 +8,6 @@ from flask import Flask, Response, request, render_template, jsonify
 
 app = Flask(__name__)
 
-
 def get_information(nickname):
     import subprocess
     try:
@@ -60,6 +59,7 @@ def get_information(nickname):
             }
             return ans
         elif response.status_code == 414:
+            # 通过响应码414来判定断网
             ans = {
                 "success": False,
                 "type": 3,
