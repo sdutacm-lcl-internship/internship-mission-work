@@ -10,6 +10,7 @@ app = Flask(__name__)
 
 def get_information(nickname):
     import subprocess
+
     try:
         e_url = f"https://codeforces.com/api/user.info"
         params = {"handles": nickname}
@@ -58,14 +59,6 @@ def get_information(nickname):
                 }
             }
             return ans
-        elif response.status_code == 414:
-            # 通过响应码414来判定断网
-            ans = {
-                "success": False,
-                "type": 3,
-                "message": "Request timeout"
-            }
-            return ans
         else:
             # 无效响应
             ans = {
@@ -74,14 +67,21 @@ def get_information(nickname):
                 "message": "Request timeout"
             }
             return ans
-    except:
-        # 本身程序异常
+    except :
         ans = {
             "success": False,
-            "type": 4,
-            "message": "Internal Server Error"
+            "type": 3,
+            "message": "No valid response code was obtained"
         }
         return ans
+
+    # 本身程序异常
+    ans = {
+        "success": False,
+        "type": 4,
+        "message": "Internal Server Error"
+    }
+    return ans
 
 
 
