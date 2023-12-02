@@ -1,5 +1,6 @@
 # coding=utf-8
 import json
+import time
 import socket
 import requests
 from gevent.pywsgi import WSGIServer
@@ -11,10 +12,21 @@ app = Flask(__name__)
 def get_information(nickname):
     import subprocess
 
+    e_url = f"https://codeforces.com/api/user.info"
+    params = {"handles": nickname}
     try:
-        e_url = f"https://codeforces.com/api/user.info"
-        params = {"handles": nickname}
-        response = requests.get(e_url, params=params)
+        timeout = 5
+        # 用响应时间来判断是否发生错误超时
+        try:
+            response = requests.get(e_url, params=params, timeout=timeout)
+        except requests.Timeout:
+            # 无效响应
+            ans = {
+                "success": False,
+                "type": 3,
+                "message": "Request timeout"
+            }
+            return ans
         data = json.loads(response.text)
 
         if response.status_code == 200:
@@ -57,14 +69,6 @@ def get_information(nickname):
                 "details": {
                     "status": response.status_code
                 }
-            }
-            return ans
-        else:
-            # 无效响应
-            ans = {
-                "success": False,
-                "type": 3,
-                "message": "Request timeout"
             }
             return ans
     except :
