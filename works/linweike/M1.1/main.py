@@ -37,7 +37,7 @@ def solve(name):
             else :
                 ans = {
                     'handle' : name,
-                    'rating' : rating[0],
+                    'rating' : int(rating[0]),
                     'rank' : rank[0],
                 }
             ans = json.dumps(ans)
