@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>查询选手</title>
+    <style>
+        body {
+            font-size:20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            margin-top: 50px;
+        }
+
+        form {
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #handle {
+            margin-right: 5px;
+        }
+
+        .container {
+            height: 3000px;
+            width: 8000px;
+            overflow: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        td {
+            align-self: center;
+            border: 1px solid black;
+            padding: 5px;
+        }
+
+        th {
+            border: 1px solid black;
+            padding: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="center">查询选手</h1>
+    <form>
+        <input type="text" id="handle" placeholder="请输入名字">
+        <button type="submit">查询</button>
+    </form>
+
+    <div id="result" class="container"></div>
+
+    <script>
+        var form = document.querySelector('form');
+        var handleInput = document.querySelector('#handle');
+        var resultDiv = document.querySelector('#result');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            var handle = handleInput.value;
+            if (handle) {
+                var url = `https://codeforces.com/api/user.rating?handle=${encodeURIComponent(handle)}`;
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', url);
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        // 处理响应数据
+                        var ratingData = JSON.parse(xhr.responseText);
+                        console.log(ratingData);
+                        if (ratingData.result.length > 0) {
+                            showRatingTable(ratingData.result);
+                        } else {
+                            showNoResultMessage();
+                        }
+                    } else {
+                        console.log('请求失败：' + xhr.status);
+                    }
+                };
+                xhr.send();
+            }
+        });
+
+        function showRatingTable(ratingData) {
+            var table = document.createElement('table');
+            var thead = document.createElement('thead');
+            var tbody = document.createElement('tbody');
+
+            // 创建表头
+            var th1 = document.createElement('th');
+            th1.textContent = '比赛ID';
+            thead.appendChild(th1);
+
+            var th2 = document.createElement('th');
+            th2.textContent = '比赛名称';
+            thead.appendChild(th2);
+
+            var th3 = document.createElement('th');
+            th3.textContent = '排名';
+            thead.appendChild(th3);
+
+            var th4 = document.createElement('th');
+            th4.textContent = '旧分数';
+            thead.appendChild(th4);
+
+            var th5 = document.createElement('th');
+            th5.textContent = '新分数';
+            thead.appendChild(th5);
+
+            var th6 = document.createElement('th');
+            th6.textContent = '更新时间';
+            thead.appendChild(th6);
+
+            // 创建表格内容
+            for (var i = 0; i < ratingData.length; i++) {
+                var tr = document.createElement('tr');
+
+                var td1 = document.createElement('td');
+                td1.textContent = ratingData[i].contestId;
+                tr.appendChild(td1);
+
+                var td2 = document.createElement('td');
+                td2.textContent = ratingData[i].contestName;
+                tr.appendChild(td2);
+
+                var td3 = document.createElement('td');
+                td3.textContent = ratingData[i].rank;
+                tr.appendChild(td3);
+
+                var td4 = document.createElement('td');
+                td4.textContent = ratingData[i].oldRating;
+                tr.appendChild(td4);
+
+                var td5 = document.createElement('td');
+                td5.textContent = ratingData[i].newRating;
+                tr.appendChild(td5);
+
+                var td6 = document.createElement('td');
+                td6.textContent = new Date(ratingData[i].ratingUpdateTimeSeconds * 1000).toLocaleString();
+                tr.appendChild(td6);
+
+                tbody.appendChild(tr);
+            }
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+
+            // 清空上次查询结果
+            resultDiv.innerHTML = "";
+
+            // 将表格放在容器中
+            resultDiv.appendChild(table);
+        }
+
+        function showNoResultMessage() {
+            // 清空上次查询结果
+            resultDiv.innerHTML = "";
+
+            var message = document.createElement('p');
+            message.textContent = "查不到相关选手信息";
+            message.style.textAlign = "center";
+
+            resultDiv.appendChild(message);
+        }
+    </script>
+</body>
+</html>
