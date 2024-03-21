@@ -22,14 +22,18 @@ def Get_ansjson(name):
             if 'rating' in user_data:
                 return {
                     'success': True,
-                    'handle': user_data['handle'],
-                    'rating': int(user_data['rating']),
-                    'rank': user_data['rank']
+                    'result': {
+                        'handle': user_data['handle'],
+                        'rating': int(user_data['rating']),
+                        'rank': user_data['rank']
+                    }
                 }
             elif 'handle' in user_data:
                 return {
                     'success': True,
-                    'handle': user_data['handle']
+                    'result': {
+                        'handle': user_data['handle']
+                    }
                 }
             #json_data = json.dumps(ans)
             #sys.stdout.write(json_data + '\n')
@@ -57,10 +61,17 @@ def Get_ansjson(name):
             'type': 3,
             'message': 'Request timeout',
         }
-    #情况5：程序内部错误（无网络链接）
+    #情况4：未得到有效相应（连接错误）
     except requests.exceptions.RequestException as e:
         return {
-            'success': 'false',
+            'success': False,
+            'type': 3,
+            'message': 'Request timeout',
+        }
+    #情况5：程序本身错误
+    except :
+        return {
+            'success': False,
             'type': 4,
             'message': 'Internal Server Error'
         }
