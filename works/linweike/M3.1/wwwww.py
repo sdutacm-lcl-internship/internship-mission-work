@@ -12,55 +12,46 @@ app = Flask(__name__)
 map_user = {}
 map_rating = {}
 
-CACHE_DIR = 'cache'
 CACHE_TTL = 30  # 缓存过期时间，单位为秒
 
 def get_ansjson(name):
-    if not os.path.exists(CACHE_DIR):
-        os.makedirs(CACHE_DIR)
-
-    cache_file = os.path.join(CACHE_DIR, f'{name}_cache.json')
-
-    # 检查缓存文件是否存在且未过期
-    if os.path.exists(cache_file):
-        with open(cache_file, 'r') as f:
+    try:
+        with open('data-user-info.json', 'r') as f:
             cache_data = json.load(f)
             expiry_time = datetime.fromisoformat(cache_data['expiry_time'])
-            if expiry_time > datetime.now():
+            if expiry_time > datetime.now() and cache_data['name'] == name:
                 return cache_data['data']
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        pass
 
     # 查询数据
     data = query_ansdata(name)
 
     # 将查询结果写入缓存文件
-    with open(cache_file, 'w') as f:
-        expiry_time = datetime.now() + timedelta(seconds=CACHE_TTL)
-        cache_data = {'expiry_time': expiry_time.isoformat(), 'data': data}
+    expiry_time = datetime.now() + timedelta(seconds=CACHE_TTL)
+    cache_data = {'expiry_time': expiry_time.isoformat(), 'data': data, 'name': name}
+    with open('data-user-info.json', 'w') as f:
         json.dump(cache_data, f)
 
     return data
 
 def get_resjson(name):
-    if not os.path.exists(CACHE_DIR):
-        os.makedirs(CACHE_DIR)
-
-    cache_file = os.path.join(CACHE_DIR, f'{name}_rating_cache.json')
-
-    # 检查缓存文件是否存在且未过期
-    if os.path.exists(cache_file):
-        with open(cache_file, 'r') as f:
+    try:
+        with open('data-user-ratings.json', 'r') as f:
             cache_data = json.load(f)
             expiry_time = datetime.fromisoformat(cache_data['expiry_time'])
-            if expiry_time > datetime.now():
+            if expiry_time > datetime.now() and cache_data['name'] == name:
                 return cache_data['data']
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        pass
 
     # 查询数据
     data = get_resdata(name)
 
     # 将查询结果写入缓存文件
-    with open(cache_file, 'w') as f:
-        expiry_time = datetime.now() + timedelta(seconds=CACHE_TTL)
-        cache_data = {'expiry_time': expiry_time.isoformat(), 'data': data}
+    expiry_time = datetime.now() + timedelta(seconds=CACHE_TTL)
+    cache_data = {'expiry_time': expiry_time.isoformat(), 'data': data, 'name': name}
+    with open('data-user-ratings.json', 'w') as f:
         json.dump(cache_data, f)
 
     return data
