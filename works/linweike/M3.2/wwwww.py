@@ -15,19 +15,19 @@ map_user = {}
 map_rating = {}
 
 def sqlite_user_info(handle, rating, rank):
-    with sqlite3.connect('codeforces.db') as conn:
+    with sqlite3.connect('cf.db') as conn:
         cursor = conn.cursor()
         cursor.execute("PRAGMA foreign_keys = ON")
         now = datetime.now(pytz.timezone('Asia/Shanghai')).isoformat()
         cursor.execute('''
-        INSERT OR REPLACE INTO user_info(handle,rating,rank,updated_at)
-        VALUES(?,?,?,?)
-        ''', (handle, rating, rank, now))
+            INSERT OR REPLACE INTO user_info(handle,rating,rank,updated_at)
+            VALUES(?,?,?,?)
+            ''', (handle, rating, rank, now))
         conn.commit()
 
 
 def sqlite_user_rating(handle, contestId, contestName, rank, oldRating, newRating, ratingUpdatedAt):
-    with sqlite3.connect('codeforces.db') as conn:
+    with sqlite3.connect('cf.db') as conn:
         cursor = conn.cursor()
         cursor.execute("PRAGMA foreign_keys = ON")
         now = datetime.now(pytz.timezone('Asia/Shanghai')).isoformat()
@@ -35,16 +35,15 @@ def sqlite_user_rating(handle, contestId, contestName, rank, oldRating, newRatin
         data = cursor.fetchone()
         if data is None:
             get_ansjson(handle)
-        cursor.execute(
-            '''
-                    INSERT OR REPLACE INTO user_ratings(handle,contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at,updated_at)
-                    VALUES(?,?,?,?,?,?,?,?)
+        cursor.execute('''
+            INSERT OR REPLACE INTO user_ratings(handle,contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at,updated_at)
+            VALUES(?,?,?,?,?,?,?,?)
             ''', (handle, contestId, contestName, rank, oldRating, newRating, ratingUpdatedAt, now))
         conn.commit()
 
 
 def get_ansjson(name):
-    with sqlite3.connect('codeforces.db') as conn:
+    with sqlite3.connect('cf.db') as conn:
         cursor = conn.cursor()
         cursor.execute('''
             SELECT rating,rank FROM user_info
@@ -154,7 +153,7 @@ def get_resjson(name):
 
     # if name in map_rating and map_rating[name]['pop'] > datetime.now():
     #     return map_rating[name]['data']
-    with sqlite3.connect('codeforces.db') as conn:
+    with sqlite3.connect('cf.db') as conn:
         cursor = conn.cursor()
         cursor.execute('''
             SELECT contest_id,contest_name,rank,old_rating,new_rating,rating_updated_at FROM user_ratings
@@ -266,7 +265,7 @@ def get_Ratings():
     return Response(json.dumps(results), mimetype='application/json')
 
 def creat():
-    with sqlite3.connect('codeforces.db') as conn:
+    with sqlite3.connect('cf.db') as conn:
         cursor = conn.cursor()
 
         cursor.execute('''
