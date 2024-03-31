@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cf用户rating查询</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f3f3;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 70%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .button {
+            padding: 8px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        #result {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #result h3 {
+            color: #333;
+        }
+
+        table {
+            margin: 30px auto;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #98bf21;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container">
+        <h3 class="title">查询选手</h3>
+        <input type="text" class="search-input" id="handle" placeholder="输入选手名称">
+        <button class="button" onclick="handle_find()">查询</button>
+
+        <div id="result"></div>
+        <div id="table_result"></div>
+    </div>
+
+    <script>
+        function handle_find() {
+            var now_handle = document.getElementById('handle')
+            var handle = now_handle.value
+
+            var xhr = new XMLHttpRequest()
+            var dataToSend = {
+                handle: handle
+            }
+            var queryString = Object.keys(dataToSend).map(key => key + '=' + dataToSend['handle']).join('&');
+            var url = '/getUserRatings?' + queryString;
+            xhr.open('GET', url, true)
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            xhr.responseText = 'json'
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.response)
+                        var user_name = handle
+                        var len = response.length
+                        var div_result = document.getElementById('result')
+                        var table_result = document.getElementById('table_result')
+                        if (len == 0) {
+                            div_result.innerHTML = `
+                            <h3>查询结果</h3>
+                            <h4>${user_name}</h4>
+                            <h4>rating: 0</h4>`
+                            table_result.innerHTML = ''
+                        }
+                        else {
+                            let contests = response
+                            let now_rating = contests[len - 1]['newRating']
+                            let str;
+                            if (now_rating < 1200) {
+                                str = "newbie"
+                            }
+                            else if (now_rating >= 1200 && now_rating <= 1399) {
+                                str = "pupil"
+                            }
+                            else if (now_rating >= 1400 && now_rating <= 1599) {
+                                str = "specialist"
+                            }
+                            else if (now_rating >= 1600 && now_rating <= 1899) {
+                                str = "expert"
+                            }
+                            else if (now_rating >= 1900 && now_rating <= 2099) {
+                                str = "candidate master"
+                            }
+                            else if (now_rating >= 2100 && now_rating <= 2299) {
+                                str = "master"
+                            }
+                            else if (now_rating >= 2300 && now_rating <= 2399) {
+                                str = "international master"
+                            }
+                            else if (now_rating >= 2400 && now_rating <= 2999) {
+                                str = "grandmaster"
+                            }
+                            else if (now_rating >= 3000) {
+                                str = "international grandmaster"
+                            }
+                            div_result.innerHTML = `
+                                <h3>查询结果</h3>
+                                <h4>${user_name + " (" + str + ")"}</h4>
+                                <h4>rating: ${now_rating}</h4>`
+
+                                    let create_tr = `<h5>rating history</h5>
+                                <table class="table" border="1" cellspacing="0" cellpadding="8">
+                                <tr>
+                                    <th class="time_th">时间</th>
+                                    <th class="contest_th">比赛</th>
+                                    <th>rank</th>
+                                    <th>Δ</th>
+                                </tr>`
+
+                            for (let i = 0; i < len; i++) {
+                                create_tr += `<tr>
+                                    <td>${contests[i]['ratingUpdatedAt']}</td>
+                                    <td>${contests[i]['contestName']}</td>
+                                    <td>${contests[i]['rank']}</td>
+                                    <td>${contests[i]['oldRating']} -> ${contests[i]['newRating']}</td>
+                                </tr>`
+                            }
+
+                            create_tr += `</table>`
+                            table_result.innerHTML = create_tr
+                        }
+
+                    }
+                    else if (xhr.status === 404) {
+                        var div_result = document.getElementById('result')
+                        var table_result = document.getElementById('table_result')
+                        div_result.innerHTML = `
+                    <h3>查询结果</h3>
+                    <h4>未找到当前用户……</h4>`
+                        table_result.innerHTML = ``
+                    }
+                    else {
+                        alert('请求异常，请检查网络连接或稍候操作！')
+                    }
+                }
+                var search_ = document.getElementById('handle')
+                search_.value = ''
+            }
+            xhr.send()
+        }
+
+    </script>
+
+</body>
+
+</html>
