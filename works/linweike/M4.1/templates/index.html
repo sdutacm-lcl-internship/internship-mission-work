@@ -111,6 +111,7 @@
                         var len = response.length
                         var div_result = document.getElementById('result')
                         var table_result = document.getElementById('table_result')
+                        var s;
                         if (len == 0) {
                             div_result.innerHTML = `
                             <h3>查询结果</h3>
@@ -119,42 +120,52 @@
                             table_result.innerHTML = ''
                         }
                         else {
-                            let contests = response
-                            let now_rating = contests[len - 1]['newRating']
-                            let str;
+                            var contests = response
+                            var now_rating = contests[len - 1]['newRating']
+                            var str;
+                            var ss
                             if (now_rating < 1200) {
                                 str = "newbie"
+                                s = '#808080'
                             }
                             else if (now_rating >= 1200 && now_rating <= 1399) {
                                 str = "pupil"
+                                s = '#008000'
                             }
                             else if (now_rating >= 1400 && now_rating <= 1599) {
                                 str = "specialist"
+                                s = '#03a89e'
                             }
                             else if (now_rating >= 1600 && now_rating <= 1899) {
                                 str = "expert"
+                                s = '#0000ff'
                             }
                             else if (now_rating >= 1900 && now_rating <= 2099) {
                                 str = "candidate master"
+                                s = '#a0a'
                             }
                             else if (now_rating >= 2100 && now_rating <= 2299) {
                                 str = "master"
+                                s = '#ff8c00'
                             }
                             else if (now_rating >= 2300 && now_rating <= 2399) {
                                 str = "international master"
+                                s = '#ff8c00'
                             }
                             else if (now_rating >= 2400 && now_rating <= 2999) {
                                 str = "grandmaster"
+                                s = '#ff0000'
                             }
                             else if (now_rating >= 3000) {
                                 str = "international grandmaster"
+                                s = '#ff0000'
                             }
                             div_result.innerHTML = `
                                 <h3>查询结果</h3>
-                                <h4>${user_name + " (" + str + ")"}</h4>
+                                <h4 style="color:${s}">${user_name + " (" + str + ")"}</h4>
                                 <h4>rating: ${now_rating}</h4>`
 
-                                    let create_tr = `<h5>rating history</h5>
+                            var create_tr = `<h5>rating history</h5>
                                 <table class="table" border="1" cellspacing="0" cellpadding="8">
                                 <tr>
                                     <th class="time_th">时间</th>
@@ -163,7 +174,7 @@
                                     <th>Δ</th>
                                 </tr>`
 
-                            for (let i = 0; i < len; i++) {
+                            for (var i = 0; i < len; i++) {
                                 create_tr += `<tr>
                                     <td>${contests[i]['ratingUpdatedAt']}</td>
                                     <td>${contests[i]['contestName']}</td>
