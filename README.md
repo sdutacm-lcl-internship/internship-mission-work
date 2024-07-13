@@ -37,4 +37,5 @@
 - [xiandandd (软件本2101孙文倩)](/works/xiandandd)：参加于 2023-07-12    
 - [baobaojiao (软件本2101张大乐)](/works/baobaojiao)：参加于 2023-07-15               
 - [munchong (软件2102国文芮)](/works/munchong)：参加于 2023-09-01  
-- [linweike (计科2201靳晰森)](/works/linweike)：参加于 2024-03-13         
+- [linweike (计科2201靳晰森)](/works/linweike)：参加于 2024-03-13
+- [OLDERHARD (计科2204胡金博)](/works/OLDERHARD)：参加于 2024-07-13     
