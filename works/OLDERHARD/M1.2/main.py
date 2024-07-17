@@ -15,7 +15,7 @@ def solve(name):
                 ans={"handle":name}
             else:
                 ans={"handle":name,
-                     "rating":user["rating"],
+                     "rating":int(user["rating"]),
                      "rank":user["rank"]}
             ans=json.dumps(ans)
             sys.stdout.write(ans+"\n")
