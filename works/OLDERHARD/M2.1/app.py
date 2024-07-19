@@ -2,15 +2,16 @@ from flask import Flask,request,jsonify,Response
 from fake_useragent import UserAgent
 import requests
 import json
-
-url='https://codeforces.com/api/user.info?handles='
+url="https://codeforces.com/api/user.info"
 headers={
     'user-Agent':UserAgent().random
 }
-
 def solve(name):
+    params = {
+        "handles": name
+    }
     try:
-        response=requests.get(url,params=name,headers=headers)
+        response=requests.get(url=url,params=params,headers=headers)
         status_code =response.status_code
         if status_code==200:        # 此项 handle 可以查询到
             Json=json.loads(response.text)
@@ -28,7 +29,7 @@ def solve(name):
                 return {
                     'success':True,
                     'result':{
-                        'handle':user['rank']
+                        'handle':user['handle']
                     }
                 }
         elif status_code==400:      # 此项 handle 无法找到
@@ -71,3 +72,4 @@ def query():
 
 if __name__=='__main__':
     app.run(host='127.0.0.1',debug=True,port=2333) # Flask监听 IP地址和端口号
+
