@@ -1,0 +1,10 @@
+POST请求的几种Content-Type
+1. application/x-www-form-urlencoded
+“application/x-www-form-urlencoded”是POST请求方法中一种常见的Content-Type类型。对于浏览器的原生<form>表单，如果不设置“enctype”属性，其就会以“application/x-www-form-urlencoded”对消息主体进行编码。
+2. multipart/form-data
+“multipart/form-data”是POST请求方法中另一种常见的Content-Type类型。当我们使用表单上传文件时，必须让<form>表单的enctype属性等于“multipart/form-data”。
+3. application/json
+由于JSON规范的流行，“application/json”类型也成为了常见的Content-Type类型之一。实际上，现在越来越多的人使用这种类型发送POST请求，用来告诉服务端消息主体是序列化后的JSON字符串。现在除了低版本IE之外，各大浏览器都对JSON有着良好的支持，服务端语言也都有处理JSON格式内容的相关函数。与通常的键值对相比，JSON格式支持更复杂的结构化数据。
+
+关于本次作业，要根据不同的Content-Type类型，按照不同的方式解析请求体的内容，这块还有很多技巧，可以规范地得到想要解析的内容。
+在清除缓存的时候，要按照blue的要求，删除相应的信息和返回相应的响应和状态码。
