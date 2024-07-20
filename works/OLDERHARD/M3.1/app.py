@@ -5,12 +5,8 @@ import json
 from datetime import timedelta,datetime
 import pytz
 
-map_user={}
-map_rating={}
 
 def solve1(name):
-    if name in map_user and map_user[name]['time']>datetime.now():
-        return map_user[name]['date']
 
     url='https://codeforces.com/api/user.info'
     headers={
@@ -26,7 +22,7 @@ def solve1(name):
             Json=json.loads(response.text)
             user=Json['result'][0]
             if 'rating' in user:
-                date={
+                ans={
                     'success':True,
                     'result':{
                         'handle':user['handle'],
@@ -35,55 +31,73 @@ def solve1(name):
                     }
                 }
             else:
-                date={
+                ans={
                     'success':True,
                     'result':{
                         'handle':user['handle']
                     }
                 }
+            return ans
         elif status_code==400:
-            date={
+            ans={
                 'success':True,
                 'type':1,
-                'message':'no such handle',
+                'message':'no such handle'
             }
+            return ans
         else:
-            date={
+            ans={
                 'success':False,
                 'type':2,
                 'message':'HTTP response with code {}'.format(status_code),
-                'datails':{
+                'details':{
                     'status':status_code
                 }
             }
-        map_user[name]={
-            'date':date,
-            'time':datetime.now()+timedelta(seconds=15)
-        }
-        return date
+            return ans
     except requests.exceptions.ConnectionError or requests.exceptions.RequestException as e:
-        return {
+        ans={
             'success':False,
             'type':3,
             'message':'Request timeout'
         }
+        return ans
     except:
-        return {
+        ans={
             'success':False,
             'type':4,
-            'message':'Internal Server Error'
+            'message':'Internal Servel Error'
         }
+        return ans
+
+def find1(name):
+    try:
+        with open('user_info','r') as f:        # 如果存在，尝试打开
+            cache_date=json.load(f)
+            deadline=datetime.fromtimestamp(cache_date['deadline'])
+            if  cache_date['name']==name and deadline>datetime.now():
+                return cache_date['date']
+    except:
+        pass
+    date=solve1(name)
+    deadline=datetime.now()+timedelta(seconds=30)
+    cache_date={
+        'deadline':deadline.isoformat(),
+        'date':date,
+        'name':name
+    }
+    with open('user_info','w') as f:
+        json.dump(cache_date,f)
+    return date
 
 def solve2(name):
-    if name in map_rating and map_rating[name]['time']>datetime.now():
-        return map_rating[name]['date']
 
     url=f"https://codeforces.com/api/user.rating?handle={name}"
     headers={
-        'User-Agent': UserAgent().random
+        'User_Agent':UserAgent().random
     }
     params={
-        'handles': name
+        'handles':name
     }
     try:
         response=requests.get(url=url,params=params,headers=headers)
@@ -97,52 +111,73 @@ def solve2(name):
                 time=datetime.fromtimestamp(ratingUpdateTime,pytz.timezone('Asia/Shanghai'))
                 ratingUpdateAt=time.isoformat()
                 result={
-                    'handle':date['handle'],
-                    'contestId':date['contestId'],
-                    'contestName':date['contestName'],
-                    'rank':int(date['rank']),
-                    'ratingUpdateAt':ratingUpdateAt,
-                    'oldRating':int(date['oldRating']),
-                    'newRating':int(date['newRating'])
+                    'handle': date['handle'],
+                    'contestId': date['contestId'],
+                    'contestName': date['contestName'],
+                    'rank': int(date['rank']),
+                    'ratingUpdateAt': ratingUpdateAt,
+                    'oldRating': int(date['oldRating']),
+                    'newRating': int(date['newRating'])
                 }
                 ans.append(result)
+            return ans
         elif status_code==400:
             ans={
                 'message':'no such handle'
             }
+            return ans
         else:
             ans={
                 'message':'HTTP response with code {}'.format(status_code)
             }
-        map_rating[name]={
-            'date':ans,
-            'time':datetime.now()+timedelta(seconds=15)
-        }
-        return ans
+            return ans
     except requests.exceptions.ConnectionError or requests.exceptions.RequestException as e:
-        return {
+        ans={
             'message':'Request timeout'
         }
+        return ans
     except:
-        return {
+        ans={
             'message':'Internal Server Error'
         }
+        return ans
 
+def find2(name):
+    try:
+        with open('user_rating','r') as f:      #如果存在，尝试打开
+            cache_date=json.load(f)
+            deadline=datetime.fromtimestamp(cache_date['deadline'])
+            if cache_date['name']==name and deadline > datetime.now():
+                return cache_date['date']
+    except:
+        pass
+    date=solve2(name)
+    deadline=datetime.now()+timedelta(seconds=30)
+    cache_date={
+        'deadline':deadline.isoformat(),
+        'date':date,
+        'name':name
+    }
+    with open('user_rating','w') as f:
+        json.dump(cache_date,f)
+    return date
 
 app=Flask(__name__)
+
 @app.route('/batchGetUserInfo')
 def get1():
     handles=request.args.get('handles').split(',')
     results=[]
     for handle in handles:
-        result=solve1(handle)
+        result=find1(handle)
         results.append(result)
     return Response(json.dumps(results),mimetype='application/json')
+
 @app.route('/getUserRatings')
 def get2():
     handle=request.args.get('handle')
-    result=[]
-    result=solve2(handle)
+    result=find2(handle)
     return Response(json.dumps(result),mimetype='application/json')
+
 if __name__=='__main__':
     app.run(host='127.0.0.1',port=2333,debug=True)

@@ -103,8 +103,8 @@ def solve2(name):
                     'contestName':date['contestName'],
                     'rank':int(date['rank']),
                     'ratingUpdateAt':ratingUpdateAt,
-                    'oldRating':date['oldRating'],
-                    'newRating':date['newRating']
+                    'oldRating':int(date['oldRating']),
+                    'newRating':int(date['newRating'])
                 }
                 ans.append(result)
         elif status_code==400:
