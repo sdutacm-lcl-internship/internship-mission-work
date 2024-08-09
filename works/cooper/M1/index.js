@@ -37,12 +37,14 @@ if (userInfo.handle) {
           userInfo.rating = user.rating;
           userInfo.rank = user.rank;
         }
-        console.log(userInfo);
+        console.log(JSON.stringify(userInfo));
+      } else {
+        throw new Error(res.comment);
       }
     })
     .catch((err) => {
       if(err.response) {
-        console.log("[查询错误] ", err.response.data.comment);
+        console.log("no such handle");
       } else {
         console.log("[请求失败] ", err.message);
       }
