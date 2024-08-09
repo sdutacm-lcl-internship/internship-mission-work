@@ -27,16 +27,26 @@ const userInfo = {
 };
 
 // 执行查询
-getUserInfo(userInfo.handle)
-  .then((res) => {
-    if (res.status === "OK") {
-      const user = res.result[0];
-      if(user.rating) {
-        userInfo.rating = user.rating;
-        userInfo.rank = user.rank;
+if (userInfo.handle) {
+  // 特殊情况：缺少运行参数
+  getUserInfo(userInfo.handle)
+    .then((res) => {
+      if(res.status === "OK") {
+        const user = res.result[0];
+        if (user.rating) {
+          userInfo.rating = user.rating;
+          userInfo.rank = user.rank;
+        }
+        console.log(userInfo);
       }
-    }
-  })
-  .finally(() => {
-    console.log(userInfo);
-  });
+    })
+    .catch((err) => {
+      if(err.response) {
+        console.log("[查询错误] ", err.response.data.comment);
+      } else {
+        console.log("[请求失败] ", err.message);
+      }
+    });
+} else {
+  console.log("[缺少参数]");
+}
