@@ -10,7 +10,6 @@
         margin: 0;
         padding: 0;
         box-sizing: border-box;
-        user-select: none;
         font-family: "Verdana";
     }
 
@@ -64,7 +63,7 @@
         border-radius: 10px;
         border: 0;
         background-color: gray;
-        color: #fff;
+        color: #cbcbcb;
         position: relative;
         z-index: 2;
         transition: all .5s ease;
@@ -73,26 +72,26 @@
     }
 
     form input:nth-last-child(1):hover{
-        filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));
+        color: #fff;
+        filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.4));
     }
 
     div{
         position: relative;
         word-break: break-all;
-        width: 900px;
-        height: 200px;
+        width: 500px;
+        height: 300px;
         background-color: rgba(72, 72, 72, .7);
         border-radius: 10px;
         padding:10px;
+        overflow-y: auto;
     }
 
-    div::before{
-        content: '你将在下方看到选手信息😊';
-        font-size: 20px;
-        display: inline;
-        position: absolute;
-        left: 35%;
-        top: -30px;
+    pre {
+        font-size: 16px;
+        color: #fff;
+        white-space: pre-wrap;
+        word-wrap: break-word;
     }
 </style>
 <body>
@@ -101,6 +100,13 @@
         <input type="text" name="name" placeholder="输入格式:name1,name2,name3,...">
         <input type="submit" name="submit" value="submit"> 
     </form>
-    <div>{{ data }}</div>
+    <p><b>你将在下方看到选手信息😊</b></p>
+    <div>
+        {%for i in data%}
+        <pre>
+        {{ i }}
+        </pre>
+        {% endfor %}
+    </div>
 </body>
 </html>
