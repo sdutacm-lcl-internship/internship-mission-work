@@ -19,7 +19,6 @@ def get_user_info(username, proxy):
         response = requests.get(API_URL, headers=headers, params=params, proxies=proxies)
         response.raise_for_status() 
         data = response.json()
-
         if data['status'] == 'OK':
             return extract_user_info(data['result'][0])
         else:
@@ -28,7 +27,7 @@ def get_user_info(username, proxy):
                 'type': '1;',
                 'message': "no such handle;",
             }
-    except requests.exceptions.HTTPError as http_error:
+    except requests.exceptions.HTTPError:
         if response.status_code == 400:
             return{
                 'success': False,
@@ -44,13 +43,49 @@ def get_user_info(username, proxy):
                 'status':f'{response.status_code};'
             }
         }
-    except requests.exceptions.RequestException as req_err:
+    except requests.exceptions.RequestException:
         return {
             'success': False,
             'type': '3;',
             'message': "Request timeout"
         }
-    except RuntimeError as runtime_err:
+    except RuntimeError:
+        return {
+            'success': False,
+            'type': '4;',
+            'message': "'Internal Server Error';",
+        }
+    except ZeroDivisionError: # 除0
+        return {
+            'success': False,
+            'type': '4;',
+            'message': "'Internal Server Error';",
+        }
+    except ValueError:  # 值错误（字母->整数
+        return {
+            'success': False,
+            'type': '4;',
+            'message': "'Internal Server Error';",
+        }
+    except TypeError: # 数据类型
+        return {
+            'success': False,
+            'type': '4;',
+            'message': "'Internal Server Error';",
+        }
+    except IndexError: # 超出索引
+        return {
+            'success': False,
+            'type': '4;',
+            'message': "'Internal Server Error';",
+        }
+    except KeyError: # 字典中没有指定的key
+        return {
+            'success': False,
+            'type': '4;',
+            'message': "'Internal Server Error';",
+        }
+    except FileNotFoundError: # 文件未找到
         return {
             'success': False,
             'type': '4;',
