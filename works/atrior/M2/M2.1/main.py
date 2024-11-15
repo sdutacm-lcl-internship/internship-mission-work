@@ -29,7 +29,14 @@ def get_user_info(username, proxy):
                 'message': "no such handle;",
             }
     except requests.exceptions.HTTPError as http_error:
-        return {
+        if response.status_code == 400:
+            return{
+                'success': False,
+                'type': '1;',
+                'message': "no such handle;",
+            }
+        else:
+            return {
             'success': False,
             'type': '2;',
             'message': f"HTTP response with code {response.status_code}",
