@@ -24,72 +24,72 @@ def get_user_info(username, proxy):
         else:
             return {
                 'success': False,
-                'type': '1;',
-                'message': "no such handle;",
+                'type': '1',
+                'message': "no such handle",
             }
     except requests.exceptions.HTTPError:
         if response.status_code == 400:
             return{
                 'success': False,
-                'type': '1;',
-                'message': "no such handle;",
+                'type': '1',
+                'message': "no such handle",
             }
         else:
             return {
             'success': False,
-            'type': '2;',
+            'type': '2',
             'message': f"HTTP response with code {response.status_code}",
             'details':{
-                'status':f'{response.status_code};'
+                'status':f'{response.status_code}'
             }
         }
     except requests.exceptions.RequestException:
         return {
             'success': False,
-            'type': '3;',
+            'type': '3',
             'message': "Request timeout"
         }
     except RuntimeError:
         return {
             'success': False,
             'type': '4;',
-            'message': "'Internal Server Error';",
+            'message': "'Internal Server Error'",
         }
     except ZeroDivisionError: # 除0
         return {
             'success': False,
             'type': '4;',
-            'message': "'Internal Server Error';",
+            'message': "'Internal Server Error'",
         }
     except ValueError:  # 值错误（字母->整数
         return {
             'success': False,
-            'type': '4;',
-            'message': "'Internal Server Error';",
+            'type': '4',
+            'message': "'Internal Server Error'",
         }
     except TypeError: # 数据类型
         return {
             'success': False,
-            'type': '4;',
-            'message': "'Internal Server Error';",
+            'type': '4',
+            'message': "'Internal Server Error'",
         }
     except IndexError: # 超出索引
         return {
             'success': False,
-            'type': '4;',
-            'message': "'Internal Server Error';",
+            'type': '4',
+            'message': "'Internal Server Error'",
         }
     except KeyError: # 字典中没有指定的key
         return {
             'success': False,
-            'type': '4;',
-            'message': "'Internal Server Error';",
+            'type': '4',
+            'message': "'Internal Server Error'",
         }
     except FileNotFoundError: # 文件未找到
         return {
             'success': False,
-            'type': '4;',
-            'message': "'Internal Server Error';",
+            'type': '4',
+            'message': "'Internal Server Error'",
         }
 
 def extract_user_info(user_info):
@@ -98,11 +98,11 @@ def extract_user_info(user_info):
         'result': {}
     }
     if 'rank' in user_info:
-        user['result']['handle'] = user_info['handle'] + ';'
-        user['result']['rating'] = str(user_info['rating']) + ';'
-        user['result']['rank'] = user_info['rank'] + ';'
+        user['result']['handle'] = user_info['handle']
+        user['result']['rating'] = str(user_info['rating'])
+        user['result']['rank'] = user_info['rank']
     else:
-        user['result']['handle'] = user_info['handle'] + ';'
+        user['result']['handle'] = user_info['handle']
     return user
 
 def get_user_list(usernames):
