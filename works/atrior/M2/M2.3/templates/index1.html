@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='icon/circular_icon.ico') }}" type="image/x-icon">
+    <title>The CFer Infor🧑‍💻</title>
+</head>
+<style>
+    *{
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Verdana";
+    }
+
+    body{
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: rgb(148, 148, 148);
+        color: #fff;
+    }
+
+    form{
+        display: flex;
+        width: 900px;
+        height: 400px;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 40px;
+        font-size: 30px;
+    }
+
+    form p{
+        user-select: none;
+        font-size: 40px;
+        font-weight: 700;
+    }
+
+    form input:nth-last-child(2){
+        width: 500px;
+        height: 50px;
+        border-radius: 30px;
+        border: 0;
+        padding-left: 40px;
+    }
+
+    input[type=search]::search-cancel-button{
+        appearance: none;
+    }
+
+    input[type=text]{
+        outline: none;
+    }
+
+    form input:nth-last-child(1){
+        width: 100px;
+        height: 50px;
+        border-radius: 10px;
+        border: 0;
+        background-color: gray;
+        color: #cbcbcb;
+        position: relative;
+        z-index: 2;
+        transition: all .5s ease;
+        font-size: 20px;
+        font-weight: 700;
+        box-shadow: inset 5px 5px 10px rgb(141, 141, 141),
+                    inset -5px -5px 10px rgb(81, 81, 81);
+    }
+
+    form input:nth-last-child(1):hover{
+        color: #fff;
+        filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.4));
+    }
+
+    .bb{
+        position: relative;
+        word-break: break-all;
+        width: 500px;
+        height: 300px;
+        background-color: rgba(115, 115, 115, 0.7);
+        padding:10px;
+        overflow-y: auto;
+        z-index: 9999;
+    }
+
+    pre {
+        font-size: 16px;
+        color: #fff;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    body p{
+        user-select: none;
+        position: relative;
+        bottom: -15px;
+        background-color: rgba(0, 0, 0, 0);
+        z-index: 99;
+    }
+
+    .bd::after{
+        content: '';
+        display: block;
+        position: absolute;
+        top: -50px;
+        left: 0;
+        width: 500px;
+        height: 50px;
+        transform: skewX(-45deg);
+        transform-origin: bottom;
+        background-color: rgb(165, 165, 165);
+        box-shadow: 350px 350px 20px rgba(0, 0, 0, .5);
+    }
+
+    .bd{
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 500px;
+        height: 300px;
+    }
+
+    .bd::before{
+        content: '';
+        width: 50px;
+        height: 300px;
+        background-color: #6a6a6a;
+        position: absolute;
+        transform-origin: left;
+        right: -50px;
+        top: 0;
+        transform: skewY(-45deg);
+    }
+
+    .btn{
+        position: relative;
+        width: 50px;
+        height: 30px;
+        top: -10px;
+        left: 180px;
+        color: #fff;
+        background-color: rgba(68, 68, 68, .5);
+        z-index: 9999;
+        border-radius: 10px;
+        border: 0;
+        font-weight: 700;
+        transition: all .1s ease;
+    }
+
+    .btn:active{
+        filter: drop-shadow(0px 0px 5px rgba(0, 0, 0, 0.4));
+    }
+
+    .copied-message {
+        position: fixed;
+        top: 20px;
+        background-color: rgba(0, 0, 0, .3);
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 10px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        font-size: 18px;
+    }
+</style>
+<body>
+    <div class="copied-message" id="copiedMessage">Text Has Copied!🥳</div>
+    <form action="" method="post">
+        <p>请输入你想查询的CodeForces选手信息🥳</p>
+        <input type="text" name="name" placeholder="输入格式:name1,name2,name3,...">
+        <input type="submit" name="submit" value="submit"> 
+    </form>
+    <p><b>你将在下方看到选手信息😊</b></p>
+    <button class="btn" onclick="copyContent()">Copy!</button>
+    <div class="bd">
+        
+        <div class="bb">
+            {%for i in data%}
+            <pre id="myText">
+            {{ i }}
+            </pre>
+            {% endfor %}
+        </div>
+    </div>
+    <script>
+        const text = document.querySelector('.bb').innerText;
+        const copyContent = async () => {
+            const message = document.getElementById('copiedMessage');
+            try {
+                await navigator.clipboard.writeText(text);
+                message.style.opacity = '1';
+                setTimeout(() => {
+                    message.style.opacity = '0';
+                }, 1000); // 显示消息2秒后消失
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+            }
+        }
+    </script>
+</body>
+</html>

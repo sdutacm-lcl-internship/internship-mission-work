@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='icon/circular_icon.ico') }}" type="image/x-icon">
+    <title>Hello My Bro🥳</title>
+</head>
+<style>
+    *{
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        user-select: none;
+        text-decoration: none;
+        list-style: none;
+        font-family: "Verdana";
+    }
+
+    body{
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: gray;
+    }
+
+    .title{
+        width: 900px;
+        height: 100px;
+        font-size: 50px;
+        text-align: center;
+        line-height: 100px;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .leader{
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        width: 400px;
+        height: 200px;
+        position: relative;
+    }
+
+    .leader::before{
+        content: '👇️请选择你想要查询的选手信息👇️';
+        display: block;
+        font-weight: 700;
+        width: 300px;
+        height: 30px;
+        position: absolute;
+        top: 0;
+        color: #fff;
+        text-align: center;
+        line-height: 30px;
+        font-size: 17px;
+    }
+
+    .leader a{
+        color: #e3e3e3;
+        display: block;
+        width: 110px;
+        height: 55px;
+        background-color: rgb(108, 108, 108);
+        font-size: 30px;
+        text-align: center;
+        line-height: 40px;
+        font-weight: 700;
+        border-radius: 20px;
+        transition:  .5s ease;
+    }
+
+    .leader a:hover{
+        filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.4));
+    }
+</style>
+<body>
+    <div class="title">欢迎访问atrior的小Web服务器😋</div>
+    <div class="leader">
+        <a href="http://127.0.0.1:2333/batchGetUserInfo" target="_blank">Infor</a>
+        <a href="http://127.0.0.1:2333/getUserRatings" target="_blank">Rate</a>
+    </div>
+    <script>
+        (function() {
+            const canvas = document.createElement('canvas');
+            document.body.appendChild(canvas);
+        
+            // 获取Canvas上下文
+            const ctx = canvas.getContext('2d');
+        
+            // 存储烟花的数组
+            let fireworks = [];
+        
+            // 设置Canvas样式和位置
+            function setCanvasStyle() {
+                canvas.style.position = 'fixed';
+                canvas.style.top = '0';
+                canvas.style.left = '0';
+                canvas.style.pointerEvents = 'none'; // 不影响原网页的鼠标事件
+            }
+        
+            // 设置Canvas大小
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        
+            // 初始化Canvas样式和大小
+            setCanvasStyle();
+            resizeCanvas();
+        
+            // 窗口大小改变时重新设置Canvas大小
+            window.addEventListener('resize', resizeCanvas);
+        
+            // 在整个body上监听点击事件
+            document.body.addEventListener('click', function(event) {
+                // 获取点击位置相对于视口的坐标
+                const x = event.clientX;
+                const y = event.clientY;
+        
+                // 创建烟花
+                createFirework(x, y);
+            });
+        
+            // 创建烟花函数
+            function createFirework(x, y) {
+                fireworks.push(new Firework(x, y));
+            }
+        
+            // 烟花对象构造函数
+            function Firework(x, y) {
+                this.particles = [];
+        
+                // 创建烟花粒子
+                for (let i = 0; i < 30; i++) {
+                    this.particles.push(new Particle(x, y));
+                }
+        
+                // 更新和绘制烟花粒子
+                this.update = function() {
+                    for (let i = 0; i < this.particles.length; i++) {
+                        this.particles[i].update();
+                        this.particles[i].draw();
+                    }
+                }
+            }
+        
+            // 烟花粒子对象构造函数
+            function Particle(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = Math.random() * 2 + 1;
+                this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 6,
+                    y: (Math.random() - 0.5) * 6
+                };
+                this.alpha = 1;
+        
+                // 更新粒子位置和透明度
+                this.update = function() {
+                    this.x += this.velocity.x;
+                    this.y += this.velocity.y;
+                    this.alpha -= 0.02;
+                }
+        
+                // 绘制粒子
+                this.draw = function() {
+                    ctx.save();
+                    ctx.globalAlpha = this.alpha;
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        
+            // 动画循环
+            function animate() {
+                requestAnimationFrame(animate);
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // 清除整个画布
+        
+                // 更新和绘制烟花
+                for (let i = 0; i < fireworks.length; i++) {
+                    fireworks[i].update();
+                }
+        
+                // 清除已消失的烟花
+                fireworks = fireworks.filter(function(firework) {
+                    return firework.particles.some(p => p.alpha > 0);
+                });
+            }
+        
+            animate();
+        
+        })();
+    </script>
+</body>
+</html>
