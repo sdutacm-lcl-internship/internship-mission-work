@@ -41,5 +41,5 @@
 - [OLDERHARD (计科2204胡金博)](/works/OLDERHARD)：参加于 2024-07-13     
 - [toujuan (计科2203吕思睿)](/works/toujuan)：参加于 2024-08-06
 - [toujuan (软件2304张涵宇)](/works/karrain)：参加于 2024-10-29
-- [atrior (计科2303吴锦皓)](/works/atrior)：参加于 2024-10-29
-- [beacon776 (计科2401张和硕)](/works/beacon776)：参加于 2025-1-13
+- [atrior (计科2303吴锦皓)](/works/atrior): 参加于 2024-10-29
+- [beacon776 (计科2401张和硕)](/works/beacon776): 参加于 2025-01-13
