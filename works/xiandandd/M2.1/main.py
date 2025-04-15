@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 import requests 
-
+from gevent.pywsgi import WSGIServer
 # 这个主要是使用了python的flask进行处理和响应，然后访问codeforces的api接口获取数据
 
 app = Flask(__name__)
@@ -125,4 +125,4 @@ def query_handles():
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=2333)
+    WSGIServer(('127.0.0.1', 2333), app).serve_forever()
