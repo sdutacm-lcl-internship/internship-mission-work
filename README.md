@@ -43,3 +43,4 @@
 - [toujuan (软件2304张涵宇)](/works/karrain)：参加于 2024-10-29
 - [atrior (计科2303吴锦皓)](/works/atrior)：参加于 2024-10-29
 - [beacon776 (计科2401张和硕)](/works/beacon776)：参加于 2025-1-13
+- [Yaku-u(计科2405王姝欢)](/works/Yaku-u)：参加于 2025-5-8
