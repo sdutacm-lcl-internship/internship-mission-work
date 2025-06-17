@@ -7,9 +7,9 @@ import random
 
 
 def solve(nickname):
-    # 模拟客户端发送信息 
+    # 模拟客户�?发送信�? 
     try:
-        imfo_t = "user.info" 
+        imfo_t = "user.rating"
         ex_url = f"https://codeforces.com/api/{imfo_t}"
 
         ex_user_agent = UserAgent()
@@ -17,43 +17,44 @@ def solve(nickname):
         # print(ex_user_agent.random)
 
         ex_par = {"handles": nickname} 
-        response = requests.get(ex_url, params=ex_par , headers=ex_header)
-        
+        response = requests.get(ex_url, params=ex_par, headers=ex_header)
+        data = json.loads(response.text)
+        print(data)
         # 分析结果 
-        if response.status_code != 200 :
-            print("no such handle") 
-        else : 
-            # 根据“status"来分类讨论 
-            data = json.loads(response.text) 
-            if data["status"] == "FAILED": 
-                print("no such handle") 
-                sys.exit(1) 
-            elif data["result"][0]["contribution"] == 0 :
-                people = {
-                    "handle" : nickname[0] 
-                }
-                print(json.dumps(people) , file= sys.stdout) 
-                sys.exit(0)
-            elif data["result"][0]["contribution"] != 0 :
-                people = {
-                    "handle" : nickname[0] , 
-                    "rating" : data["result"][0]["rating"],
-                    "rank" : data["result"][0]["rank"] 
-                }
-                print(json.dumps(people) , file= sys.stdout) 
-                sys.exit(0)
+        # if response.status_code != 200 :
+        #     print("no such handle")
+        # else :
 
-    except IndexError: #发生越界的时候捕获
+
+            # if data["status"] == "FAILED":
+            #     print("no such handle")
+            #     sys.exit(1)
+            # elif data["result"][0]["contribution"] == 0 :
+            #     people = {
+            #         "handle" : nickname[0]
+            #     }
+            #     print(json.dumps(people) , file= sys.stdout)
+            #     sys.exit(0)
+            # elif data["result"][0]["contribution"] != 0 :
+            #     people = {
+            #         "handle" : nickname[0] ,
+            #         "rating" : data["result"][0]["rating"],
+            #         "rank" : data["result"][0]["rank"]
+            #     }
+            #     print(json.dumps(people) , file= sys.stdout)
+            #     sys.exit(0)
+
+    except IndexError:
         print("no such handle", file=sys.stderr)
         sys.exit(1)
-    except requests.exceptions.RequestException as e: #requests错误的保险 
-        print("requests 错误" ,file = sys.stderr)
+    except requests.exceptions.RequestException as e:
+        print("requests 错�??" ,file = sys.stderr)
         sys.exit(1)
-    except json.JSONDecodeError as e: #json解析的保险 
-        print("json 解析错误",file = sys.stderr)
+    except json.JSONDecodeError as e:
+        print("json 解析错�??",file = sys.stderr)
         sys.exit(1)
-    except Exception as e: #其他的报错都用了这个捕获 
-        print("发生错误",file = sys.stderr)
+    except Exception as e:
+        print("发生错�??",file = sys.stderr)
         sys.exit(1)
     return 0 
 
