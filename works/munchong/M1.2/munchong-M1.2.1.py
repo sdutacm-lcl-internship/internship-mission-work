@@ -11,36 +11,34 @@ def solve(nickname):
     try:
         imfo_t = "user.info" 
         ex_url = f"https://codeforces.com/api/{imfo_t}"
-
         ex_user_agent = UserAgent()
-        ex_header = {"User-Agent": ex_user_agent.random} 
-        # print(ex_user_agent.random)
+        ex_header = {"User-Agent": ex_user_agent.random}
 
         ex_par = {"handles": nickname} 
-        response = requests.get(ex_url, params=ex_par , headers=ex_header)
+        response = requests.get(ex_url, params=ex_par, headers=ex_header)
         
         # 分析结果 
-        if response.status_code != 200 :
+        if response.status_code != 200:
             print("no such handle") 
-        else : 
+        else:
             # 根据“status"来分类讨论 
             data = json.loads(response.text) 
             if data["status"] == "FAILED": 
                 print("no such handle") 
                 sys.exit(1) 
-            elif data["result"][0]["contribution"] == 0 :
+            elif data["result"][0]["contribution"] == 0:
                 people = {
-                    "handle" : nickname[0] 
+                    "handle": nickname[0]
                 }
-                print(json.dumps(people) , file= sys.stdout) 
+                print(json.dumps(people), file=sys.stdout)
                 sys.exit(0)
-            elif data["result"][0]["contribution"] != 0 :
+            elif data["result"][0]["contribution"] != 0:
                 people = {
-                    "handle" : nickname[0] , 
-                    "rating" : data["result"][0]["rating"],
-                    "rank" : data["result"][0]["rank"] 
+                    "handle": nickname[0],
+                    "rating": data["result"][0]["rating"],
+                    "rank": data["result"][0]["rank"]
                 }
-                print(json.dumps(people) , file= sys.stdout) 
+                print(json.dumps(people), file=sys.stdout)
                 sys.exit(0)
 
     except IndexError: #发生越界的时候捕获
