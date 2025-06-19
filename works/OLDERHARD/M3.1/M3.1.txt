@@ -1,0 +1,23 @@
+TXT 文本存储：
+TXT 文件是最简单的存储格式之一，几乎兼容任何平台。虽然不利于检索，但如果对检索和数据结构要求不高，可以采用 TXT 格式。
+with open('demo.txt', 'a', encoding='utf-8') as file:
+    file.write(data)
+
+JSON 文件存储：
+JSON（JavaScript Object Notation）是一种轻量级的数据交换格式，适用于结构化数据。Python 中可以使用 json 库进行读写操作。
+import json
+with open('demo.json', 'w', encoding='utf-8') as f:
+    f.write(json.dumps(data, indent=2, ensure_ascii=False))
+
+CSV 文件存储：
+CSV（Comma-Separated Values）以纯文本形式存储表格数据，逗号分隔。适用于保存大量数据。
+import csv
+with open('demo.csv', 'w', encoding='utf-8') as csvf:
+    writer = csv.writer(csvf)
+    writer.writerow(['id', 'name', 'gender'])
+
+
+持久化存储通常指将数据保存到磁盘或其他持久性介质中，以便在应用程序关闭后仍然可以访问。这对于保存用户配置、文件、数据库记录等非易失性数据非常有用。
+内存缓存是将数据存储在应用程序的内存中，以便在运行时更快地访问。这对于频繁读取的数据、临时计算结果和缓存数据非常有用。
+持久化存储和内存缓存可以结合使用，以优化性能和数据可靠性。
+可以从数据库中读取数据并将其缓存在内存中，以避免频繁的数据库查询。如果数据发生更改，你可以更新数据库并清除缓存，以便下次重新加载最新数据。
