@@ -3,14 +3,57 @@ import dayjs from 'dayjs';
 import express from 'express';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
+import fs from 'fs';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const app = express();
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true}));
+
+
 const UserInfoCache = new Map();
 const UserRatingsCache = new Map();
+
+
+function lodafile(file, callback){
+    fs.readFile(file, 'utf-8', (err, data) =>{
+        if(err) return callback({});
+        try{
+            const Data = JSON.parse(data);
+            callback(Data);
+        }catch{
+            callback({});
+        }
+    })
+}
+
+function savefile (file, data){
+    fs.writeFile(file, JSON.stringify(data, null, 2), 'utf-8', (err)=>{
+        if(err){
+            console.error('写入失败', err);
+        }else{
+            console.log('写入成功');
+            
+        }
+    })
+}
+
+// 在程序启动时加载缓存
+lodafile('./data-user-info.json', (Data)=>{
+    for(const key in Data){
+        UserInfoCache.set(key,Data[key]);
+    }
+});
+
+lodafile('./data-user-ratings.json', (Data)=>{
+    for(const key in Data){
+        UserRatingsCache.set(key, Data[key]);
+    }
+})
+
 
 app.get('/batchGetUserInfo', async (req, res) => {
     res.setHeader('Content-Type', 'application/json')
@@ -54,8 +97,10 @@ app.get('/batchGetUserInfo', async (req, res) => {
                 }
                 UserInfoCache.set(handle,{
                     value: userInfo,
-                    timez: Date.now() + 15000,
+                    timez: Date.now() + 30000,
                 });
+
+                savefile('./data-user-info.json', Object.fromEntries(UserInfoCache));
 
                 return userInfo;
             }
@@ -92,8 +137,9 @@ app.get('/batchGetUserInfo', async (req, res) => {
             }
             UserInfoCache.set(handle,{
                 value: errorResponse,
-                timez: Date.now() + 15000,
+                timez: Date.now() + 30000,
             });
+            savefile('./data-user-info.json', Object.fromEntries(UserInfoCache));
             return errorResponse;
         }
     })
@@ -136,9 +182,10 @@ app.get('/getUserRatings', async (req, res) => {
 
         UserRatingsCache.set(handle,{
             value: result,
-            timez: Date.now() + 15000,
+            timez: Date.now() + 30000,
         })
 
+        savefile('./data-user-ratings.json', Object.fromEntries(UserRatingsCache));
         return res.status(200).send(JSON.stringify(result, null, 2));
 
     } catch (err) {
@@ -158,10 +205,36 @@ app.get('/getUserRatings', async (req, res) => {
             value: errorResponse,
             timez: Date.now() + 30000
         });
+        savefile('./data-user-ratings.json', Object.fromEntries(UserRatingsCache));
         return res.status(statusCode).send(errorResponse);
     }
 
 })
+
+
+/*
+app.post('/clearCache', (req, res)=>{
+    const { cacheType, handles } = req.body;
+
+    if(cacheType !== 'userInfo' && cacheType !== 'userRatings' ){
+        return res.status(400).send({message: 'invalid request' });
+    }
+
+    const cache = cacheType === 'userInfo' ? UserInfoCache : UserRatingsCache;
+
+    if(!handles){
+        cache.clear();
+    }else if(Array.isArray(handles) && handles.every(x => typeof x === 'string')){
+        for(let handle of handles){
+            cache.delete(handle);
+        }
+    }else{
+        return res.status(400).send({message: 'invalid request'});
+    }
+    return res.status(200).send({message: 'ok'});
+});
+*/
+
 
 app.listen(2333, '127.0.0.1', () => {
     console.log('Server running');

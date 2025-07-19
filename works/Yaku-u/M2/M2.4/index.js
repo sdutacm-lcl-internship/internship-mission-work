@@ -74,7 +74,7 @@ app.get('/batchGetUserInfo', async (req, res) => {
                     message: 'no such handle',
                 }
             } else if (err.response) {
-                errorResponse = {
+                return {
                     success: false,
                     type: 2,
                     message: 'HTTP response error',
@@ -83,13 +83,13 @@ app.get('/batchGetUserInfo', async (req, res) => {
                     }
                 };
             } else if (err.request) {
-                errorResponse = {
+                return {
                     success: false,
                     type: 3,
                     message: 'Request error',
                 };
             } else {
-                errorResponse = {
+                return {
                     success: false,
                     type: 4,
                     message: 'Internal Server Error',
@@ -147,8 +147,11 @@ app.get('/getUserRatings', async (req, res) => {
         return res.status(200).send(JSON.stringify(result, null, 2));
 
     } catch (err) {
+        let errorResponse;
+        let statusCode;
         if(err.response && err.response.status === 400){
-            return res.status(404).send({message: 'No such handle'});
+            errorResponse = {message: 'No such handle'};
+            statusCode = 404;
         }else if(err.response){
             return res.status(404).send({message: 'HTTP response error'});
         }else if(err.request){
@@ -156,10 +159,14 @@ app.get('/getUserRatings', async (req, res) => {
         }else{
             return res.status(500).send({message: 'Internal Server Error'});
         }
+        UserRatingsCache.set(handle, {
+            value: errorResponse,
+            timez: Date.now() + 30000
+        });
+        return res.status(statusCode).send(errorResponse);
     }
 
 })
-
 
 
 app.post('/clearCache', (req, res)=>{
