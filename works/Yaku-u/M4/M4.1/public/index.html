@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cf</title>
+    <style>
+        body {
+            margin: 40px;
+            text-align: center;
+        }
+
+        input {
+            padding: 3px;
+        }
+
+        button {
+            padding: 2px 12px;
+            margin: 5px;
+        }
+
+        #result {
+            margin-top: 100px;
+        }
+
+        .card {
+            margin: 50px auto;
+
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 65%;
+            margin: 0 auto;
+
+        }
+
+        table th,tr,td {
+            border: 1px solid;
+            padding: 5px;
+        }
+
+        table td{
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>查询选手</h1>
+    <input type="text" id="handle" placeholder="Enter handle">
+    <button onclick="handleSearch()"> 查询 </button>
+    <div id="result"></div>
+
+    <script>
+        async function handleSearch() {
+            const input = document.getElementById('handle').value;
+            const result = document.getElementById('result');
+            // 清空结果
+            result.innerHTML = '';
+
+            if (!input) {
+                result.textContent = '请输入 handle';
+                setTimeout(() => {
+                    result.textContent = '';
+                }, 3000);
+                return;
+            }
+            // 分割字符串，去除空格和空值
+            const handles = input.split(',').map(h => h.trim()).filter(Boolean);
+            if (handles.length === 0) {
+                result.textContent = '请输入有效的 handle';
+                setTimeout(() => {
+                    result.textContent = '';
+                }, 3000);
+                return;
+            }
+            result.textContent = "查询中...";
+
+            // 向后端发起 get 请求，把响应数据从 json 转换为 js
+            const requests = handles.map(async (handle) => {
+                const userInfo = await fetch(`/batchGetUserInfo?handles=${handle}`).then(res => res.json());
+                const userRatings = await fetch(`/getUserRatings?handle=${handle}`).then(res => res.json());
+                return {
+                    handle,
+                    user: userInfo?.[0] ?? null,
+                    ratings: userRatings
+                };
+            });
+
+            const results = await Promise.all(requests);
+            result.innerHTML = '';
+
+            for (const { handle, user, ratings } of results) {
+                // 用户信息
+                const card = document.createElement('div');
+                card.className = "card";
+                if (user.success) {
+                    card.innerHTML = `
+                        <h3>查询结果</h3>
+                        <p> ${user.result.handle ?? handle} (${user.result.rank ?? '无段位'}) </p>
+                        <p> Rating: ${user.result.rating ?? '无记录'}</p>`;
+                    // rating 记录
+                    const table = document.createElement('table');
+                    table.innerHTML = `
+                        <thead>
+                            <tr>
+                                <th>比赛时间</th>
+                                <th>比赛名称</th>
+                                <th>Rank</th>
+                                <th>旧分数</th>
+                                <th>新分数</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${ratings.map(r => `
+                                <tr>
+                                    <td>${r.ratingUpdatedAt}</td>
+                                    <td>${r.contestName}</td>
+                                    <td>${r.rank}</td>
+                                    <td>${r.oldRating}</td>
+                                    <td>${r.newRating}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        `;
+                    card.appendChild(table);
+                }else{
+                    card.innerHTML = `
+                    <h3>查询结果</h3>
+                    <p>${handle}</p>
+                    <p>查无此人</p>`
+                }
+                result.appendChild(card);
+            }
+        }
+    </script>
+</body>
+
+</html>
